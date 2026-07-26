@@ -7,38 +7,38 @@ import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
-import { getTopicName } from "@/lib/mock-data";
+import type { SynonymAntonymQuestion } from "@/lib/mock-data";
 import { cn, shuffle } from "@/lib/utils";
-import type { Vocabulary } from "@/types";
 
-interface QuizQuestion {
-  vocab: Vocabulary;
-  options: Vocabulary[];
+const relationLabel = {
+  synonym: "đồng nghĩa",
+  antonym: "trái nghĩa",
+};
+
+interface PreparedQuestion extends SynonymAntonymQuestion {
+  shuffledOptions: string[];
 }
 
-function buildQuestions(vocabList: Vocabulary[]): QuizQuestion[] {
-  return shuffle(vocabList).map((vocab) => ({
-    vocab,
-    options: shuffle(vocabList),
-  }));
+function prepare(questions: SynonymAntonymQuestion[]): PreparedQuestion[] {
+  return shuffle(questions).map((q) => ({ ...q, shuffledOptions: shuffle(q.options) }));
 }
 
-export function QuizSession({ vocabList }: { vocabList: Vocabulary[] }) {
-  const [questions] = useState<QuizQuestion[]>(() => buildQuestions(vocabList));
+export function SynonymAntonymGame({ questions }: { questions: SynonymAntonymQuestion[] }) {
+  const [prepared] = useState<PreparedQuestion[]>(() => prepare(questions));
   const [index, setIndex] = useState(0);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(null);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
 
-  const total = questions.length;
-  const question = questions[index];
-  const isAnswered = selectedId !== null;
-  const isCorrect = selectedId === question.vocab.id;
+  const total = prepared.length;
+  const question = prepared[index];
+  const isAnswered = selected !== null;
+  const isCorrect = selected === question.correctAnswer;
 
-  const handleSelect = (optionId: string) => {
+  const handleSelect = (option: string) => {
     if (isAnswered) return;
-    setSelectedId(optionId);
-    if (optionId === question.vocab.id) {
+    setSelected(option);
+    if (option === question.correctAnswer) {
       setScore((s) => s + 1);
     }
   };
@@ -49,12 +49,12 @@ export function QuizSession({ vocabList }: { vocabList: Vocabulary[] }) {
       return;
     }
     setIndex((i) => i + 1);
-    setSelectedId(null);
+    setSelected(null);
   };
 
   const handleRestart = () => {
     setIndex(0);
-    setSelectedId(null);
+    setSelected(null);
     setScore(0);
     setFinished(false);
   };
@@ -67,7 +67,7 @@ export function QuizSession({ vocabList }: { vocabList: Vocabulary[] }) {
         </div>
         <div className="flex flex-col gap-1">
           <h2 className="font-heading text-2xl font-semibold tracking-tight">
-            Hoàn thành bài kiểm tra!
+            Hoàn thành bài tập!
           </h2>
           <p className="text-muted-foreground">
             Bạn trả lời đúng {score}/{total} câu.
@@ -78,8 +78,8 @@ export function QuizSession({ vocabList }: { vocabList: Vocabulary[] }) {
             <RotateCcw className="size-4" />
             Làm lại
           </Button>
-          <Button nativeButton={false} render={<Link href="/dashboard" />}>
-            Về Dashboard
+          <Button nativeButton={false} render={<Link href="/exercises" />}>
+            Chọn dạng khác
           </Button>
         </div>
       </div>
@@ -95,22 +95,23 @@ export function QuizSession({ vocabList }: { vocabList: Vocabulary[] }) {
       </Progress>
 
       <div className="flex flex-col items-center gap-2 text-center">
-        <Badge variant="secondary">{getTopicName(question.vocab.topicId)}</Badge>
+        <Badge variant="secondary">{relationLabel[question.relation]}</Badge>
         <h2 className="font-heading text-xl font-semibold tracking-tight sm:text-2xl">
-          Từ nào có nghĩa là &ldquo;{question.vocab.meanVI}&rdquo;?
+          Từ nào {relationLabel[question.relation]} với &ldquo;{question.word}&rdquo;?
         </h2>
+        <p className="text-sm text-muted-foreground">{question.meanVI}</p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        {question.options.map((option) => {
-          const isThisCorrect = option.id === question.vocab.id;
-          const isSelected = option.id === selectedId;
+        {question.shuffledOptions.map((option) => {
+          const isThisCorrect = option === question.correctAnswer;
+          const isSelected = option === selected;
 
           return (
             <button
-              key={option.id}
+              key={option}
               type="button"
-              onClick={() => handleSelect(option.id)}
+              onClick={() => handleSelect(option)}
               disabled={isAnswered}
               className={cn(
                 "flex items-center justify-between rounded-2xl border-2 border-border bg-card px-4 py-3 text-left text-base font-medium transition-colors disabled:cursor-default",
@@ -122,7 +123,7 @@ export function QuizSession({ vocabList }: { vocabList: Vocabulary[] }) {
                   "border-red-400 bg-red-50 text-red-700"
               )}
             >
-              {option.vocab}
+              {option}
               {isAnswered && isThisCorrect && <Check className="size-5 shrink-0 text-emerald-600" />}
               {isAnswered && isSelected && !isThisCorrect && (
                 <X className="size-5 shrink-0 text-red-500" />
@@ -135,13 +136,9 @@ export function QuizSession({ vocabList }: { vocabList: Vocabulary[] }) {
       {isAnswered && (
         <div className="flex flex-col items-center gap-4 text-center">
           <p className="text-sm text-muted-foreground">
-            {isCorrect ? "Chính xác! " : "Chưa đúng — "}
-            <span className="font-medium text-foreground">{question.vocab.vocab}</span>:{" "}
-            {question.vocab.definition}
+            {isCorrect ? "Chính xác!" : `Chưa đúng — đáp án là "${question.correctAnswer}".`}
           </p>
-          <Button onClick={handleNext}>
-            {index + 1 >= total ? "Xem kết quả" : "Câu tiếp theo"}
-          </Button>
+          <Button onClick={handleNext}>{index + 1 >= total ? "Xem kết quả" : "Câu tiếp theo"}</Button>
         </div>
       )}
     </div>

@@ -7,6 +7,7 @@ import { Check, PartyPopper, RotateCcw, Volume2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
+import { getTopicName } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import type { Vocabulary } from "@/types";
 
@@ -101,7 +102,7 @@ export function PracticeSession({ vocabList }: { vocabList: Vocabulary[] }) {
         >
           {/* Front */}
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-3xl border border-border bg-card p-8 shadow-sm [backface-visibility:hidden]">
-            <Badge variant="secondary">{current.topic}</Badge>
+            <Badge variant="secondary">{getTopicName(current.topicId)}</Badge>
             <p className="font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
               {current.vocab}
             </p>

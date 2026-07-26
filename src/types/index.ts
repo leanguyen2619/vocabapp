@@ -21,6 +21,7 @@ export interface Account {
 export interface SchoolClass {
   id: string; // PK
   className: string;
+  dailyWordTarget: number;
 }
 
 // ---------- Levels ----------
@@ -42,6 +43,13 @@ export interface AccountLevel {
   status: AccountLevelStatus;
 }
 
+// ---------- Topics ----------
+export interface Topic {
+  id: number; // PK, id_topic
+  topic: string;
+  definition: string;
+}
+
 // ---------- Vocabulations ----------
 export type PartOfSpeech =
   | "noun"
@@ -60,7 +68,7 @@ export interface Vocabulary {
   meanVI: string;
   partOfSpeech: PartOfSpeech;
   levelId: string; // FK -> Level
-  topic: string;
+  topicId: number; // FK -> Topic
 }
 
 // ---------- Word_Relations ----------
@@ -78,7 +86,12 @@ export type PracticeTypeCode =
   | "flashcard"
   | "typing"
   | "listening"
-  | "matching";
+  | "matching"
+  | "pos_classification"
+  | "sentence_writing"
+  | "synonym_antonym"
+  | "fill_blank"
+  | "word_formation";
 
 export interface PracticeType {
   id: string; // PK
@@ -88,12 +101,15 @@ export interface PracticeType {
 }
 
 // ---------- QuestionBank ----------
+export type QuestionStatus = "pending" | "approved" | "rejected";
+
 export interface Question {
   id: string; // PK
   vocabId: string; // FK -> Vocabulary
   pracTypeId: string; // FK -> PracticeType
   questionText: string;
   explanation?: string;
+  status: QuestionStatus;
 }
 
 // ---------- AnswersBank ----------

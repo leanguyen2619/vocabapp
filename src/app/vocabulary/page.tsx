@@ -16,19 +16,9 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRequireSession } from "@/hooks/use-session";
-import { getLevelName, levels, vocabularyBank } from "@/lib/mock-data";
-import type { LearningStatus, PartOfSpeech } from "@/types";
-
-const posLabel: Record<PartOfSpeech, string> = {
-  noun: "danh từ",
-  verb: "động từ",
-  adjective: "tính từ",
-  adverb: "trạng từ",
-  preposition: "giới từ",
-  pronoun: "đại từ",
-  conjunction: "liên từ",
-  interjection: "thán từ",
-};
+import { posLabel } from "@/lib/labels";
+import { getLevelName, getTopicName, levels, topics, vocabularyBank } from "@/lib/mock-data";
+import type { LearningStatus } from "@/types";
 
 const statusLabel: Record<LearningStatus, string> = {
   new: "Chưa học",
@@ -41,8 +31,6 @@ const statusVariant: Record<LearningStatus, "default" | "outline" | "secondary">
   learning: "outline",
   new: "secondary",
 };
-
-const topics = Array.from(new Set(vocabularyBank.map((v) => v.topic))).sort();
 
 export default function VocabularyPage() {
   const { status } = useRequireSession();
@@ -61,7 +49,7 @@ export default function VocabularyPage() {
   const query = search.trim().toLowerCase();
   const filtered = vocabularyBank.filter((v) => {
     if (levelFilter !== "all" && v.levelId !== levelFilter) return false;
-    if (topicFilter !== "all" && v.topic !== topicFilter) return false;
+    if (topicFilter !== "all" && v.topicId !== Number(topicFilter)) return false;
     if (query && !v.vocab.toLowerCase().includes(query) && !v.meanVI.toLowerCase().includes(query)) {
       return false;
     }
@@ -116,8 +104,8 @@ export default function VocabularyPage() {
               <SelectContent>
                 <SelectItem value="all">Tất cả chủ đề</SelectItem>
                 {topics.map((topic) => (
-                  <SelectItem key={topic} value={topic}>
-                    {topic}
+                  <SelectItem key={topic.id} value={String(topic.id)}>
+                    {topic.topic}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -159,7 +147,7 @@ export default function VocabularyPage() {
                   <p className="text-sm text-muted-foreground">{word.definition}</p>
 
                   <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                    <Badge variant="outline">{word.topic}</Badge>
+                    <Badge variant="outline">{getTopicName(word.topicId)}</Badge>
                     <Badge variant="secondary">{getLevelName(word.levelId)}</Badge>
                   </div>
                 </CardContent>

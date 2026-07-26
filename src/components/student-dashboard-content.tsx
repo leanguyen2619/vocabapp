@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Circle, ClipboardCheck, Library } from "lucide-react";
+import { ArrowRight, CheckCircle2, Circle, Library } from "lucide-react";
 
 import { LevelCard } from "@/components/level-card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { dailyAssignments, levels } from "@/lib/mock-data";
+import { dailyAssignments, getTopicName, levels } from "@/lib/mock-data";
 import type { Account, AssignmentStatus } from "@/types";
 
 const assignmentStatusLabel: Record<AssignmentStatus, string> = {
@@ -55,21 +55,10 @@ export function StudentDashboardContent({ account }: { account: Account }) {
               <CardTitle>Từ vựng hôm nay</CardTitle>
               <CardDescription>Danh sách bài tập được giao ngày 21/07/2026</CardDescription>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                nativeButton={false}
-                render={<Link href="/quiz" />}
-              >
-                <ClipboardCheck className="size-4" />
-                Làm kiểm tra
-              </Button>
-              <Button size="sm" nativeButton={false} render={<Link href="/practice" />}>
-                Luyện tập ngay
-                <ArrowRight className="size-4" />
-              </Button>
-            </div>
+            <Button size="sm" nativeButton={false} render={<Link href="/exercises" />}>
+              Chọn dạng bài tập
+              <ArrowRight className="size-4" />
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-1">
@@ -86,7 +75,7 @@ export function StudentDashboardContent({ account }: { account: Account }) {
                   <div>
                     <p className="font-medium">{assignment.vocab.vocab}</p>
                     <p className="text-sm text-muted-foreground">
-                      {assignment.vocab.meanVI} · {assignment.vocab.topic}
+                      {assignment.vocab.meanVI} · {getTopicName(assignment.vocab.topicId)}
                     </p>
                   </div>
                 </div>

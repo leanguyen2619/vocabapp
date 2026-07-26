@@ -1,0 +1,355 @@
+"use client";
+
+import { useState, type SubmitEvent } from "react";
+import Link from "next/link";
+import { toast } from "sonner";
+import {
+  AlertCircle,
+  ArrowLeft,
+  BookOpen,
+  KeyRound,
+  Lock,
+  LockOpen,
+  Plus,
+  ShieldAlert,
+} from "lucide-react";
+
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useRequireSession } from "@/hooks/use-session";
+import {
+  createAccountByAdmin,
+  isEmailTaken,
+  listAccounts,
+  resetPasswordByAdmin,
+  setAccountStatus,
+} from "@/lib/auth";
+import { getClassName, schoolClasses } from "@/lib/mock-data";
+import type { Role } from "@/types";
+
+const roleLabel: Record<Role, string> = {
+  student: "Học sinh",
+  teacher: "Giáo viên",
+  admin: "Quản trị viên",
+};
+
+const NONE_CLASS = "none";
+
+export default function AdminAccountsPage() {
+  const { account: adminAccount, status } = useRequireSession();
+  const [accounts, setAccounts] = useState(() => listAccounts());
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState<Role>("student");
+  const [classId, setClassId] = useState<string>(NONE_CLASS);
+  const [error, setError] = useState<string | null>(null);
+
+  if (status !== "authenticated" || !adminAccount) {
+    return (
+      <div className="flex flex-1 items-center justify-center py-24 text-sm text-muted-foreground">
+        Đang kiểm tra đăng nhập...
+      </div>
+    );
+  }
+
+  if (adminAccount.role !== "admin") {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 py-24 text-center">
+        <ShieldAlert className="size-8 text-muted-foreground" />
+        <p className="text-muted-foreground">Chỉ quản trị viên mới có quyền truy cập trang này.</p>
+        <Link href="/dashboard" className="text-sm font-medium text-primary hover:underline">
+          Về Dashboard
+        </Link>
+      </div>
+    );
+  }
+
+  const resetForm = () => {
+    setFullName("");
+    setEmail("");
+    setPassword("");
+    setRole("student");
+    setClassId(NONE_CLASS);
+    setError(null);
+  };
+
+  const handleCreate = (event: SubmitEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+
+    if (!fullName.trim() || !email.trim() || !password) {
+      setError("Vui lòng điền đầy đủ thông tin.");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Mật khẩu cần ít nhất 6 ký tự.");
+      return;
+    }
+    if (isEmailTaken(email)) {
+      setError("Email này đã được sử dụng.");
+      return;
+    }
+
+    createAccountByAdmin({
+      fullName: fullName.trim(),
+      email: email.trim(),
+      password,
+      role,
+      classId: role === "student" && classId !== NONE_CLASS ? classId : null,
+    });
+
+    setAccounts(listAccounts());
+    setDialogOpen(false);
+    resetForm();
+    toast.success(`Đã tạo tài khoản cho ${fullName.trim()}.`);
+  };
+
+  const handleResetPassword = (id_login: string, name: string) => {
+    const newPassword = resetPasswordByAdmin(id_login);
+    if (!newPassword) return;
+    toast.success(`Mật khẩu mới cho ${name}: ${newPassword}`, { duration: 10000 });
+  };
+
+  const handleToggleStatus = (id_login: string, name: string, active: boolean) => {
+    setAccountStatus(id_login, active ? "inactive" : "active");
+    setAccounts(listAccounts());
+    toast.success(`Đã ${active ? "khóa" : "mở khóa"} tài khoản ${name}.`);
+  };
+
+  return (
+    <div className="flex flex-1 flex-col bg-background">
+      <header className="border-b border-border">
+        <div className="mx-auto flex w-full max-w-4xl items-center justify-between px-6 py-4">
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="size-4" />
+            Dashboard
+          </Link>
+          <div className="flex items-center gap-2">
+            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <BookOpen className="size-3.5" />
+            </div>
+            <span className="font-heading text-base font-semibold">VocabApp</span>
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-10">
+        <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-1">
+            <h1 className="font-heading text-2xl font-semibold tracking-tight">
+              Quản lý tài khoản
+            </h1>
+            <p className="text-muted-foreground">
+              Tạo tài khoản, đặt lại mật khẩu, khóa/mở khóa học sinh và giáo viên.
+            </p>
+          </div>
+
+          <Dialog
+            open={dialogOpen}
+            onOpenChange={(open) => {
+              setDialogOpen(open);
+              if (!open) resetForm();
+            }}
+          >
+            <DialogTrigger render={<Button />}>
+              <Plus className="size-4" />
+              Tạo tài khoản
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Tạo tài khoản mới</DialogTitle>
+                <DialogDescription>
+                  Tài khoản sẽ có thể đăng nhập ngay bằng email và mật khẩu bên dưới.
+                </DialogDescription>
+              </DialogHeader>
+
+              <form onSubmit={handleCreate} noValidate className="flex flex-col gap-4">
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertCircle />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="fullName">Họ và tên</Label>
+                  <Input
+                    id="fullName"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Nguyễn Văn A"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="ban@vocabapp.vn"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="password">Mật khẩu</Label>
+                  <Input
+                    id="password"
+                    type="text"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Tối thiểu 6 ký tự"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label>Vai trò</Label>
+                  <RadioGroup
+                    value={role}
+                    onValueChange={(value) => setRole(value as Role)}
+                    className="grid-cols-2"
+                  >
+                    <Label className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 has-data-checked:border-primary">
+                      <RadioGroupItem value="student" />
+                      Học sinh
+                    </Label>
+                    <Label className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 has-data-checked:border-primary">
+                      <RadioGroupItem value="teacher" />
+                      Giáo viên
+                    </Label>
+                  </RadioGroup>
+                </div>
+
+                {role === "student" && (
+                  <div className="flex flex-col gap-1.5">
+                    <Label>Lớp</Label>
+                    <Select value={classId} onValueChange={(value) => setClassId(value ?? NONE_CLASS)}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Chọn lớp" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NONE_CLASS}>Chưa có lớp</SelectItem>
+                        {schoolClasses.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.className}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <DialogFooter>
+                  <Button type="submit">Tạo tài khoản</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        <Card>
+          <CardContent className="flex flex-col gap-1 py-4">
+            {accounts.map(({ account: acc, email: accEmail }, index) => {
+              const isSelf = acc.id_login === adminAccount.id_login;
+              const isActive = acc.status === "active";
+              const initials = acc.fullName
+                .split(" ")
+                .map((p) => p[0])
+                .slice(-2)
+                .join("")
+                .toUpperCase();
+
+              return (
+                <div key={acc.id_login}>
+                  {index > 0 && <div className="my-3 h-px bg-border" />}
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3">
+                      <Avatar>
+                        <AvatarFallback>{initials}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium">
+                          {acc.fullName} {isSelf && <span className="text-muted-foreground">(Bạn)</span>}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {accEmail}
+                          {acc.classId && <> · {getClassName(acc.classId)}</>}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="secondary">{roleLabel[acc.role]}</Badge>
+                      <Badge variant={isActive ? "default" : "destructive"}>
+                        {isActive ? "Hoạt động" : "Đã khóa"}
+                      </Badge>
+
+                      {!isSelf && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleResetPassword(acc.id_login, acc.fullName)}
+                          >
+                            <KeyRound className="size-3.5" />
+                            Đặt lại mật khẩu
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleToggleStatus(acc.id_login, acc.fullName, isActive)}
+                          >
+                            {isActive ? (
+                              <>
+                                <Lock className="size-3.5" />
+                                Khóa
+                              </>
+                            ) : (
+                              <>
+                                <LockOpen className="size-3.5" />
+                                Mở khóa
+                              </>
+                            )}
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      </main>
+    </div>
+  );
+}

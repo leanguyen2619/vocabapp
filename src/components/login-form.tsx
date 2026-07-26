@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DEMO_CREDENTIALS } from "@/lib/mock-data";
+import { ADMIN_DEMO_CREDENTIALS, DEMO_CREDENTIALS } from "@/lib/mock-data";
 import { login } from "@/lib/auth";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -40,11 +40,11 @@ export function LoginForm() {
     }
 
     setSubmitting(true);
-    const account = login(email, password);
+    const result = login(email, password);
     setSubmitting(false);
 
-    if (!account) {
-      setError("Email hoặc mật khẩu không đúng.");
+    if (!result.account) {
+      setError(result.error ?? "Đăng nhập thất bại.");
       setInvalidField("password");
       return;
     }
@@ -92,7 +92,9 @@ export function LoginForm() {
       </Button>
 
       <p className="text-center text-xs text-muted-foreground">
-        Tài khoản demo: {DEMO_CREDENTIALS.email} / {DEMO_CREDENTIALS.password}
+        Học sinh demo: {DEMO_CREDENTIALS.email} / {DEMO_CREDENTIALS.password}
+        <br />
+        Admin demo: {ADMIN_DEMO_CREDENTIALS.email} / {ADMIN_DEMO_CREDENTIALS.password}
       </p>
     </form>
   );

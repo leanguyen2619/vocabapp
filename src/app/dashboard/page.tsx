@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BookOpen, Flame, LogOut } from "lucide-react";
 
+import { AdminDashboardContent } from "@/components/admin-dashboard-content";
 import { StudentDashboardContent } from "@/components/student-dashboard-content";
 import { TeacherDashboardContent } from "@/components/teacher-dashboard-content";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -69,7 +70,9 @@ export default function DashboardPage() {
       </header>
 
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6 py-10">
-        {account.role === "teacher" ? (
+        {account.role === "admin" ? (
+          <AdminDashboardContent account={account} />
+        ) : account.role === "teacher" ? (
           <TeacherDashboardContent account={account} />
         ) : (
           <StudentDashboardContent account={account} />
