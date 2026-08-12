@@ -1,19 +1,11 @@
-"use client";
-
 import Link from "next/link";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { useSession } from "@/hooks/use-session";
+import type { SessionAccount } from "@/lib/session";
 
-export function HeaderAuthActions() {
-  const { account, status } = useSession();
-
-  if (status === "loading") {
-    return <div className="h-8 w-32 shrink-0" aria-hidden />;
-  }
-
-  if (status === "authenticated" && account) {
+export function HeaderAuthActions({ account }: { account: SessionAccount | null }) {
+  if (account) {
     const initials = account.fullName
       .split(" ")
       .map((part) => part[0])

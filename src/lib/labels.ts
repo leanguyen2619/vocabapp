@@ -1,4 +1,4 @@
-import type { PartOfSpeech } from "@/types";
+import type { Level, PartOfSpeech, Topic } from "@/types";
 
 export const posLabel: Record<PartOfSpeech, string> = {
   noun: "danh từ",
@@ -10,3 +10,11 @@ export const posLabel: Record<PartOfSpeech, string> = {
   conjunction: "liên từ",
   interjection: "thán từ",
 };
+
+export function getTopicName(topics: Topic[], topicId: number): string {
+  return topics.find((t) => t.id === topicId)?.topic ?? String(topicId);
+}
+
+export function getLevelName(levels: Level[], levelId: string): string {
+  return levels.find((l) => l.id === levelId)?.level ?? levelId;
+}

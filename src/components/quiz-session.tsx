@@ -7,9 +7,9 @@ import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
-import { getTopicName } from "@/lib/mock-data";
+import { getTopicName } from "@/lib/labels";
 import { cn, shuffle } from "@/lib/utils";
-import type { Vocabulary } from "@/types";
+import type { Topic, Vocabulary } from "@/types";
 
 interface QuizQuestion {
   vocab: Vocabulary;
@@ -23,7 +23,7 @@ function buildQuestions(vocabList: Vocabulary[]): QuizQuestion[] {
   }));
 }
 
-export function QuizSession({ vocabList }: { vocabList: Vocabulary[] }) {
+export function QuizSession({ vocabList, topics }: { vocabList: Vocabulary[]; topics: Topic[] }) {
   const [questions] = useState<QuizQuestion[]>(() => buildQuestions(vocabList));
   const [index, setIndex] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -95,7 +95,7 @@ export function QuizSession({ vocabList }: { vocabList: Vocabulary[] }) {
       </Progress>
 
       <div className="flex flex-col items-center gap-2 text-center">
-        <Badge variant="secondary">{getTopicName(question.vocab.topicId)}</Badge>
+        <Badge variant="secondary">{getTopicName(topics, question.vocab.topicId)}</Badge>
         <h2 className="font-heading text-xl font-semibold tracking-tight sm:text-2xl">
           Từ nào có nghĩa là &ldquo;{question.vocab.meanVI}&rdquo;?
         </h2>

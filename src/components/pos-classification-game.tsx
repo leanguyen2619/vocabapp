@@ -7,26 +7,25 @@ import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
-import { posLabel } from "@/lib/labels";
-import { getTopicName } from "@/lib/mock-data";
+import { getTopicName, posLabel } from "@/lib/labels";
 import { cn, shuffle } from "@/lib/utils";
-import type { PartOfSpeech, VocabularyWithProgress } from "@/types";
+import type { PartOfSpeech, Topic, Vocabulary } from "@/types";
 
 const POS_OPTIONS: PartOfSpeech[] = ["noun", "verb", "adjective", "adverb"];
 const QUESTION_COUNT = 8;
 
 interface PosQuestion {
-  vocab: VocabularyWithProgress;
+  vocab: Vocabulary;
   options: PartOfSpeech[];
 }
 
-function buildQuestions(bank: VocabularyWithProgress[]): PosQuestion[] {
+function buildQuestions(bank: Vocabulary[]): PosQuestion[] {
   return shuffle(bank)
     .slice(0, QUESTION_COUNT)
     .map((vocab) => ({ vocab, options: shuffle(POS_OPTIONS) }));
 }
 
-export function PosClassificationGame({ bank }: { bank: VocabularyWithProgress[] }) {
+export function PosClassificationGame({ bank, topics }: { bank: Vocabulary[]; topics: Topic[] }) {
   const [questions] = useState<PosQuestion[]>(() => buildQuestions(bank));
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<PartOfSpeech | null>(null);
@@ -98,7 +97,7 @@ export function PosClassificationGame({ bank }: { bank: VocabularyWithProgress[]
       </Progress>
 
       <div className="flex flex-col items-center gap-2 text-center">
-        <Badge variant="secondary">{getTopicName(question.vocab.topicId)}</Badge>
+        <Badge variant="secondary">{getTopicName(topics, question.vocab.topicId)}</Badge>
         <h2 className="font-heading text-2xl font-semibold tracking-tight">
           {question.vocab.vocab}
         </h2>

@@ -1,0 +1,141 @@
+"use server";
+
+import { prisma } from "@/lib/prisma";
+import { getCurrentAccount, type SessionAccount } from "@/lib/session";
+import type {
+  AssignmentStatus,
+  DailyAssignmentWithVocab,
+  LearningStatus,
+  PartOfSpeech,
+  Topic,
+  Vocabulary,
+  VocabularyWithProgress,
+} from "@/types";
+
+async function requireAdmin() {
+  const account = await getCurrentAccount();
+  if (!account || account.role !== "admin") return null;
+  return account;
+}
+
+export async function listTopicsAction(): Promise<Topic[]> {
+  const account = await getCurrentAccount();
+  if (!account) return [];
+  return prisma.topic.findMany({ orderBy: { id: "asc" } });
+}
+
+/** Any signed-in user may read the full bank (e.g. the POS-classification game samples from it). */
+export async function listVocabularyAction(): Promise<Vocabulary[]> {
+  const account = await getCurrentAccount();
+  if (!account) return [];
+  return prisma.vocabulary.findMany({ orderBy: { id: "asc" } });
+}
+
+export async function getMyVocabularyWithProgressAction(): Promise<VocabularyWithProgress[]> {
+  const account = await getCurrentAccount();
+  if (!account) return [];
+
+  const [vocabulary, history] = await Promise.all([
+    prisma.vocabulary.findMany({ orderBy: { id: "asc" } }),
+    prisma.learningHistory.findMany({ where: { accountId: account.id_login } }),
+  ]);
+
+  return vocabulary.map((v) => ({
+    ...v,
+    learningStatus: history.find((h) => h.vocabId === v.id)?.status ?? "new",
+  }));
+}
+
+/** Not-yet-mastered words first, sized to the account's class daily target (default 5). */
+async function computeDailyWords(
+  account: SessionAccount
+): Promise<{ vocab: Vocabulary; status: LearningStatus }[]> {
+  const [cls, vocabulary, history] = await Promise.all([
+    account.classId ? prisma.schoolClass.findUnique({ where: { id: account.classId } }) : null,
+    prisma.vocabulary.findMany({ orderBy: { id: "asc" } }),
+    prisma.learningHistory.findMany({ where: { accountId: account.id_login } }),
+  ]);
+
+  const target = cls?.dailyWordTarget ?? 5;
+  const priority: Record<LearningStatus, number> = { new: 0, learning: 1, mastered: 2 };
+  const statusOf = (vocabId: string): LearningStatus =>
+    history.find((h) => h.vocabId === vocabId)?.status ?? "new";
+
+  const sorted = [...vocabulary]
+    .map((vocab) => ({ vocab, status: statusOf(vocab.id) }))
+    .sort((a, b) => priority[a.status] - priority[b.status]);
+
+  return sorted.slice(0, Math.max(1, target));
+}
+
+export async function getMyDailyWordsAction(): Promise<Vocabulary[]> {
+  const account = await getCurrentAccount();
+  if (!account) return [];
+  const words = await computeDailyWords(account);
+  return words.map((w) => w.vocab);
+}
+
+export async function getMyDailyAssignmentsAction(): Promise<DailyAssignmentWithVocab[]> {
+  const account = await getCurrentAccount();
+  if (!account) return [];
+
+  const today = new Date().toISOString().slice(0, 10);
+  const words = await computeDailyWords(account);
+
+  return words.map(({ vocab, status }) => {
+    const assignmentStatus: AssignmentStatus =
+      status === "mastered" ? "done" : status === "learning" ? "in_progress" : "pending";
+    return {
+      assignmentId: `assign_${account.id_login}_${vocab.id}`,
+      accountId: account.id_login,
+      vocabId: vocab.id,
+      assignedDate: today,
+      status: assignmentStatus,
+      vocab,
+    };
+  });
+}
+
+type VocabInput = {
+  vocab: string;
+  definition: string;
+  meanVI: string;
+  partOfSpeech: PartOfSpeech;
+  topicId: number;
+  levelId: string;
+};
+
+export async function createVocabularyAction(
+  input: VocabInput
+): Promise<{ error: string } | { error?: undefined; id: string }> {
+  const admin = await requireAdmin();
+  if (!admin) return { error: "Bạn không có quyền thực hiện thao tác này." };
+
+  const created = await prisma.vocabulary.create({ data: input });
+  return { id: created.id };
+}
+
+export async function updateVocabularyAction(id: string, input: VocabInput): Promise<boolean> {
+  const admin = await requireAdmin();
+  if (!admin) return false;
+
+  const updated = await prisma.vocabulary.update({ where: { id }, data: input }).catch(() => null);
+  return updated !== null;
+}
+
+export async function deleteVocabularyAction(id: string): Promise<boolean> {
+  const admin = await requireAdmin();
+  if (!admin) return false;
+
+  await prisma.vocabulary.delete({ where: { id } }).catch(() => null);
+  return true;
+}
+
+export async function bulkCreateVocabularyAction(rows: VocabInput[]): Promise<number> {
+  const admin = await requireAdmin();
+  if (!admin) return 0;
+  if (rows.length === 0) return 0;
+
+  const result = await prisma.vocabulary.createMany({ data: rows });
+  return result.count;
+}

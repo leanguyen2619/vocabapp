@@ -26,7 +26,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { classStudents, getClassName, vocabToday } from "@/lib/mock-data";
+import { classStudents, vocabToday } from "@/lib/mock-data";
 import type { Account, AssignmentStatus } from "@/types";
 
 const statusLabel: Record<AssignmentStatus, string> = {
@@ -36,11 +36,17 @@ const statusLabel: Record<AssignmentStatus, string> = {
   overdue: "Quá hạn",
 };
 
-export function TeacherDashboardContent({ account }: { account: Account }) {
+export function TeacherDashboardContent({
+  account,
+  className: assignedClassName,
+}: {
+  account: Account;
+  className: string | null;
+}) {
   const [selectedVocab, setSelectedVocab] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const className = getClassName(account.classId) ?? "lớp của bạn";
+  const className = assignedClassName ?? "lớp của bạn";
   const studentCount = classStudents.length;
   const averageScore = Math.round(
     classStudents.reduce((sum, s) => sum + s.score, 0) / studentCount

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
 
@@ -20,7 +21,9 @@ export default function RegisterPage() {
           <CardDescription>Bắt đầu học từ vựng miễn phí ngay hôm nay.</CardDescription>
         </CardHeader>
         <CardContent>
-          <RegisterForm />
+          <Suspense fallback={null}>
+            <RegisterForm />
+          </Suspense>
         </CardContent>
       </Card>
 

@@ -11,7 +11,6 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { classStudents, schoolClasses, vocabularyBank } from "@/lib/mock-data";
 import type { Account } from "@/types";
 
 interface AdminFunction {
@@ -60,7 +59,17 @@ const adminFunctions: AdminFunction[] = [
   },
 ];
 
-export function AdminDashboardContent({ account }: { account: Account }) {
+export function AdminDashboardContent({
+  account,
+  studentCount,
+  classCount,
+  vocabCount,
+}: {
+  account: Account;
+  studentCount: number;
+  classCount: number;
+  vocabCount: number;
+}) {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-1">
@@ -77,7 +86,7 @@ export function AdminDashboardContent({ account }: { account: Account }) {
               <Users className="size-4 text-primary" />
             </div>
             <div>
-              <p className="text-lg font-semibold leading-none">{classStudents.length}</p>
+              <p className="text-lg font-semibold leading-none">{studentCount}</p>
               <p className="text-xs text-muted-foreground">Học viên</p>
             </div>
           </CardContent>
@@ -88,7 +97,7 @@ export function AdminDashboardContent({ account }: { account: Account }) {
               <Building2 className="size-4 text-primary" />
             </div>
             <div>
-              <p className="text-lg font-semibold leading-none">{schoolClasses.length}</p>
+              <p className="text-lg font-semibold leading-none">{classCount}</p>
               <p className="text-xs text-muted-foreground">Lớp học</p>
             </div>
           </CardContent>
@@ -99,7 +108,7 @@ export function AdminDashboardContent({ account }: { account: Account }) {
               <Library className="size-4 text-primary" />
             </div>
             <div>
-              <p className="text-lg font-semibold leading-none">{vocabularyBank.length}</p>
+              <p className="text-lg font-semibold leading-none">{vocabCount}</p>
               <p className="text-xs text-muted-foreground">Từ vựng</p>
             </div>
           </CardContent>

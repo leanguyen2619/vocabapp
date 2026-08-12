@@ -1,0 +1,309 @@
+// Prisma schema — mirrors src/types/index.ts 1:1 (see that file's header comment).
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------- Enums ----------
+
+enum Role {
+  student
+  teacher
+  admin
+}
+
+enum AccountStatus {
+  active
+  inactive
+  banned
+}
+
+enum AccountLevelStatus {
+  locked
+  in_progress
+  completed
+}
+
+enum PartOfSpeech {
+  noun
+  verb
+  adjective
+  adverb
+  preposition
+  pronoun
+  conjunction
+  interjection
+}
+
+enum WordRelationType {
+  synonym
+  antonym
+  related
+}
+
+enum PracticeTypeCode {
+  multiple_choice
+  flashcard
+  typing
+  listening
+  matching
+  pos_classification
+  sentence_writing
+  synonym_antonym
+  fill_blank
+  word_formation
+}
+
+enum QuestionStatus {
+  pending
+  approved
+  rejected
+}
+
+enum AnswerStatus {
+  active
+  disabled
+}
+
+enum LearningStatus {
+  new
+  learning
+  mastered
+}
+
+enum AssignmentStatus {
+  pending
+  in_progress
+  done
+  overdue
+}
+
+// ---------- Accounts ----------
+
+model Account {
+  id_login     String        @id
+  fullName     String
+  role         Role
+  status       AccountStatus @default(active)
+  classId      String?
+  avatarUrl    String?
+  email        String        @unique
+  passwordHash String
+  createdAt    DateTime      @default(now())
+
+  class SchoolClass? @relation(fields: [classId], references: [id])
+
+  sessions         Session[]
+  accountLevels    AccountLevel[]
+  learningHistory  LearningHistory[]
+  exerciseAttempts ExerciseAttempt[]
+  dailyAssignments DailyAssignment[]
+}
+
+// ---------- Sessions (new — real auth, not in the original ERD) ----------
+
+model Session {
+  id        String   @id @default(cuid())
+  accountId String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  account Account @relation(fields: [accountId], references: [id_login], onDelete: Cascade)
+
+  @@index([accountId])
+}
+
+// ---------- Classes ----------
+
+model SchoolClass {
+  id              String @id @default(cuid())
+  className       String
+  dailyWordTarget Int    @default(5)
+
+  accounts Account[]
+}
+
+// ---------- Levels ----------
+
+model Level {
+  id       String @id
+  level    String
+  maxScore Int    @default(100)
+
+  vocabulary    Vocabulary[]
+  practiceTypes PracticeType[]
+  accountLevels AccountLevel[]
+}
+
+// ---------- Accounts_Level ----------
+
+model AccountLevel {
+  accountId  String
+  levelId    String
+  score      Int                @default(0)
+  streak     Int                @default(0)
+  manualNote String?
+  status     AccountLevelStatus @default(locked)
+
+  account Account @relation(fields: [accountId], references: [id_login], onDelete: Cascade)
+  level   Level   @relation(fields: [levelId], references: [id], onDelete: Cascade)
+
+  @@id([accountId, levelId])
+}
+
+// ---------- Topics ----------
+
+model Topic {
+  id         Int    @id @default(autoincrement())
+  topic      String
+  definition String
+
+  vocabulary Vocabulary[]
+}
+
+// ---------- Vocabulations ----------
+
+model Vocabulary {
+  id           String       @id @default(cuid())
+  vocab        String
+  definition   String
+  meanVI       String
+  partOfSpeech PartOfSpeech
+  levelId      String
+  topicId      Int
+
+  level Level @relation(fields: [levelId], references: [id])
+  topic Topic @relation(fields: [topicId], references: [id])
+
+  mainRelations    WordRelation[]    @relation("MainVocab")
+  subRelations     WordRelation[]    @relation("SubVocab")
+  questions        Question[]
+  learningHistory  LearningHistory[]
+  exerciseAttempts ExerciseAttempt[]
+  dailyAssignments DailyAssignment[]
+}
+
+// ---------- Word_Relations ----------
+
+model WordRelation {
+  mainId       String
+  subId        String
+  relationship WordRelationType
+
+  main Vocabulary @relation("MainVocab", fields: [mainId], references: [id], onDelete: Cascade)
+  sub  Vocabulary @relation("SubVocab", fields: [subId], references: [id], onDelete: Cascade)
+
+  @@id([mainId, subId])
+}
+
+// ---------- PracType ----------
+// `name`/`description`/`enabled` fold in what used to be a separate
+// localStorage-only settings store (src/lib/exercise-types.ts).
+
+model PracticeType {
+  id          String           @id @default(cuid())
+  levelId     String
+  type        PracticeTypeCode @unique
+  definition  String
+  name        String
+  description String
+  enabled     Boolean          @default(true)
+
+  level Level @relation(fields: [levelId], references: [id])
+
+  questions        Question[]
+  exerciseAttempts ExerciseAttempt[]
+}
+
+// ---------- QuestionBank ----------
+
+model Question {
+  id           String         @id @default(cuid())
+  vocabId      String
+  pracTypeId   String
+  questionText String
+  explanation  String?
+  status       QuestionStatus @default(pending)
+
+  vocab    Vocabulary   @relation(fields: [vocabId], references: [id])
+  pracType PracticeType @relation(fields: [pracTypeId], references: [id])
+
+  answers          Answer[]
+  exerciseAttempts ExerciseAttempt[]
+}
+
+// ---------- AnswersBank ----------
+// Composite (questionId, ansId) is the natural/business key the app already
+// uses (e.g. `${questionId}_a${i}`); a surrogate `id` is added only so
+// ExerciseAttempt can hold a single-column FK to a specific answer.
+
+model Answer {
+  id         String       @id @default(cuid())
+  questionId String
+  ansId      String
+  ansText    String
+  status     AnswerStatus @default(active)
+  isCorrect  Boolean      @default(false)
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  exerciseAttempts ExerciseAttempt[]
+
+  @@unique([questionId, ansId])
+}
+
+// ---------- Exercise_Attempts ----------
+// Table exists for schema fidelity; not written to by the app yet (see plan).
+
+model ExerciseAttempt {
+  id          String   @id @default(cuid())
+  accountId   String
+  vocabId     String
+  questionId  String
+  pracTypeId  String
+  answerId    String
+  timeSpentMs Int
+  attemptedAt DateTime @default(now())
+  isCorrect   Boolean
+
+  account  Account      @relation(fields: [accountId], references: [id_login], onDelete: Cascade)
+  vocab    Vocabulary   @relation(fields: [vocabId], references: [id])
+  question Question     @relation(fields: [questionId], references: [id])
+  pracType PracticeType @relation(fields: [pracTypeId], references: [id])
+  answer   Answer       @relation(fields: [answerId], references: [id])
+}
+
+// ---------- Learning_History ----------
+
+model LearningHistory {
+  accountId String
+  vocabId   String
+  lastDate  DateTime       @default(now())
+  status    LearningStatus @default(new)
+
+  account Account    @relation(fields: [accountId], references: [id_login], onDelete: Cascade)
+  vocab   Vocabulary @relation(fields: [vocabId], references: [id], onDelete: Cascade)
+
+  @@id([accountId, vocabId])
+}
+
+// ---------- Daily_Assignments ----------
+// Table exists for schema fidelity; the app computes "today's words" on the
+// fly instead of persisting rows here for now (see plan).
+
+model DailyAssignment {
+  assignmentId String           @id @default(cuid())
+  accountId    String
+  vocabId      String
+  assignedDate DateTime
+  status       AssignmentStatus @default(pending)
+
+  account Account    @relation(fields: [accountId], references: [id_login], onDelete: Cascade)
+  vocab   Vocabulary @relation(fields: [vocabId], references: [id])
+}
