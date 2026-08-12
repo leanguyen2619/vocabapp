@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, type SubmitEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { isEmailTaken, register } from "@/lib/auth";
+import { registerAction } from "@/lib/actions/auth";
 import type { Role } from "@/types";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -18,11 +19,14 @@ type InvalidField = "fullName" | "email" | "password" | "confirmPassword" | null
 
 export function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState<Role>("student");
+  const [role, setRole] = useState<Role>(() =>
+    searchParams.get("role") === "teacher" ? "teacher" : "student"
+  );
   const [error, setError] = useState<string | null>(null);
   const [invalidField, setInvalidField] = useState<InvalidField>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -32,7 +36,7 @@ export function RegisterForm() {
     setInvalidField(field);
   };
 
-  const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
     setInvalidField(null);
@@ -61,15 +65,21 @@ export function RegisterForm() {
       fail("Mật khẩu xác nhận không khớp.", "confirmPassword");
       return;
     }
-    if (isEmailTaken(email)) {
-      fail("Email này đã được sử dụng.", "email");
+
+    setSubmitting(true);
+    const result = await registerAction({ fullName: fullName.trim(), email: email.trim(), password, role });
+    setSubmitting(false);
+
+    if (result.error !== undefined) {
+      fail(result.error, "email");
       return;
     }
 
-    setSubmitting(true);
-    register({ fullName: fullName.trim(), email: email.trim(), password, role });
-    setSubmitting(false);
+    toast.success(`Đăng ký thành công! Mã đăng nhập của bạn: ${result.id_login} — hãy lưu lại.`, {
+      duration: 10000,
+    });
     router.push("/dashboard");
+    router.refresh();
   };
 
   return (

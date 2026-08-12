@@ -5,8 +5,11 @@ import { FeatureCarousel } from "@/components/feature-carousel";
 import { HeaderAuthActions } from "@/components/header-auth-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getCurrentAccount } from "@/lib/session";
 
-export default function Home() {
+export default async function Home() {
+  const account = await getCurrentAccount();
+
   return (
     <div className="flex flex-1 flex-col bg-background">
       <header className="border-b border-border">
@@ -35,7 +38,7 @@ export default function Home() {
           </div>
 
           <div className="ml-auto">
-            <HeaderAuthActions />
+            <HeaderAuthActions account={account} />
           </div>
         </div>
       </header>
@@ -65,7 +68,10 @@ export default function Home() {
             >
               Đăng ký miễn phí
             </Button>
-            <Link href="/register" className="text-sm font-medium text-primary hover:underline">
+            <Link
+              href="/register?role=teacher"
+              className="text-sm font-medium text-primary hover:underline"
+            >
               Tôi là giáo viên
             </Link>
           </div>

@@ -1,6 +1,5 @@
-"use client";
-
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   ArrowLeft,
   ArrowLeftRight,
@@ -18,8 +17,9 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { useExerciseTypes } from "@/hooks/use-exercise-types";
-import { useRequireSession } from "@/hooks/use-session";
+import { listExerciseTypesAction } from "@/lib/actions/exercise-types";
+import { getMyStudentLevelIndexAction, listLevelsAction } from "@/lib/actions/levels";
+import { getCurrentAccount } from "@/lib/session";
 import type { PracticeTypeCode } from "@/types";
 
 const iconByCode: Record<PracticeTypeCode, LucideIcon> = {
@@ -35,19 +35,18 @@ const iconByCode: Record<PracticeTypeCode, LucideIcon> = {
   listening: TextCursorInput,
 };
 
-export default function ExercisesPage() {
-  const { status } = useRequireSession();
-  const { types } = useExerciseTypes();
+export default async function ExercisesPage() {
+  const account = await getCurrentAccount();
+  if (!account) redirect("/login");
 
-  if (status !== "authenticated") {
-    return (
-      <div className="flex flex-1 items-center justify-center py-24 text-sm text-muted-foreground">
-        Đang kiểm tra đăng nhập...
-      </div>
-    );
-  }
+  const isStudent = account.role === "student";
+  const [levels, types] = await Promise.all([listLevelsAction(), listExerciseTypesAction()]);
+  const studentLevelIndex = isStudent ? await getMyStudentLevelIndexAction() : levels.length;
+  const studentLevelName = levels[studentLevelIndex - 1]?.level;
 
-  const visibleTypes = types.filter((t) => t.enabled).sort((a, b) => a.level - b.level);
+  const visibleTypes = types
+    .filter((t) => t.enabled && t.level <= studentLevelIndex)
+    .sort((a, b) => a.level - b.level);
 
   return (
     <div className="flex flex-1 flex-col bg-background">
@@ -74,6 +73,9 @@ export default function ExercisesPage() {
           <h1 className="font-heading text-2xl font-semibold tracking-tight">Chọn dạng bài tập</h1>
           <p className="text-muted-foreground">
             Chọn một dạng bài tập bên dưới để bắt đầu luyện tập.
+            {isStudent && studentLevelName && (
+              <> Cấp độ hiện tại của bạn: <span className="font-medium text-foreground">{studentLevelName}</span>.</>
+            )}
           </p>
         </div>
 

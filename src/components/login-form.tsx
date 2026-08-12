@@ -9,47 +9,41 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ADMIN_DEMO_CREDENTIALS, DEMO_CREDENTIALS } from "@/lib/mock-data";
-import { login } from "@/lib/auth";
+import { loginAction } from "@/lib/actions/auth";
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-type InvalidField = "email" | "password" | null;
+type InvalidField = "id" | "password" | null;
 
 export function LoginForm() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [id, setId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [invalidField, setInvalidField] = useState<InvalidField>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
     setInvalidField(null);
 
-    if (!email.trim() || !password) {
-      setError("Vui lòng nhập đầy đủ email và mật khẩu.");
-      setInvalidField(!email.trim() ? "email" : "password");
-      return;
-    }
-    if (!EMAIL_PATTERN.test(email.trim())) {
-      setError("Email không đúng định dạng.");
-      setInvalidField("email");
+    if (!id.trim() || !password) {
+      setError("Vui lòng nhập đầy đủ mã đăng nhập và mật khẩu.");
+      setInvalidField(!id.trim() ? "id" : "password");
       return;
     }
 
     setSubmitting(true);
-    const result = login(email, password);
+    const result = await loginAction(id, password);
     setSubmitting(false);
 
-    if (!result.account) {
-      setError(result.error ?? "Đăng nhập thất bại.");
+    if (result.error !== undefined) {
+      setError(result.error);
       setInvalidField("password");
       return;
     }
 
     router.push("/dashboard");
+    router.refresh();
   };
 
   return (
@@ -62,15 +56,14 @@ export function LoginForm() {
       )}
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="id">Mã đăng nhập</Label>
         <Input
-          id="email"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="ban@vocabapp.vn"
-          aria-invalid={invalidField === "email"}
+          id="id"
+          autoComplete="username"
+          value={id}
+          onChange={(e) => setId(e.target.value)}
+          placeholder="HS0001"
+          aria-invalid={invalidField === "id"}
         />
       </div>
 
@@ -92,9 +85,9 @@ export function LoginForm() {
       </Button>
 
       <p className="text-center text-xs text-muted-foreground">
-        Học sinh demo: {DEMO_CREDENTIALS.email} / {DEMO_CREDENTIALS.password}
+        Học sinh demo: {DEMO_CREDENTIALS.id} / {DEMO_CREDENTIALS.password}
         <br />
-        Admin demo: {ADMIN_DEMO_CREDENTIALS.email} / {ADMIN_DEMO_CREDENTIALS.password}
+        Admin demo: {ADMIN_DEMO_CREDENTIALS.id} / {ADMIN_DEMO_CREDENTIALS.password}
       </p>
     </form>
   );

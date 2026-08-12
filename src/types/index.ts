@@ -14,7 +14,7 @@ export interface Account {
   role: Role;
   status: AccountStatus;
   classId: string | null; // FK -> Classes.id
-  avatarUrl?: string;
+  avatarUrl: string | null;
 }
 
 // ---------- Classes ----------
@@ -98,6 +98,9 @@ export interface PracticeType {
   levelId: string; // FK -> Level
   type: PracticeTypeCode;
   definition: string;
+  name: string;
+  description: string;
+  enabled: boolean;
 }
 
 // ---------- QuestionBank ----------

@@ -1,34 +1,33 @@
-"use client";
-
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowLeft, BookOpen } from "lucide-react";
 
 import { FillBlankGame } from "@/components/fill-blank-game";
-import { useRequireSession } from "@/hooks/use-session";
+import { RandomExerciseButton } from "@/components/random-exercise-button";
+import { listExerciseTypesAction } from "@/lib/actions/exercise-types";
+import { getCurrentAccount } from "@/lib/session";
 import { fillBlankQuestions } from "@/lib/mock-data";
 
-export default function FillBlankPage() {
-  const { status } = useRequireSession();
+export default async function FillBlankPage() {
+  const account = await getCurrentAccount();
+  if (!account) redirect("/login");
 
-  if (status !== "authenticated") {
-    return (
-      <div className="flex flex-1 items-center justify-center py-24 text-sm text-muted-foreground">
-        Đang kiểm tra đăng nhập...
-      </div>
-    );
-  }
+  const exerciseTypes = await listExerciseTypesAction();
 
   return (
     <div className="flex flex-1 flex-col bg-background">
       <header className="border-b border-border">
         <div className="mx-auto flex w-full max-w-2xl items-center justify-between px-6 py-4">
-          <Link
-            href="/exercises"
-            className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="size-4" />
-            Dạng bài tập
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/exercises"
+              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="size-4" />
+              Dạng bài tập
+            </Link>
+            <RandomExerciseButton currentCode="fill_blank" types={exerciseTypes} />
+          </div>
           <div className="flex items-center gap-2">
             <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <BookOpen className="size-3.5" />

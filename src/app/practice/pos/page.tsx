@@ -1,34 +1,37 @@
-"use client";
-
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowLeft, BookOpen } from "lucide-react";
 
 import { PosClassificationGame } from "@/components/pos-classification-game";
-import { useRequireSession } from "@/hooks/use-session";
-import { vocabularyBank } from "@/lib/mock-data";
+import { RandomExerciseButton } from "@/components/random-exercise-button";
+import { listExerciseTypesAction } from "@/lib/actions/exercise-types";
+import { listTopicsAction, listVocabularyAction } from "@/lib/actions/vocabulary";
+import { getCurrentAccount } from "@/lib/session";
 
-export default function PosClassificationPage() {
-  const { status } = useRequireSession();
+export default async function PosClassificationPage() {
+  const account = await getCurrentAccount();
+  if (!account) redirect("/login");
 
-  if (status !== "authenticated") {
-    return (
-      <div className="flex flex-1 items-center justify-center py-24 text-sm text-muted-foreground">
-        Đang kiểm tra đăng nhập...
-      </div>
-    );
-  }
+  const [vocabularyBank, topics, exerciseTypes] = await Promise.all([
+    listVocabularyAction(),
+    listTopicsAction(),
+    listExerciseTypesAction(),
+  ]);
 
   return (
     <div className="flex flex-1 flex-col bg-background">
       <header className="border-b border-border">
         <div className="mx-auto flex w-full max-w-2xl items-center justify-between px-6 py-4">
-          <Link
-            href="/exercises"
-            className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="size-4" />
-            Dạng bài tập
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/exercises"
+              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="size-4" />
+              Dạng bài tập
+            </Link>
+            <RandomExerciseButton currentCode="pos_classification" types={exerciseTypes} />
+          </div>
           <div className="flex items-center gap-2">
             <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <BookOpen className="size-3.5" />
@@ -39,7 +42,7 @@ export default function PosClassificationPage() {
       </header>
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-10 sm:py-16">
-        <PosClassificationGame bank={vocabularyBank} />
+        <PosClassificationGame bank={vocabularyBank} topics={topics} />
       </main>
     </div>
   );

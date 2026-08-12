@@ -7,11 +7,11 @@ import { Check, PartyPopper, RotateCcw, Volume2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
-import { getTopicName } from "@/lib/mock-data";
+import { getTopicName } from "@/lib/labels";
 import { cn } from "@/lib/utils";
-import type { Vocabulary } from "@/types";
+import type { Topic, Vocabulary } from "@/types";
 
-export function PracticeSession({ vocabList }: { vocabList: Vocabulary[] }) {
+export function PracticeSession({ vocabList, topics }: { vocabList: Vocabulary[]; topics: Topic[] }) {
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [knownCount, setKnownCount] = useState(0);
@@ -102,7 +102,7 @@ export function PracticeSession({ vocabList }: { vocabList: Vocabulary[] }) {
         >
           {/* Front */}
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-3xl border border-border bg-card p-8 shadow-sm [backface-visibility:hidden]">
-            <Badge variant="secondary">{getTopicName(current.topicId)}</Badge>
+            <Badge variant="secondary">{getTopicName(topics, current.topicId)}</Badge>
             <p className="font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
               {current.vocab}
             </p>

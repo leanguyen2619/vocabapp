@@ -12,8 +12,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { dailyAssignments, getTopicName, levels } from "@/lib/mock-data";
-import type { Account, AssignmentStatus } from "@/types";
+import { getTopicName } from "@/lib/labels";
+import type {
+  Account,
+  AssignmentStatus,
+  DailyAssignmentWithVocab,
+  LevelWithProgress,
+  Topic,
+} from "@/types";
 
 const assignmentStatusLabel: Record<AssignmentStatus, string> = {
   pending: "Chưa làm",
@@ -22,7 +28,17 @@ const assignmentStatusLabel: Record<AssignmentStatus, string> = {
   overdue: "Quá hạn",
 };
 
-export function StudentDashboardContent({ account }: { account: Account }) {
+export function StudentDashboardContent({
+  account,
+  dailyAssignments,
+  levels,
+  topics,
+}: {
+  account: Account;
+  dailyAssignments: DailyAssignmentWithVocab[];
+  levels: LevelWithProgress[];
+  topics: Topic[];
+}) {
   const completedCount = dailyAssignments.filter((a) => a.status === "done").length;
 
   return (
@@ -53,7 +69,9 @@ export function StudentDashboardContent({ account }: { account: Account }) {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Từ vựng hôm nay</CardTitle>
-              <CardDescription>Danh sách bài tập được giao ngày 21/07/2026</CardDescription>
+              <CardDescription>
+                {dailyAssignments.length} từ được giao theo mục tiêu mỗi ngày của lớp
+              </CardDescription>
             </div>
             <Button size="sm" nativeButton={false} render={<Link href="/exercises" />}>
               Chọn dạng bài tập
@@ -75,7 +93,7 @@ export function StudentDashboardContent({ account }: { account: Account }) {
                   <div>
                     <p className="font-medium">{assignment.vocab.vocab}</p>
                     <p className="text-sm text-muted-foreground">
-                      {assignment.vocab.meanVI} · {getTopicName(assignment.vocab.topicId)}
+                      {assignment.vocab.meanVI} · {getTopicName(topics, assignment.vocab.topicId)}
                     </p>
                   </div>
                 </div>

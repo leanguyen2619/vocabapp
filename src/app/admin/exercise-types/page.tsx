@@ -1,47 +1,18 @@
-"use client";
-
 import Link from "next/link";
-import { toast } from "sonner";
-import { ArrowLeft, BookOpen, ShieldAlert } from "lucide-react";
+import { redirect } from "next/navigation";
+import { BookOpen, ArrowLeft } from "lucide-react";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import { useExerciseTypes } from "@/hooks/use-exercise-types";
-import { useRequireSession } from "@/hooks/use-session";
+import { AdminOnlyDenied } from "@/components/admin-only-denied";
+import { listExerciseTypesAction } from "@/lib/actions/exercise-types";
+import { getCurrentAccount } from "@/lib/session";
+import { AdminExerciseTypesClient } from "./exercise-types-client";
 
-export default function ExerciseTypesSettingsPage() {
-  const { account, status } = useRequireSession();
-  const { types, loaded, updateType } = useExerciseTypes();
+export default async function ExerciseTypesSettingsPage() {
+  const account = await getCurrentAccount();
+  if (!account) redirect("/login");
+  if (account.role !== "admin") return <AdminOnlyDenied />;
 
-  if (status !== "authenticated" || !account) {
-    return (
-      <div className="flex flex-1 items-center justify-center py-24 text-sm text-muted-foreground">
-        Đang kiểm tra đăng nhập...
-      </div>
-    );
-  }
-
-  if (account.role !== "admin") {
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 py-24 text-center">
-        <ShieldAlert className="size-8 text-muted-foreground" />
-        <p className="text-muted-foreground">Chỉ quản trị viên mới có quyền truy cập trang này.</p>
-        <Link href="/dashboard" className="text-sm font-medium text-primary hover:underline">
-          Về Dashboard
-        </Link>
-      </div>
-    );
-  }
+  const initialTypes = await listExerciseTypesAction();
 
   return (
     <div className="flex flex-1 flex-col bg-background">
@@ -73,63 +44,7 @@ export default function ExerciseTypesSettingsPage() {
           </p>
         </div>
 
-        {loaded && (
-          <div className="flex flex-col gap-4">
-            {types.map((type) => (
-              <Card key={type.code}>
-                <CardContent className="flex flex-col gap-3 py-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <Input
-                      value={type.name}
-                      onChange={(e) => updateType(type.code, { name: e.target.value })}
-                      className="max-w-64 font-medium"
-                    />
-                    <Switch
-                      checked={type.enabled}
-                      onCheckedChange={(checked) => {
-                        updateType(type.code, { enabled: checked });
-                        toast.success(`Đã ${checked ? "bật" : "tắt"} "${type.name}".`);
-                      }}
-                    />
-                  </div>
-
-                  <Textarea
-                    value={type.description}
-                    onChange={(e) => updateType(type.code, { description: e.target.value })}
-                    rows={2}
-                  />
-
-                  <div className="flex items-center gap-2">
-                    <Label className="text-sm text-muted-foreground">Cấp độ</Label>
-                    <Select
-                      value={String(type.level)}
-                      onValueChange={(value) =>
-                        updateType(type.code, { level: Number(value) as 1 | 2 | 3 | 4 })
-                      }
-                    >
-                      <SelectTrigger size="sm" className="w-24">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[1, 2, 3, 4].map((lv) => (
-                          <SelectItem key={lv} value={String(lv)}>
-                            Lv{lv}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    {!type.href && (
-                      <span className="ml-auto text-xs text-muted-foreground">
-                        Chưa có giao diện bài tập
-                      </span>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+        <AdminExerciseTypesClient initialTypes={initialTypes} />
       </main>
     </div>
   );
