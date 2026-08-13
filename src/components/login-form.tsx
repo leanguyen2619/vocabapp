@@ -8,7 +8,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ADMIN_DEMO_CREDENTIALS, DEMO_CREDENTIALS } from "@/lib/mock-data";
 import { loginAction } from "@/lib/actions/auth";
 
 type InvalidField = "id" | "password" | null;
@@ -83,12 +82,6 @@ export function LoginForm() {
       <Button type="submit" size="lg" className="mt-2 h-10" disabled={submitting}>
         {submitting ? "Đang đăng nhập..." : "Đăng nhập"}
       </Button>
-
-      <p className="text-center text-xs text-muted-foreground">
-        Học sinh demo: {DEMO_CREDENTIALS.id} / {DEMO_CREDENTIALS.password}
-        <br />
-        Admin demo: {ADMIN_DEMO_CREDENTIALS.id} / {ADMIN_DEMO_CREDENTIALS.password}
-      </p>
     </form>
   );
 }

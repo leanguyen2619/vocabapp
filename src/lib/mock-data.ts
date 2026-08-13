@@ -1,9 +1,5 @@
 import type { AssignmentStatus, Vocabulary } from "@/types";
 
-// Demo login hints shown on the /login page — match the accounts seeded by prisma/seed.ts.
-export const DEMO_CREDENTIALS = { id: "HS0001", password: "123456" };
-export const ADMIN_DEMO_CREDENTIALS = { id: "QT0001", password: "admin123" };
-
 // ---------- Teacher dashboard demo data ----------
 // The teacher role has no function spec from the user yet (unlike student/admin), so its
 // dashboard stays presentational demo content until that spec exists.
