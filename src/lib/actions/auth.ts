@@ -11,11 +11,11 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type AuthResult = { error: string } | { error?: undefined; id_login: string };
 
-/** Students/teachers/admins log in with their ID (id_login), not email. */
-export async function loginAction(idLogin: string, password: string): Promise<AuthResult> {
-  const account = await prisma.account.findUnique({ where: { id_login: idLogin.trim() } });
+/** Students/teachers/admins log in with their email, not id_login. */
+export async function loginAction(email: string, password: string): Promise<AuthResult> {
+  const account = await prisma.account.findUnique({ where: { email: email.trim().toLowerCase() } });
   if (!account) {
-    return { error: "Mã đăng nhập hoặc mật khẩu không đúng." };
+    return { error: "Email hoặc mật khẩu không đúng." };
   }
   if (account.status !== "active") {
     return { error: "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên." };
@@ -23,7 +23,7 @@ export async function loginAction(idLogin: string, password: string): Promise<Au
 
   const passwordMatches = await bcrypt.compare(password, account.passwordHash);
   if (!passwordMatches) {
-    return { error: "Mã đăng nhập hoặc mật khẩu không đúng." };
+    return { error: "Email hoặc mật khẩu không đúng." };
   }
 
   await createSession(account.id_login);

@@ -75,7 +75,7 @@ export function RegisterForm() {
       return;
     }
 
-    toast.success(`Đăng ký thành công! Mã đăng nhập của bạn: ${result.id_login} — hãy lưu lại.`, {
+    toast.success(`Đăng ký thành công! Mã học viên của bạn: ${result.id_login}. Lần sau đăng nhập bằng email nhé.`, {
       duration: 10000,
     });
     router.push("/dashboard");

@@ -10,11 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { loginAction } from "@/lib/actions/auth";
 
-type InvalidField = "id" | "password" | null;
+type InvalidField = "email" | "password" | null;
 
 export function LoginForm() {
   const router = useRouter();
-  const [id, setId] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [invalidField, setInvalidField] = useState<InvalidField>(null);
@@ -25,14 +25,14 @@ export function LoginForm() {
     setError(null);
     setInvalidField(null);
 
-    if (!id.trim() || !password) {
-      setError("Vui lòng nhập đầy đủ mã đăng nhập và mật khẩu.");
-      setInvalidField(!id.trim() ? "id" : "password");
+    if (!email.trim() || !password) {
+      setError("Vui lòng nhập đầy đủ email và mật khẩu.");
+      setInvalidField(!email.trim() ? "email" : "password");
       return;
     }
 
     setSubmitting(true);
-    const result = await loginAction(id, password);
+    const result = await loginAction(email, password);
     setSubmitting(false);
 
     if (result.error !== undefined) {
@@ -55,14 +55,15 @@ export function LoginForm() {
       )}
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="id">Mã đăng nhập</Label>
+        <Label htmlFor="email">Email</Label>
         <Input
-          id="id"
-          autoComplete="username"
-          value={id}
-          onChange={(e) => setId(e.target.value)}
-          placeholder="HS0001"
-          aria-invalid={invalidField === "id"}
+          id="email"
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="ban@vocabapp.vn"
+          aria-invalid={invalidField === "email"}
         />
       </div>
 
