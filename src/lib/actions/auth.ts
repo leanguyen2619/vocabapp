@@ -11,6 +11,9 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type AuthResult = { error: string } | { error?: undefined; id_login: string };
 
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+
 /** Students/teachers/admins log in with their ID (id_login), not email. */
 export async function loginAction(idLogin: string, password: string): Promise<AuthResult> {
   const account = await prisma.account.findUnique({ where: { id_login: idLogin.trim() } });
@@ -21,9 +24,34 @@ export async function loginAction(idLogin: string, password: string): Promise<Au
     return { error: "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên." };
   }
 
+  if (account.lockedUntil && account.lockedUntil > new Date()) {
+    const minutesLeft = Math.ceil((account.lockedUntil.getTime() - Date.now()) / 60000);
+    return {
+      error: `Đăng nhập sai quá nhiều lần. Vui lòng thử lại sau ${minutesLeft} phút.`,
+    };
+  }
+
   const passwordMatches = await bcrypt.compare(password, account.passwordHash);
   if (!passwordMatches) {
-    return { error: "Mã đăng nhập hoặc mật khẩu không đúng." };
+    const failedLoginAttempts = account.failedLoginAttempts + 1;
+    const lockedOut = failedLoginAttempts >= MAX_FAILED_ATTEMPTS;
+    await prisma.account.update({
+      where: { id_login: account.id_login },
+      data: {
+        failedLoginAttempts: lockedOut ? 0 : failedLoginAttempts,
+        lockedUntil: lockedOut ? new Date(Date.now() + LOCKOUT_DURATION_MS) : null,
+      },
+    });
+    return lockedOut
+      ? { error: `Đăng nhập sai quá nhiều lần. Vui lòng thử lại sau ${LOCKOUT_DURATION_MS / 60000} phút.` }
+      : { error: "Mã đăng nhập hoặc mật khẩu không đúng." };
+  }
+
+  if (account.failedLoginAttempts > 0 || account.lockedUntil) {
+    await prisma.account.update({
+      where: { id_login: account.id_login },
+      data: { failedLoginAttempts: 0, lockedUntil: null },
+    });
   }
 
   await createSession(account.id_login);

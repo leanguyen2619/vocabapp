@@ -65,19 +65,21 @@ export async function createAccountByAdminAction(input: {
   return { id_login: account.id_login };
 }
 
-export async function resetPasswordByAdminAction(id_login: string): Promise<string | null> {
+export async function resetPasswordByAdminAction(
+  id_login: string,
+  newPassword: string
+): Promise<{ error: string } | { error?: undefined }> {
   const admin = await requireAdmin();
-  if (!admin) return null;
+  if (!admin) return { error: "Bạn không có quyền thực hiện thao tác này." };
+  if (newPassword.length < 6) return { error: "Mật khẩu cần ít nhất 6 ký tự." };
 
-  const newPassword = Math.random().toString(36).slice(-8);
   const passwordHash = await bcrypt.hash(newPassword, 10);
-
   const updated = await prisma.account
     .update({ where: { id_login }, data: { passwordHash } })
     .catch(() => null);
-  if (!updated) return null;
+  if (!updated) return { error: "Không tìm thấy tài khoản." };
 
-  return newPassword;
+  return {};
 }
 
 /** A locked account's active session is rejected on its very next request (see getCurrentAccount). */

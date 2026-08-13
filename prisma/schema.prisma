@@ -87,15 +87,17 @@ enum AssignmentStatus {
 // ---------- Accounts ----------
 
 model Account {
-  id_login     String        @id
-  fullName     String
-  role         Role
-  status       AccountStatus @default(active)
-  classId      String?
-  avatarUrl    String?
-  email        String        @unique
-  passwordHash String
-  createdAt    DateTime      @default(now())
+  id_login            String        @id
+  fullName            String
+  role                Role
+  status              AccountStatus @default(active)
+  classId             String?
+  avatarUrl           String?
+  email               String        @unique
+  passwordHash        String
+  createdAt           DateTime      @default(now())
+  failedLoginAttempts Int           @default(0)
+  lockedUntil         DateTime?
 
   class SchoolClass? @relation(fields: [classId], references: [id])
 

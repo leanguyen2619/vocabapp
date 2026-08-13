@@ -65,6 +65,10 @@ export function AdminAccountsClient({
   const [classId, setClassId] = useState<string>(NONE_CLASS);
   const [error, setError] = useState<string | null>(null);
 
+  const [resetTarget, setResetTarget] = useState<{ id_login: string; fullName: string } | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [resetError, setResetError] = useState<string | null>(null);
+
   const className = (id: string | null) => classes.find((c) => c.id === id)?.className ?? null;
 
   const resetForm = () => {
@@ -102,10 +106,20 @@ export function AdminAccountsClient({
     });
   };
 
-  const handleResetPassword = async (id_login: string, name: string) => {
-    const newPassword = await resetPasswordByAdminAction(id_login);
-    if (!newPassword) return;
-    toast.success(`Mật khẩu mới cho ${name}: ${newPassword}`, { duration: 10000 });
+  const handleResetPasswordSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setResetError(null);
+    if (!resetTarget) return;
+
+    const result = await resetPasswordByAdminAction(resetTarget.id_login, newPassword);
+    if (result.error !== undefined) {
+      setResetError(result.error);
+      return;
+    }
+
+    toast.success(`Đã đặt lại mật khẩu cho ${resetTarget.fullName}.`);
+    setResetTarget(null);
+    setNewPassword("");
   };
 
   const handleToggleStatus = async (id_login: string, name: string, active: boolean) => {
@@ -291,7 +305,11 @@ export function AdminAccountsClient({
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => void handleResetPassword(acc.id_login, acc.fullName)}
+                            onClick={() => {
+                              setResetTarget({ id_login: acc.id_login, fullName: acc.fullName });
+                              setNewPassword("");
+                              setResetError(null);
+                            }}
                           >
                             <KeyRound className="size-3.5" />
                             Đặt lại mật khẩu
@@ -323,6 +341,51 @@ export function AdminAccountsClient({
           </CardContent>
         </Card>
       </main>
+
+      <Dialog
+        open={resetTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setResetTarget(null);
+            setNewPassword("");
+            setResetError(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Đặt lại mật khẩu</DialogTitle>
+            <DialogDescription>
+              Đặt mật khẩu mới cho {resetTarget?.fullName}. Mật khẩu cũ sẽ không còn dùng được.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleResetPasswordSubmit} noValidate className="flex flex-col gap-4">
+            {resetError && (
+              <Alert variant="destructive">
+                <AlertCircle />
+                <AlertDescription>{resetError}</AlertDescription>
+              </Alert>
+            )}
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="newPassword">Mật khẩu mới</Label>
+              <Input
+                id="newPassword"
+                type="text"
+                autoFocus
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Tối thiểu 6 ký tự"
+              />
+            </div>
+
+            <DialogFooter>
+              <Button type="submit">Đặt lại mật khẩu</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
