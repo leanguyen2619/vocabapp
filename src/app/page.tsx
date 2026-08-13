@@ -68,10 +68,7 @@ export default async function Home() {
             >
               Đăng ký miễn phí
             </Button>
-            <Link
-              href="/register?role=teacher"
-              className="text-sm font-medium text-primary hover:underline"
-            >
+            <Link href="/login" className="text-sm font-medium text-primary hover:underline">
               Tôi là giáo viên
             </Link>
           </div>

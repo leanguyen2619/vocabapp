@@ -92,6 +92,8 @@ const exerciseTypes = [
   { code: "synonym_antonym", name: "Từ đồng nghĩa - trái nghĩa", description: "Tìm từ đồng nghĩa hoặc trái nghĩa với từ đã cho.", level: "level_2" },
   { code: "fill_blank", name: "Điền từ vào chỗ trống", description: "Hoàn thành câu bằng từ vựng phù hợp.", level: "level_3" },
   { code: "word_formation", name: "Từ ghép", description: "Ghép các thành phần để tạo thành từ đúng.", level: "level_4" },
+  { code: "typing", name: "Gõ từ", description: "Gõ lại từ tiếng Anh dựa trên nghĩa tiếng Việt.", level: "level_1" },
+  { code: "listening", name: "Nghe và gõ từ", description: "Nghe phát âm rồi gõ lại từ bạn nghe được.", level: "level_2" },
 ] as const;
 
 const questionBank = [
