@@ -103,3 +103,24 @@ export async function updateFullNameAction(
   await prisma.account.update({ where: { id_login: session.id_login }, data: { fullName: trimmed } });
   return { fullName: trimmed };
 }
+
+/** Re-derives identity from the session cookie, not from any client-supplied id. */
+export async function changePasswordAction(
+  currentPassword: string,
+  newPassword: string
+): Promise<{ error: string } | { error?: undefined }> {
+  const session = await getCurrentAccount();
+  if (!session) return { error: "Bạn chưa đăng nhập." };
+
+  const account = await prisma.account.findUnique({ where: { id_login: session.id_login } });
+  if (!account) return { error: "Bạn chưa đăng nhập." };
+
+  const currentMatches = await bcrypt.compare(currentPassword, account.passwordHash);
+  if (!currentMatches) return { error: "Mật khẩu hiện tại không đúng." };
+
+  if (newPassword.length < 6) return { error: "Mật khẩu mới cần ít nhất 6 ký tự." };
+
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  await prisma.account.update({ where: { id_login: session.id_login }, data: { passwordHash } });
+  return {};
+}

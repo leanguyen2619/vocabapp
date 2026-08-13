@@ -1,18 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type SubmitEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, BookOpen, Flame, GraduationCap, LogOut, Mail, Pencil, Trophy } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  BookOpen,
+  Flame,
+  GraduationCap,
+  KeyRound,
+  LogOut,
+  Mail,
+  Pencil,
+  Trophy,
+} from "lucide-react";
 
 import { LevelCard } from "@/components/level-card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { logoutAction, updateFullNameAction } from "@/lib/actions/auth";
+import { Label } from "@/components/ui/label";
+import { changePasswordAction, logoutAction, updateFullNameAction } from "@/lib/actions/auth";
 import type { SessionAccount } from "@/lib/session";
 import type { LevelWithProgress, Role } from "@/types";
 
@@ -35,6 +57,12 @@ export function ProfileClient({
   const [displayName, setDisplayName] = useState(account.fullName);
   const [editing, setEditing] = useState(false);
   const [fullName, setFullName] = useState("");
+
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   const initials = displayName
     .split(" ")
@@ -73,6 +101,41 @@ export function ProfileClient({
     setDisplayName(result.fullName);
     setEditing(false);
     toast.success("Đã cập nhật hồ sơ.");
+  };
+
+  const resetPasswordForm = () => {
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setPasswordError(null);
+  };
+
+  const handleChangePassword = async (event: SubmitEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setPasswordError(null);
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError("Vui lòng điền đầy đủ thông tin.");
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordError("Mật khẩu mới cần ít nhất 6 ký tự.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Mật khẩu xác nhận không khớp.");
+      return;
+    }
+
+    const result = await changePasswordAction(currentPassword, newPassword);
+    if (result.error !== undefined) {
+      setPasswordError(result.error);
+      return;
+    }
+
+    setPasswordDialogOpen(false);
+    resetPasswordForm();
+    toast.success("Đã đổi mật khẩu.");
   };
 
   return (
@@ -153,10 +216,78 @@ export function ProfileClient({
               </div>
             </div>
 
-            <Button variant="outline" size="sm" onClick={handleLogout} className="shrink-0">
-              <LogOut className="size-4" />
-              Đăng xuất
-            </Button>
+            <div className="flex shrink-0 items-center gap-2">
+              <Dialog
+                open={passwordDialogOpen}
+                onOpenChange={(open) => {
+                  setPasswordDialogOpen(open);
+                  if (!open) resetPasswordForm();
+                }}
+              >
+                <DialogTrigger render={<Button variant="outline" size="sm" />}>
+                  <KeyRound className="size-4" />
+                  Đổi mật khẩu
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Đổi mật khẩu</DialogTitle>
+                    <DialogDescription>Nhập mật khẩu hiện tại và mật khẩu mới.</DialogDescription>
+                  </DialogHeader>
+
+                  <form onSubmit={handleChangePassword} noValidate className="flex flex-col gap-4">
+                    {passwordError && (
+                      <Alert variant="destructive">
+                        <AlertCircle />
+                        <AlertDescription>{passwordError}</AlertDescription>
+                      </Alert>
+                    )}
+
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="currentPassword">Mật khẩu hiện tại</Label>
+                      <Input
+                        id="currentPassword"
+                        type="password"
+                        autoComplete="current-password"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="newPassword">Mật khẩu mới</Label>
+                      <Input
+                        id="newPassword"
+                        type="password"
+                        autoComplete="new-password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Tối thiểu 6 ký tự"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="confirmPassword">Xác nhận mật khẩu mới</Label>
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        autoComplete="new-password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                      />
+                    </div>
+
+                    <DialogFooter>
+                      <Button type="submit">Đổi mật khẩu</Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                <LogOut className="size-4" />
+                Đăng xuất
+              </Button>
+            </div>
           </CardContent>
         </Card>
 

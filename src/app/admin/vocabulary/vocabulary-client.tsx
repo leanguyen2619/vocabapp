@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type SubmitEvent } from "react";
+import { useMemo, useRef, useState, type SubmitEvent } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
@@ -11,10 +11,12 @@ import {
   Download,
   Pencil,
   Plus,
+  Search,
   Trash2,
   Upload,
 } from "lucide-react";
 
+import { PaginationControls } from "@/components/pagination-controls";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -91,6 +93,22 @@ export function AdminVocabularyClient({
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+
+  const PAGE_SIZE = 10;
+  const query = search.trim().toLowerCase();
+  const filteredWords = useMemo(
+    () =>
+      words.filter(
+        (w) => w.vocab.toLowerCase().includes(query) || w.meanVI.toLowerCase().includes(query)
+      ),
+    [words, query]
+  );
+  const totalPages = Math.max(1, Math.ceil(filteredWords.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pagedWords = filteredWords.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const openCreate = () => {
     setEditingId(null);
@@ -273,9 +291,27 @@ export function AdminVocabularyClient({
           </div>
         </div>
 
+        <div className="relative max-w-sm">
+          <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Tìm từ vựng hoặc nghĩa..."
+            className="pl-8"
+          />
+        </div>
+
         <Card>
           <CardContent className="flex flex-col gap-1 py-4">
-            {words.map((word, index) => (
+            {pagedWords.length === 0 && (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                Không tìm thấy từ vựng phù hợp.
+              </p>
+            )}
+            {pagedWords.map((word, index) => (
               <div key={word.id}>
                 {index > 0 && <div className="my-3 h-px bg-border" />}
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -313,6 +349,8 @@ export function AdminVocabularyClient({
             ))}
           </CardContent>
         </Card>
+
+        <PaginationControls page={currentPage} totalPages={totalPages} onPageChange={setPage} />
       </main>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

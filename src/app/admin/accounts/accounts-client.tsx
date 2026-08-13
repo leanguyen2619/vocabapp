@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, type SubmitEvent } from "react";
+import { useMemo, useState, type SubmitEvent } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { AlertCircle, ArrowLeft, BookOpen, KeyRound, Lock, LockOpen, Plus } from "lucide-react";
+import { AlertCircle, ArrowLeft, BookOpen, KeyRound, Lock, LockOpen, Plus, Search } from "lucide-react";
 
+import { PaginationControls } from "@/components/pagination-controls";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +46,7 @@ const roleLabel: Record<Role, string> = {
 };
 
 const NONE_CLASS = "none";
+const PAGE_SIZE = 10;
 
 export function AdminAccountsClient({
   adminAccount,
@@ -69,7 +71,30 @@ export function AdminAccountsClient({
   const [newPassword, setNewPassword] = useState("");
   const [resetError, setResetError] = useState<string | null>(null);
 
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+
   const className = (id: string | null) => classes.find((c) => c.id === id)?.className ?? null;
+
+  const query = search.trim().toLowerCase();
+  const filteredAccounts = useMemo(
+    () =>
+      accounts.filter(({ account: acc, email: accEmail }) => {
+        if (!query) return true;
+        return (
+          acc.fullName.toLowerCase().includes(query) ||
+          acc.id_login.toLowerCase().includes(query) ||
+          accEmail.toLowerCase().includes(query)
+        );
+      }),
+    [accounts, query]
+  );
+  const totalPages = Math.max(1, Math.ceil(filteredAccounts.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pagedAccounts = filteredAccounts.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
 
   const resetForm = () => {
     setFullName("");
@@ -263,9 +288,27 @@ export function AdminAccountsClient({
           </Dialog>
         </div>
 
+        <div className="relative max-w-sm">
+          <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Tìm theo tên, mã đăng nhập, email..."
+            className="pl-8"
+          />
+        </div>
+
         <Card>
           <CardContent className="flex flex-col gap-1 py-4">
-            {accounts.map(({ account: acc, email: accEmail }, index) => {
+            {pagedAccounts.length === 0 && (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                Không tìm thấy tài khoản phù hợp.
+              </p>
+            )}
+            {pagedAccounts.map(({ account: acc, email: accEmail }, index) => {
               const isSelf = acc.id_login === adminAccount.id_login;
               const isActive = acc.status === "active";
               const initials = acc.fullName
@@ -340,6 +383,8 @@ export function AdminAccountsClient({
             })}
           </CardContent>
         </Card>
+
+        <PaginationControls page={currentPage} totalPages={totalPages} onPageChange={setPage} />
       </main>
 
       <Dialog

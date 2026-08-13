@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, type SubmitEvent } from "react";
+import { useMemo, useState, type SubmitEvent } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { AlertCircle, ArrowLeft, BookOpen, Check, Pencil, Plus, X } from "lucide-react";
+import { AlertCircle, ArrowLeft, BookOpen, Check, Pencil, Plus, Search, X } from "lucide-react";
 
+import { PaginationControls } from "@/components/pagination-controls";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -71,7 +72,24 @@ export function AdminQuestionBankClient({
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState<string | null>(null);
 
-  const filtered = filter === "all" ? questions : questions.filter((q) => q.status === filter);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+
+  const PAGE_SIZE = 10;
+  const query = search.trim().toLowerCase();
+  const filtered = useMemo(() => {
+    const byStatus = filter === "all" ? questions : questions.filter((q) => q.status === filter);
+    if (!query) return byStatus;
+    return byStatus.filter(
+      (q) =>
+        q.questionText.toLowerCase().includes(query) ||
+        q.vocab.vocab.toLowerCase().includes(query) ||
+        q.vocab.meanVI.toLowerCase().includes(query)
+    );
+  }, [questions, filter, query]);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pagedQuestions = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const openCreate = () => {
     setEditingId(null);
@@ -177,7 +195,13 @@ export function AdminQuestionBankClient({
           </Button>
         </div>
 
-        <Tabs value={filter} onValueChange={(value) => setFilter(value as typeof filter)}>
+        <Tabs
+          value={filter}
+          onValueChange={(value) => {
+            setFilter(value as typeof filter);
+            setPage(1);
+          }}
+        >
           <TabsList>
             <TabsTrigger value="all">Tất cả</TabsTrigger>
             <TabsTrigger value="pending">Chờ duyệt</TabsTrigger>
@@ -186,8 +210,21 @@ export function AdminQuestionBankClient({
           </TabsList>
         </Tabs>
 
+        <div className="relative max-w-sm">
+          <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Tìm theo nội dung câu hỏi hoặc từ vựng..."
+            className="pl-8"
+          />
+        </div>
+
         <div className="flex flex-col gap-4">
-          {filtered.map((q) => (
+          {pagedQuestions.map((q) => (
             <Card key={q.id}>
               <CardContent className="flex flex-col gap-3 py-4">
                 <div className="flex items-start justify-between gap-3">
@@ -254,6 +291,8 @@ export function AdminQuestionBankClient({
             </p>
           )}
         </div>
+
+        <PaginationControls page={currentPage} totalPages={totalPages} onPageChange={setPage} />
       </main>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
