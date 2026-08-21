@@ -44,6 +44,12 @@ const vocabularyBank = [
   { id: "vocab_007", vocab: "hot", definition: "having a high temperature", meanVI: "nóng", partOfSpeech: "adjective", levelId: "level_1", topicId: 1 },
   { id: "vocab_008", vocab: "easy", definition: "achieved without great effort", meanVI: "dễ", partOfSpeech: "adjective", levelId: "level_1", topicId: 1 },
   { id: "vocab_009", vocab: "fast", definition: "moving or capable of moving at high speed", meanVI: "nhanh", partOfSpeech: "adjective", levelId: "level_1", topicId: 1 },
+  { id: "vocab_010", vocab: "book", definition: "a set of printed pages bound together", meanVI: "quyển sách", partOfSpeech: "noun", levelId: "level_1", topicId: 9 },
+  { id: "vocab_011", vocab: "water", definition: "a clear liquid needed by all living things", meanVI: "nước", partOfSpeech: "noun", levelId: "level_1", topicId: 3 },
+  { id: "vocab_012", vocab: "school", definition: "a place where children go to learn", meanVI: "trường học", partOfSpeech: "noun", levelId: "level_1", topicId: 9 },
+  { id: "vocab_013", vocab: "work", definition: "to do a job or task", meanVI: "làm việc", partOfSpeech: "verb", levelId: "level_1", topicId: 5 },
+  { id: "vocab_014", vocab: "beautiful", definition: "pleasing to look at", meanVI: "đẹp", partOfSpeech: "adjective", levelId: "level_1", topicId: 4 },
+  { id: "vocab_015", vocab: "play", definition: "to take part in a game or fun activity", meanVI: "chơi", partOfSpeech: "verb", levelId: "level_1", topicId: 1 },
 
   // A2 — level_2
   { id: "vocab_101", vocab: "ambitious", definition: "having a strong desire to achieve success", meanVI: "có tham vọng", partOfSpeech: "adjective", levelId: "level_2", topicId: 4 },
@@ -53,6 +59,11 @@ const vocabularyBank = [
   { id: "vocab_105", vocab: "colleague", definition: "a person you work with", meanVI: "đồng nghiệp", partOfSpeech: "noun", levelId: "level_2", topicId: 5 },
   { id: "vocab_106", vocab: "curious", definition: "eager to know or learn something", meanVI: "tò mò", partOfSpeech: "adjective", levelId: "level_2", topicId: 4 },
   { id: "vocab_107", vocab: "pollution", definition: "harmful substances damaging the environment", meanVI: "ô nhiễm", partOfSpeech: "noun", levelId: "level_2", topicId: 6 },
+  { id: "vocab_108", vocab: "traveler", definition: "a person who is traveling or who often travels", meanVI: "du khách", partOfSpeech: "noun", levelId: "level_2", topicId: 8 },
+  { id: "vocab_109", vocab: "delicious", definition: "highly pleasant to the taste", meanVI: "ngon", partOfSpeech: "adjective", levelId: "level_2", topicId: 3 },
+  { id: "vocab_110", vocab: "confident", definition: "feeling sure about one's own abilities", meanVI: "tự tin", partOfSpeech: "adjective", levelId: "level_2", topicId: 4 },
+  { id: "vocab_111", vocab: "schedule", definition: "a plan of activities with the times they will happen", meanVI: "lịch trình", partOfSpeech: "noun", levelId: "level_2", topicId: 5 },
+  { id: "vocab_112", vocab: "device", definition: "a piece of equipment made for a particular purpose", meanVI: "thiết bị", partOfSpeech: "noun", levelId: "level_2", topicId: 7 },
 
   // B1 — level_3
   { id: "vocab_201", vocab: "algorithm", definition: "a set of rules for solving a problem", meanVI: "thuật toán", partOfSpeech: "noun", levelId: "level_3", topicId: 7 },
@@ -61,6 +72,21 @@ const vocabularyBank = [
   { id: "vocab_204", vocab: "innovative", definition: "introducing new ideas or methods", meanVI: "sáng tạo, đổi mới", partOfSpeech: "adjective", levelId: "level_3", topicId: 7 },
   { id: "vocab_205", vocab: "postpone", definition: "to delay an event to a later time", meanVI: "hoãn lại", partOfSpeech: "verb", levelId: "level_3", topicId: 8 },
   { id: "vocab_206", vocab: "meticulous", definition: "showing great attention to detail", meanVI: "tỉ mỉ, cẩn thận", partOfSpeech: "adjective", levelId: "level_3", topicId: 9 },
+  { id: "vocab_207", vocab: "perspective", definition: "a particular way of viewing things", meanVI: "quan điểm", partOfSpeech: "noun", levelId: "level_3", topicId: 9 },
+  { id: "vocab_208", vocab: "consequence", definition: "a result of an action or condition", meanVI: "hậu quả", partOfSpeech: "noun", levelId: "level_3", topicId: 9 },
+  { id: "vocab_209", vocab: "flexible", definition: "able to change or adapt easily", meanVI: "linh hoạt", partOfSpeech: "adjective", levelId: "level_3", topicId: 5 },
+  { id: "vocab_210", vocab: "efficient", definition: "achieving results without wasting time or resources", meanVI: "hiệu quả", partOfSpeech: "adjective", levelId: "level_3", topicId: 5 },
+  { id: "vocab_211", vocab: "diverse", definition: "showing a great deal of variety", meanVI: "đa dạng", partOfSpeech: "adjective", levelId: "level_3", topicId: 8 },
+
+  // B2 — level_4
+  { id: "vocab_301", vocab: "eloquent", definition: "fluent and persuasive in speaking or writing", meanVI: "hùng biện, lưu loát", partOfSpeech: "adjective", levelId: "level_4", topicId: 9 },
+  { id: "vocab_302", vocab: "resilience", definition: "the capacity to recover quickly from difficulties", meanVI: "khả năng phục hồi", partOfSpeech: "noun", levelId: "level_4", topicId: 4 },
+  { id: "vocab_303", vocab: "ambiguous", definition: "open to more than one interpretation", meanVI: "mơ hồ, không rõ ràng", partOfSpeech: "adjective", levelId: "level_4", topicId: 9 },
+  { id: "vocab_304", vocab: "procrastinate", definition: "to delay or postpone action", meanVI: "trì hoãn", partOfSpeech: "verb", levelId: "level_4", topicId: 1 },
+  { id: "vocab_305", vocab: "controversial", definition: "giving rise to public disagreement", meanVI: "gây tranh cãi", partOfSpeech: "adjective", levelId: "level_4", topicId: 5 },
+  { id: "vocab_306", vocab: "subsequent", definition: "coming after something in time", meanVI: "sau đó, tiếp theo", partOfSpeech: "adjective", levelId: "level_4", topicId: 9 },
+  { id: "vocab_307", vocab: "deteriorate", definition: "to become progressively worse", meanVI: "trở nên tồi tệ hơn", partOfSpeech: "verb", levelId: "level_4", topicId: 6 },
+  { id: "vocab_308", vocab: "versatile", definition: "able to adapt to many different functions", meanVI: "đa năng, linh hoạt", partOfSpeech: "adjective", levelId: "level_4", topicId: 7 },
 ] as const;
 
 const accountLevels = [

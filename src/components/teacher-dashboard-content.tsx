@@ -1,8 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
-import { BellRing, CheckCircle2, Circle, ClipboardList, Flame, Users } from "lucide-react";
+import {
+  BellRing,
+  CheckCircle2,
+  Circle,
+  ClipboardList,
+  Flame,
+  Library,
+  ListChecks,
+  Users,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -79,40 +89,51 @@ export function TeacherDashboardContent({
           <p className="text-muted-foreground">Tổng quan {className} bạn đang phụ trách.</p>
         </div>
 
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger render={<Button />}>
-            <ClipboardList className="size-4" />
-            Giao từ vựng mới
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Giao từ vựng cho {className}</DialogTitle>
-              <DialogDescription>Chọn từ vựng muốn giao cho toàn bộ học sinh.</DialogDescription>
-            </DialogHeader>
-            <div className="flex flex-col gap-3">
-              {vocabToday.map((vocab) => (
-                <Label
-                  key={vocab.id}
-                  className="flex items-center gap-2 rounded-lg border border-border px-3 py-2"
-                >
-                  <Checkbox
-                    checked={selectedVocab.includes(vocab.id)}
-                    onCheckedChange={() => toggleVocab(vocab.id)}
-                  />
-                  <span className="flex-1">
-                    <span className="font-medium">{vocab.vocab}</span>{" "}
-                    <span className="text-muted-foreground">— {vocab.meanVI}</span>
-                  </span>
-                </Label>
-              ))}
-            </div>
-            <DialogFooter>
-              <Button disabled={selectedVocab.length === 0} onClick={handleAssign}>
-                Giao bài ({selectedVocab.length})
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/vocabulary" />}>
+            <Library className="size-4" />
+            Kho từ vựng
+          </Button>
+          <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/exercises" />}>
+            <ListChecks className="size-4" />
+            Dạng bài tập
+          </Button>
+
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger render={<Button size="sm" />}>
+              <ClipboardList className="size-4" />
+              Giao từ vựng mới
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Giao từ vựng cho {className}</DialogTitle>
+                <DialogDescription>Chọn từ vựng muốn giao cho toàn bộ học sinh.</DialogDescription>
+              </DialogHeader>
+              <div className="flex flex-col gap-3">
+                {vocabToday.map((vocab) => (
+                  <Label
+                    key={vocab.id}
+                    className="flex items-center gap-2 rounded-lg border border-border px-3 py-2"
+                  >
+                    <Checkbox
+                      checked={selectedVocab.includes(vocab.id)}
+                      onCheckedChange={() => toggleVocab(vocab.id)}
+                    />
+                    <span className="flex-1">
+                      <span className="font-medium">{vocab.vocab}</span>{" "}
+                      <span className="text-muted-foreground">— {vocab.meanVI}</span>
+                    </span>
+                  </Label>
+                ))}
+              </div>
+              <DialogFooter>
+                <Button disabled={selectedVocab.length === 0} onClick={handleAssign}>
+                  Giao bài ({selectedVocab.length})
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
