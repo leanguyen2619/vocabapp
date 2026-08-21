@@ -3,7 +3,17 @@
 import { useMemo, useState, type SubmitEvent } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { AlertCircle, ArrowLeft, BookOpen, KeyRound, Lock, LockOpen, Plus, Search } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  BookOpen,
+  KeyRound,
+  Lock,
+  LockOpen,
+  Pencil,
+  Plus,
+  Search,
+} from "lucide-react";
 
 import { PaginationControls } from "@/components/pagination-controls";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -35,6 +45,7 @@ import {
   listAccountsAction,
   resetPasswordByAdminAction,
   setAccountStatusAction,
+  updateAccountByAdminAction,
   type AccountSummary,
 } from "@/lib/actions/accounts";
 import type { Account, Role, SchoolClass } from "@/types";
@@ -70,6 +81,11 @@ export function AdminAccountsClient({
   const [resetTarget, setResetTarget] = useState<{ id_login: string; fullName: string } | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [resetError, setResetError] = useState<string | null>(null);
+
+  const [editTarget, setEditTarget] = useState<Account | null>(null);
+  const [editFullName, setEditFullName] = useState("");
+  const [editClassId, setEditClassId] = useState<string>(NONE_CLASS);
+  const [editError, setEditError] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -114,7 +130,7 @@ export function AdminAccountsClient({
       email,
       password,
       role,
-      classId: role === "student" && classId !== NONE_CLASS ? classId : null,
+      classId: role !== "admin" && classId !== NONE_CLASS ? classId : null,
     });
 
     if (result.error !== undefined) {
@@ -145,6 +161,32 @@ export function AdminAccountsClient({
     toast.success(`Đã đặt lại mật khẩu cho ${resetTarget.fullName}.`);
     setResetTarget(null);
     setNewPassword("");
+  };
+
+  const openEdit = (acc: Account) => {
+    setEditTarget(acc);
+    setEditFullName(acc.fullName);
+    setEditClassId(acc.classId ?? NONE_CLASS);
+    setEditError(null);
+  };
+
+  const handleEditSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setEditError(null);
+    if (!editTarget) return;
+
+    const result = await updateAccountByAdminAction(editTarget.id_login, {
+      fullName: editFullName,
+      classId: editTarget.role !== "admin" && editClassId !== NONE_CLASS ? editClassId : null,
+    });
+    if (result.error !== undefined) {
+      setEditError(result.error);
+      return;
+    }
+
+    setAccounts(await listAccountsAction());
+    setEditTarget(null);
+    toast.success(`Đã cập nhật tài khoản ${editFullName.trim()}.`);
   };
 
   const handleToggleStatus = async (id_login: string, name: string, active: boolean) => {
@@ -261,7 +303,7 @@ export function AdminAccountsClient({
                   </RadioGroup>
                 </div>
 
-                {role === "student" && (
+                {role !== "admin" && (
                   <div className="flex flex-col gap-1.5">
                     <Label>Lớp</Label>
                     <Select value={classId} onValueChange={(value) => setClassId(value ?? NONE_CLASS)}>
@@ -342,6 +384,11 @@ export function AdminAccountsClient({
                       <Badge variant={isActive ? "default" : "destructive"}>
                         {isActive ? "Hoạt động" : "Đã khóa"}
                       </Badge>
+
+                      <Button variant="outline" size="sm" onClick={() => openEdit(acc)}>
+                        <Pencil className="size-3.5" />
+                        Sửa
+                      </Button>
 
                       {!isSelf && (
                         <>
@@ -427,6 +474,67 @@ export function AdminAccountsClient({
 
             <DialogFooter>
               <Button type="submit">Đặt lại mật khẩu</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={editTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditTarget(null);
+            setEditError(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Sửa tài khoản</DialogTitle>
+            <DialogDescription>
+              Cập nhật họ tên{editTarget && editTarget.role !== "admin" ? " và lớp phụ trách" : ""}.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleEditSubmit} noValidate className="flex flex-col gap-4">
+            {editError && (
+              <Alert variant="destructive">
+                <AlertCircle />
+                <AlertDescription>{editError}</AlertDescription>
+              </Alert>
+            )}
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="editFullName">Họ và tên</Label>
+              <Input
+                id="editFullName"
+                autoFocus
+                value={editFullName}
+                onChange={(e) => setEditFullName(e.target.value)}
+              />
+            </div>
+
+            {editTarget && editTarget.role !== "admin" && (
+              <div className="flex flex-col gap-1.5">
+                <Label>{editTarget.role === "teacher" ? "Lớp phụ trách" : "Lớp"}</Label>
+                <Select value={editClassId} onValueChange={(value) => setEditClassId(value ?? NONE_CLASS)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Chọn lớp" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE_CLASS}>Chưa có lớp</SelectItem>
+                    {classes.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.className}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button type="submit">Lưu thay đổi</Button>
             </DialogFooter>
           </form>
         </DialogContent>

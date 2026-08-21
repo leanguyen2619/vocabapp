@@ -90,3 +90,22 @@ export async function setAccountStatusAction(id_login: string, status: AccountSt
   const updated = await prisma.account.update({ where: { id_login }, data: { status } }).catch(() => null);
   return updated !== null;
 }
+
+/** Edits an existing account's name and/or class assignment (e.g. assigning a teacher to a class). */
+export async function updateAccountByAdminAction(
+  id_login: string,
+  patch: { fullName: string; classId: string | null }
+): Promise<{ error: string } | { error?: undefined }> {
+  const admin = await requireAdmin();
+  if (!admin) return { error: "Bạn không có quyền thực hiện thao tác này." };
+
+  const fullName = patch.fullName.trim();
+  if (!fullName) return { error: "Vui lòng nhập họ và tên." };
+
+  const updated = await prisma.account
+    .update({ where: { id_login }, data: { fullName, classId: patch.classId } })
+    .catch(() => null);
+  if (!updated) return { error: "Không tìm thấy tài khoản." };
+
+  return {};
+}
