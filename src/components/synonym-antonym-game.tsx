@@ -7,13 +7,10 @@ import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { formatMessage } from "@/lib/i18n/format";
 import type { SynonymAntonymQuestion } from "@/lib/mock-data";
 import { cn, shuffle } from "@/lib/utils";
-
-const relationLabel = {
-  synonym: "đồng nghĩa",
-  antonym: "trái nghĩa",
-};
 
 interface PreparedQuestion extends SynonymAntonymQuestion {
   shuffledOptions: string[];
@@ -23,7 +20,17 @@ function prepare(questions: SynonymAntonymQuestion[]): PreparedQuestion[] {
   return shuffle(questions).map((q) => ({ ...q, shuffledOptions: shuffle(q.options) }));
 }
 
-export function SynonymAntonymGame({ questions }: { questions: SynonymAntonymQuestion[] }) {
+export function SynonymAntonymGame({
+  questions,
+  dict,
+}: {
+  questions: SynonymAntonymQuestion[];
+  dict: Dictionary;
+}) {
+  const relationLabel = {
+    synonym: dict.synonymAntonymGame.relationSynonym,
+    antonym: dict.synonymAntonymGame.relationAntonym,
+  };
   const [prepared] = useState<PreparedQuestion[]>(() => prepare(questions));
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
@@ -67,19 +74,19 @@ export function SynonymAntonymGame({ questions }: { questions: SynonymAntonymQue
         </div>
         <div className="flex flex-col gap-1">
           <h2 className="font-heading text-2xl font-semibold tracking-tight">
-            Hoàn thành bài tập!
+            {dict.synonymAntonymGame.finishedTitle}
           </h2>
           <p className="text-muted-foreground">
-            Bạn trả lời đúng {score}/{total} câu.
+            {formatMessage(dict.synonymAntonymGame.finishedSubtitle, { score, total })}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" onClick={handleRestart}>
             <RotateCcw className="size-4" />
-            Làm lại
+            {dict.synonymAntonymGame.restart}
           </Button>
           <Button nativeButton={false} render={<Link href="/exercises" />}>
-            Chọn dạng khác
+            {dict.synonymAntonymGame.changeType}
           </Button>
         </div>
       </div>
@@ -90,14 +97,17 @@ export function SynonymAntonymGame({ questions }: { questions: SynonymAntonymQue
     <div className="flex flex-col gap-8">
       <Progress value={(index / total) * 100}>
         <ProgressLabel>
-          Câu {index + 1}/{total}
+          {formatMessage(dict.synonymAntonymGame.questionCounter, { current: index + 1, total })}
         </ProgressLabel>
       </Progress>
 
       <div className="flex flex-col items-center gap-2 text-center">
         <Badge variant="secondary">{relationLabel[question.relation]}</Badge>
         <h2 className="font-heading text-xl font-semibold tracking-tight sm:text-2xl">
-          Từ nào {relationLabel[question.relation]} với &ldquo;{question.word}&rdquo;?
+          {formatMessage(dict.synonymAntonymGame.questionPrompt, {
+            relation: relationLabel[question.relation],
+            word: question.word,
+          })}
         </h2>
         <p className="text-sm text-muted-foreground">{question.meanVI}</p>
       </div>
@@ -136,9 +146,17 @@ export function SynonymAntonymGame({ questions }: { questions: SynonymAntonymQue
       {isAnswered && (
         <div className="flex flex-col items-center gap-4 text-center">
           <p className="text-sm text-muted-foreground">
-            {isCorrect ? "Chính xác!" : `Chưa đúng — đáp án là "${question.correctAnswer}".`}
+            {isCorrect
+              ? dict.synonymAntonymGame.feedbackCorrect
+              : formatMessage(dict.synonymAntonymGame.feedbackWrong, {
+                  answer: question.correctAnswer,
+                })}
           </p>
-          <Button onClick={handleNext}>{index + 1 >= total ? "Xem kết quả" : "Câu tiếp theo"}</Button>
+          <Button onClick={handleNext}>
+            {index + 1 >= total
+              ? dict.synonymAntonymGame.viewResults
+              : dict.synonymAntonymGame.nextQuestion}
+          </Button>
         </div>
       )}
     </div>

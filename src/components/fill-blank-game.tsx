@@ -6,6 +6,8 @@ import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { formatMessage } from "@/lib/i18n/format";
 import type { FillBlankQuestion } from "@/lib/mock-data";
 import { cn, shuffle } from "@/lib/utils";
 
@@ -17,7 +19,13 @@ function prepare(questions: FillBlankQuestion[]): PreparedQuestion[] {
   return shuffle(questions).map((q) => ({ ...q, shuffledOptions: shuffle(q.options) }));
 }
 
-export function FillBlankGame({ questions }: { questions: FillBlankQuestion[] }) {
+export function FillBlankGame({
+  questions,
+  dict,
+}: {
+  questions: FillBlankQuestion[];
+  dict: Dictionary;
+}) {
   const [prepared] = useState<PreparedQuestion[]>(() => prepare(questions));
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
@@ -62,19 +70,19 @@ export function FillBlankGame({ questions }: { questions: FillBlankQuestion[] })
         </div>
         <div className="flex flex-col gap-1">
           <h2 className="font-heading text-2xl font-semibold tracking-tight">
-            Hoàn thành bài tập!
+            {dict.fillBlankGame.finishedTitle}
           </h2>
           <p className="text-muted-foreground">
-            Bạn điền đúng {score}/{total} câu.
+            {formatMessage(dict.fillBlankGame.finishedSubtitle, { score, total })}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" onClick={handleRestart}>
             <RotateCcw className="size-4" />
-            Làm lại
+            {dict.fillBlankGame.restart}
           </Button>
           <Button nativeButton={false} render={<Link href="/exercises" />}>
-            Chọn dạng khác
+            {dict.fillBlankGame.changeType}
           </Button>
         </div>
       </div>
@@ -85,7 +93,7 @@ export function FillBlankGame({ questions }: { questions: FillBlankQuestion[] })
     <div className="flex flex-col gap-8">
       <Progress value={(index / total) * 100}>
         <ProgressLabel>
-          Câu {index + 1}/{total}
+          {formatMessage(dict.fillBlankGame.questionCounter, { current: index + 1, total })}
         </ProgressLabel>
       </Progress>
 
@@ -103,7 +111,9 @@ export function FillBlankGame({ questions }: { questions: FillBlankQuestion[] })
           </span>
           {after}
         </p>
-        <p className="text-sm text-muted-foreground">Gợi ý nghĩa: {question.meanVI}</p>
+        <p className="text-sm text-muted-foreground">
+          {formatMessage(dict.fillBlankGame.hint, { mean: question.meanVI })}
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -139,7 +149,9 @@ export function FillBlankGame({ questions }: { questions: FillBlankQuestion[] })
 
       {isAnswered && (
         <div className="flex justify-center">
-          <Button onClick={handleNext}>{index + 1 >= total ? "Xem kết quả" : "Câu tiếp theo"}</Button>
+          <Button onClick={handleNext}>
+            {index + 1 >= total ? dict.fillBlankGame.viewResults : dict.fillBlankGame.nextQuestion}
+          </Button>
         </div>
       )}
     </div>

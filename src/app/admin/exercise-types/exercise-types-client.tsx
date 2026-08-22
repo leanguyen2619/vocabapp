@@ -16,9 +16,17 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { updateExerciseTypeAction, type ExerciseTypeSummary } from "@/lib/actions/exercise-types";
+import { formatMessage } from "@/lib/i18n/format";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { PracticeTypeCode } from "@/types";
 
-export function AdminExerciseTypesClient({ initialTypes }: { initialTypes: ExerciseTypeSummary[] }) {
+export function AdminExerciseTypesClient({
+  initialTypes,
+  dict,
+}: {
+  initialTypes: ExerciseTypeSummary[];
+  dict: Dictionary;
+}) {
   const [types, setTypes] = useState(initialTypes);
 
   const patchLocal = (code: PracticeTypeCode, patch: Partial<ExerciseTypeSummary>) => {
@@ -46,7 +54,12 @@ export function AdminExerciseTypesClient({ initialTypes }: { initialTypes: Exerc
                 onCheckedChange={(checked) => {
                   patchLocal(type.code, { enabled: checked });
                   commit(type.code, { enabled: checked });
-                  toast.success(`Đã ${checked ? "bật" : "tắt"} "${type.name}".`);
+                  toast.success(
+                    formatMessage(dict.admin.exerciseTypes.toggleSuccess, {
+                      action: checked ? dict.admin.exerciseTypes.enable : dict.admin.exerciseTypes.disable,
+                      name: type.name,
+                    })
+                  );
                 }}
               />
             </div>
@@ -59,7 +72,7 @@ export function AdminExerciseTypesClient({ initialTypes }: { initialTypes: Exerc
             />
 
             <div className="flex items-center gap-2">
-              <Label className="text-sm text-muted-foreground">Cấp độ</Label>
+              <Label className="text-sm text-muted-foreground">{dict.admin.exerciseTypes.levelLabel}</Label>
               <Select
                 value={String(type.level)}
                 onValueChange={(value) => {
@@ -83,7 +96,7 @@ export function AdminExerciseTypesClient({ initialTypes }: { initialTypes: Exerc
 
               {!type.href && (
                 <span className="ml-auto text-xs text-muted-foreground">
-                  Chưa có giao diện bài tập
+                  {dict.admin.exerciseTypes.noUi}
                 </span>
               )}
             </div>

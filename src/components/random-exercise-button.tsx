@@ -5,14 +5,17 @@ import { Shuffle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import type { ExerciseTypeSummary } from "@/lib/actions/exercise-types";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { PracticeTypeCode } from "@/types";
 
 export function RandomExerciseButton({
   currentCode,
   types,
+  dict,
 }: {
   currentCode: PracticeTypeCode;
   types: ExerciseTypeSummary[];
+  dict: Dictionary;
 }) {
   const router = useRouter();
 
@@ -26,7 +29,7 @@ export function RandomExerciseButton({
   return (
     <Button variant="ghost" size="sm" onClick={handleRefresh}>
       <Shuffle className="size-4" />
-      Đổi dạng bài
+      {dict.exercises.changeType}
     </Button>
   );
 }

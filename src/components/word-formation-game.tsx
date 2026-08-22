@@ -7,6 +7,8 @@ import { Check, Delete, PartyPopper, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { formatMessage } from "@/lib/i18n/format";
 import type { WordFormationPrompt } from "@/lib/mock-data";
 import { cn, shuffle } from "@/lib/utils";
 
@@ -26,7 +28,13 @@ function prepare(prompts: WordFormationPrompt[]): PreparedPrompt[] {
   }));
 }
 
-export function WordFormationGame({ prompts }: { prompts: WordFormationPrompt[] }) {
+export function WordFormationGame({
+  prompts,
+  dict,
+}: {
+  prompts: WordFormationPrompt[];
+  dict: Dictionary;
+}) {
   const [prepared] = useState<PreparedPrompt[]>(() => prepare(prompts));
   const [index, setIndex] = useState(0);
   const [placedIds, setPlacedIds] = useState<number[]>([]);
@@ -91,19 +99,22 @@ export function WordFormationGame({ prompts }: { prompts: WordFormationPrompt[] 
         </div>
         <div className="flex flex-col gap-1">
           <h2 className="font-heading text-2xl font-semibold tracking-tight">
-            Hoàn thành trò chơi ghép từ!
+            {dict.wordFormationGame.finishedTitle}
           </h2>
           <p className="text-muted-foreground">
-            Bạn đã ghép đúng {total} từ · {wrongAttempts} lần thử sai.
+            {formatMessage(dict.wordFormationGame.finishedSubtitle, {
+              total,
+              wrong: wrongAttempts,
+            })}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" onClick={handleRestart}>
             <RotateCcw className="size-4" />
-            Chơi lại
+            {dict.wordFormationGame.restart}
           </Button>
           <Button nativeButton={false} render={<Link href="/exercises" />}>
-            Chọn dạng khác
+            {dict.wordFormationGame.changeType}
           </Button>
         </div>
       </div>
@@ -114,7 +125,7 @@ export function WordFormationGame({ prompts }: { prompts: WordFormationPrompt[] 
     <div className="flex flex-col gap-8">
       <Progress value={(index / total) * 100}>
         <ProgressLabel>
-          Từ {index + 1}/{total}
+          {formatMessage(dict.wordFormationGame.wordCounter, { current: index + 1, total })}
         </ProgressLabel>
       </Progress>
 
@@ -131,7 +142,9 @@ export function WordFormationGame({ prompts }: { prompts: WordFormationPrompt[] 
         )}
       >
         {placedIds.length === 0 && (
-          <span className="text-sm text-muted-foreground">Chạm vào các chữ bên dưới</span>
+          <span className="text-sm text-muted-foreground">
+            {dict.wordFormationGame.emptyPlaceholder}
+          </span>
         )}
         {placedIds.map((id) => (
           <span
@@ -159,7 +172,12 @@ export function WordFormationGame({ prompts }: { prompts: WordFormationPrompt[] 
               {tile.char}
             </button>
           ))}
-          <Button variant="ghost" size="icon" aria-label="Xóa chữ cuối" onClick={handleBackspace}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={dict.wordFormationGame.backspaceAriaLabel}
+            onClick={handleBackspace}
+          >
             <Delete className="size-4" />
           </Button>
         </div>
@@ -169,9 +187,14 @@ export function WordFormationGame({ prompts }: { prompts: WordFormationPrompt[] 
         <div className="flex flex-col items-center gap-4 text-center">
           <p className="flex items-center gap-1.5 text-sm font-medium text-emerald-700">
             <Check className="size-4" />
-            Chính xác! {answer} nghĩa là &ldquo;{prompt.meanVI}&rdquo;.
+            {formatMessage(dict.wordFormationGame.successMessage, {
+              answer,
+              mean: prompt.meanVI,
+            })}
           </p>
-          <Button onClick={handleNext}>{index + 1 >= total ? "Xem kết quả" : "Từ tiếp theo"}</Button>
+          <Button onClick={handleNext}>
+            {index + 1 >= total ? dict.wordFormationGame.viewResults : dict.wordFormationGame.nextWord}
+          </Button>
         </div>
       )}
     </div>

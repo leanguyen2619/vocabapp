@@ -11,13 +11,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { registerAction } from "@/lib/actions/auth";
+import { formatMessage } from "@/lib/i18n/format";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Role } from "@/types";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type InvalidField = "fullName" | "email" | "password" | "confirmPassword" | null;
 
-export function RegisterForm() {
+export function RegisterForm({ dict }: { dict: Dictionary }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [fullName, setFullName] = useState("");
@@ -42,27 +44,27 @@ export function RegisterForm() {
     setInvalidField(null);
 
     if (!fullName.trim()) {
-      fail("Vui lòng nhập họ và tên.", "fullName");
+      fail(dict.register.errorFullName, "fullName");
       return;
     }
     if (!email.trim()) {
-      fail("Vui lòng nhập email.", "email");
+      fail(dict.register.errorEmail, "email");
       return;
     }
     if (!EMAIL_PATTERN.test(email.trim())) {
-      fail("Email không đúng định dạng.", "email");
+      fail(dict.register.errorEmailFormat, "email");
       return;
     }
     if (!password || !confirmPassword) {
-      fail("Vui lòng nhập đầy đủ mật khẩu.", !password ? "password" : "confirmPassword");
+      fail(dict.register.errorPasswordRequired, !password ? "password" : "confirmPassword");
       return;
     }
     if (password.length < 6) {
-      fail("Mật khẩu cần ít nhất 6 ký tự.", "password");
+      fail(dict.register.errorPasswordLength, "password");
       return;
     }
     if (password !== confirmPassword) {
-      fail("Mật khẩu xác nhận không khớp.", "confirmPassword");
+      fail(dict.register.errorPasswordMismatch, "confirmPassword");
       return;
     }
 
@@ -75,7 +77,7 @@ export function RegisterForm() {
       return;
     }
 
-    toast.success(`Đăng ký thành công! Mã học viên của bạn: ${result.id_login}. Lần sau đăng nhập bằng email nhé.`, {
+    toast.success(formatMessage(dict.register.successToast, { id: result.id_login }), {
       duration: 10000,
     });
     router.push("/dashboard");
@@ -92,18 +94,18 @@ export function RegisterForm() {
       )}
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="fullName">Họ và tên</Label>
+        <Label htmlFor="fullName">{dict.register.fullNameLabel}</Label>
         <Input
           id="fullName"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-          placeholder="Nguyễn Văn A"
+          placeholder={dict.register.fullNamePlaceholder}
           aria-invalid={invalidField === "fullName"}
         />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">{dict.register.emailLabel}</Label>
         <Input
           id="email"
           type="email"
@@ -116,33 +118,33 @@ export function RegisterForm() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="password">Mật khẩu</Label>
+        <Label htmlFor="password">{dict.register.passwordLabel}</Label>
         <Input
           id="password"
           type="password"
           autoComplete="new-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Tối thiểu 6 ký tự"
+          placeholder={dict.register.passwordPlaceholder}
           aria-invalid={invalidField === "password"}
         />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="confirmPassword">Xác nhận mật khẩu</Label>
+        <Label htmlFor="confirmPassword">{dict.register.confirmPasswordLabel}</Label>
         <Input
           id="confirmPassword"
           type="password"
           autoComplete="new-password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Nhập lại mật khẩu"
+          placeholder={dict.register.confirmPasswordPlaceholder}
           aria-invalid={invalidField === "confirmPassword"}
         />
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label>Bạn là</Label>
+        <Label>{dict.register.roleLabel}</Label>
         <RadioGroup
           value={role}
           onValueChange={(value) => setRole(value as Role)}
@@ -150,17 +152,17 @@ export function RegisterForm() {
         >
           <Label className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 has-data-checked:border-primary">
             <RadioGroupItem value="student" />
-            Học sinh
+            {dict.register.roleStudent}
           </Label>
           <Label className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 has-data-checked:border-primary">
             <RadioGroupItem value="teacher" />
-            Giáo viên
+            {dict.register.roleTeacher}
           </Label>
         </RadioGroup>
       </div>
 
       <Button type="submit" size="lg" className="mt-2 h-10" disabled={submitting}>
-        {submitting ? "Đang tạo tài khoản..." : "Đăng ký"}
+        {submitting ? dict.register.submitting : dict.register.submit}
       </Button>
     </form>
   );

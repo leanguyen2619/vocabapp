@@ -11,6 +11,8 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatMessage } from "@/lib/i18n/format";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Account } from "@/types";
 
 interface AdminFunction {
@@ -20,63 +22,65 @@ interface AdminFunction {
   href: string | null;
 }
 
-const adminFunctions: AdminFunction[] = [
-  {
-    title: "Tài khoản học viên",
-    description: "Tạo tài khoản, reset mật khẩu, khóa/mở khóa.",
-    icon: Users,
-    href: "/admin/accounts",
-  },
-  {
-    title: "Lớp học",
-    description: "Tạo lớp, chỉnh số từ mục tiêu mỗi ngày.",
-    icon: Building2,
-    href: "/admin/classes",
-  },
-  {
-    title: "Từ vựng",
-    description: "Thêm/sửa/xóa từ, import từ file Excel.",
-    icon: Library,
-    href: "/admin/vocabulary",
-  },
-  {
-    title: "Dạng bài tập",
-    description: "Thêm dạng bài, chỉnh level mở khóa, bật/tắt.",
-    icon: Settings2,
-    href: "/admin/exercise-types",
-  },
-  {
-    title: "Question Bank",
-    description: "Thêm, chỉnh sửa và duyệt câu hỏi.",
-    icon: BarChart3,
-    href: "/admin/question-bank",
-  },
-  {
-    title: "Level học viên",
-    description: "Unlock A1/A2/B1/B2 thủ công cho học viên.",
-    icon: Users,
-    href: "/admin/levels",
-  },
-];
-
 export function AdminDashboardContent({
   account,
   studentCount,
   classCount,
   vocabCount,
+  dict,
 }: {
   account: Account;
   studentCount: number;
   classCount: number;
   vocabCount: number;
+  dict: Dictionary;
 }) {
+  const adminFunctions: AdminFunction[] = [
+    {
+      title: dict.adminDashboard.fnAccountsTitle,
+      description: dict.adminDashboard.fnAccountsDesc,
+      icon: Users,
+      href: "/admin/accounts",
+    },
+    {
+      title: dict.adminDashboard.fnClassesTitle,
+      description: dict.adminDashboard.fnClassesDesc,
+      icon: Building2,
+      href: "/admin/classes",
+    },
+    {
+      title: dict.adminDashboard.fnVocabTitle,
+      description: dict.adminDashboard.fnVocabDesc,
+      icon: Library,
+      href: "/admin/vocabulary",
+    },
+    {
+      title: dict.adminDashboard.fnExerciseTypesTitle,
+      description: dict.adminDashboard.fnExerciseTypesDesc,
+      icon: Settings2,
+      href: "/admin/exercise-types",
+    },
+    {
+      title: dict.adminDashboard.fnQuestionBankTitle,
+      description: dict.adminDashboard.fnQuestionBankDesc,
+      icon: BarChart3,
+      href: "/admin/question-bank",
+    },
+    {
+      title: dict.adminDashboard.fnLevelsTitle,
+      description: dict.adminDashboard.fnLevelsDesc,
+      icon: Users,
+      href: "/admin/levels",
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-1">
         <h1 className="font-heading text-2xl font-semibold tracking-tight">
-          Chào {account.fullName}
+          {formatMessage(dict.adminDashboard.greeting, { name: account.fullName })}
         </h1>
-        <p className="text-muted-foreground">Bảng điều khiển quản trị VocabApp.</p>
+        <p className="text-muted-foreground">{dict.adminDashboard.subtitle}</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -87,7 +91,7 @@ export function AdminDashboardContent({
             </div>
             <div>
               <p className="text-lg font-semibold leading-none">{studentCount}</p>
-              <p className="text-xs text-muted-foreground">Học viên</p>
+              <p className="text-xs text-muted-foreground">{dict.adminDashboard.students}</p>
             </div>
           </CardContent>
         </Card>
@@ -98,7 +102,7 @@ export function AdminDashboardContent({
             </div>
             <div>
               <p className="text-lg font-semibold leading-none">{classCount}</p>
-              <p className="text-xs text-muted-foreground">Lớp học</p>
+              <p className="text-xs text-muted-foreground">{dict.adminDashboard.classes}</p>
             </div>
           </CardContent>
         </Card>
@@ -109,14 +113,16 @@ export function AdminDashboardContent({
             </div>
             <div>
               <p className="text-lg font-semibold leading-none">{vocabCount}</p>
-              <p className="text-xs text-muted-foreground">Từ vựng</p>
+              <p className="text-xs text-muted-foreground">{dict.adminDashboard.vocabulary}</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
       <div className="flex flex-col gap-3">
-        <h2 className="font-heading text-lg font-semibold tracking-tight">Chức năng quản trị</h2>
+        <h2 className="font-heading text-lg font-semibold tracking-tight">
+          {dict.adminDashboard.functionsTitle}
+        </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {adminFunctions.map((fn) => {
             const Icon = fn.icon;
@@ -136,7 +142,7 @@ export function AdminDashboardContent({
                 {!isReady && (
                   <Badge variant="outline" className="w-fit gap-1 text-muted-foreground">
                     <Clock className="size-3" />
-                    Sắp có
+                    {dict.adminDashboard.comingSoon}
                   </Badge>
                 )}
               </CardContent>

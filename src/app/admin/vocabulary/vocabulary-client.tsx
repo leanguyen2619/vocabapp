@@ -46,7 +46,9 @@ import {
   listVocabularyAction,
   updateVocabularyAction,
 } from "@/lib/actions/vocabulary";
-import { getLevelName, getTopicName, posLabel } from "@/lib/labels";
+import { formatMessage } from "@/lib/i18n/format";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { getLevelName, getTopicName } from "@/lib/labels";
 import type { Level, PartOfSpeech, Topic, Vocabulary } from "@/types";
 
 const POS_VALUES: PartOfSpeech[] = [
@@ -73,10 +75,12 @@ export function AdminVocabularyClient({
   initialWords,
   levels,
   topics,
+  dict,
 }: {
   initialWords: Vocabulary[];
   levels: Level[];
   topics: Topic[];
+  dict: Dictionary;
 }) {
   const emptyForm = {
     vocab: "",
@@ -136,7 +140,7 @@ export function AdminVocabularyClient({
     setError(null);
 
     if (!form.vocab.trim() || !form.definition.trim() || !form.meanVI.trim()) {
-      setError("Vui lòng điền đầy đủ thông tin.");
+      setError(dict.admin.vocabulary.errorFillAll);
       return;
     }
 
@@ -151,14 +155,14 @@ export function AdminVocabularyClient({
 
     if (editingId) {
       await updateVocabularyAction(editingId, payload);
-      toast.success(`Đã cập nhật từ "${payload.vocab}".`);
+      toast.success(formatMessage(dict.admin.vocabulary.updateSuccess, { word: payload.vocab }));
     } else {
       const result = await createVocabularyAction(payload);
       if (result.error !== undefined) {
         setError(result.error);
         return;
       }
-      toast.success(`Đã thêm từ "${payload.vocab}".`);
+      toast.success(formatMessage(dict.admin.vocabulary.addSuccess, { word: payload.vocab }));
     }
 
     setWords(await listVocabularyAction());
@@ -166,10 +170,10 @@ export function AdminVocabularyClient({
   };
 
   const handleDelete = async (word: Vocabulary) => {
-    if (!window.confirm(`Xóa từ "${word.vocab}"?`)) return;
+    if (!window.confirm(formatMessage(dict.admin.vocabulary.deleteConfirm, { word: word.vocab }))) return;
     await deleteVocabularyAction(word.id);
     setWords(await listVocabularyAction());
-    toast.success(`Đã xóa từ "${word.vocab}".`);
+    toast.success(formatMessage(dict.admin.vocabulary.deleteSuccess, { word: word.vocab }));
   };
 
   const handleDownloadTemplate = () => {
@@ -185,7 +189,7 @@ export function AdminVocabularyClient({
     ];
     const sheet = XLSX.utils.json_to_sheet(sample);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, sheet, "Từ vựng");
+    XLSX.utils.book_append_sheet(workbook, sheet, dict.admin.vocabulary.title);
     XLSX.writeFile(workbook, "vocabapp_mau_tu_vung.xlsx");
   };
 
@@ -229,11 +233,13 @@ export function AdminVocabularyClient({
       const imported = await bulkCreateVocabularyAction(validRows);
       setWords(await listVocabularyAction());
 
-      if (imported > 0) toast.success(`Đã import ${imported} từ vựng.`);
-      if (skipped > 0) toast.error(`Bỏ qua ${skipped} dòng do thiếu hoặc sai dữ liệu.`);
-      if (imported === 0 && skipped === 0) toast.error("File không có dữ liệu.");
+      if (imported > 0)
+        toast.success(formatMessage(dict.admin.vocabulary.importSuccess, { count: imported }));
+      if (skipped > 0)
+        toast.error(formatMessage(dict.admin.vocabulary.importSkipped, { count: skipped }));
+      if (imported === 0 && skipped === 0) toast.error(dict.admin.vocabulary.importEmpty);
     } catch {
-      toast.error("Không đọc được file. Vui lòng kiểm tra định dạng .xlsx.");
+      toast.error(dict.admin.vocabulary.importError);
     }
   };
 
@@ -246,13 +252,13 @@ export function AdminVocabularyClient({
             className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="size-4" />
-            Dashboard
+            {dict.common.backToDashboard}
           </Link>
           <div className="flex items-center gap-2">
             <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <BookOpen className="size-3.5" />
             </div>
-            <span className="font-heading text-base font-semibold">VocabApp</span>
+            <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
           </div>
         </div>
       </header>
@@ -260,18 +266,22 @@ export function AdminVocabularyClient({
       <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-10">
         <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div className="flex flex-col gap-1">
-            <h1 className="font-heading text-2xl font-semibold tracking-tight">Từ vựng</h1>
-            <p className="text-muted-foreground">{words.length} từ trong kho từ vựng.</p>
+            <h1 className="font-heading text-2xl font-semibold tracking-tight">
+              {dict.admin.vocabulary.title}
+            </h1>
+            <p className="text-muted-foreground">
+              {formatMessage(dict.admin.vocabulary.subtitle, { count: words.length })}
+            </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" size="sm" onClick={handleDownloadTemplate}>
               <Download className="size-4" />
-              Tải mẫu Excel
+              {dict.admin.vocabulary.downloadTemplate}
             </Button>
             <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
               <Upload className="size-4" />
-              Import Excel
+              {dict.admin.vocabulary.importExcel}
             </Button>
             <input
               ref={fileInputRef}
@@ -286,7 +296,7 @@ export function AdminVocabularyClient({
             />
             <Button size="sm" onClick={openCreate}>
               <Plus className="size-4" />
-              Thêm từ
+              {dict.admin.vocabulary.addWord}
             </Button>
           </div>
         </div>
@@ -299,7 +309,7 @@ export function AdminVocabularyClient({
               setSearch(e.target.value);
               setPage(1);
             }}
-            placeholder="Tìm từ vựng hoặc nghĩa..."
+            placeholder={dict.admin.vocabulary.searchPlaceholder}
             className="pl-8"
           />
         </div>
@@ -308,7 +318,7 @@ export function AdminVocabularyClient({
           <CardContent className="flex flex-col gap-1 py-4">
             {pagedWords.length === 0 && (
               <p className="py-6 text-center text-sm text-muted-foreground">
-                Không tìm thấy từ vựng phù hợp.
+                {dict.admin.vocabulary.noResults}
               </p>
             )}
             {pagedWords.map((word, index) => (
@@ -319,7 +329,7 @@ export function AdminVocabularyClient({
                     <p className="font-medium">
                       {word.vocab}{" "}
                       <span className="text-xs font-normal text-muted-foreground">
-                        {posLabel[word.partOfSpeech]}
+                        {dict.partOfSpeech[word.partOfSpeech]}
                       </span>
                     </p>
                     <p className="text-sm text-muted-foreground">
@@ -332,13 +342,18 @@ export function AdminVocabularyClient({
                   </div>
 
                   <div className="flex shrink-0 items-center gap-2">
-                    <Button variant="ghost" size="icon-sm" aria-label="Sửa" onClick={() => openEdit(word)}>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={dict.common.edit}
+                      onClick={() => openEdit(word)}
+                    >
                       <Pencil className="size-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label="Xóa"
+                      aria-label={dict.common.delete}
                       onClick={() => void handleDelete(word)}
                     >
                       <Trash2 className="size-4 text-destructive" />
@@ -356,9 +371,11 @@ export function AdminVocabularyClient({
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingId ? "Sửa từ vựng" : "Thêm từ vựng"}</DialogTitle>
+            <DialogTitle>
+              {editingId ? dict.admin.vocabulary.editTitle : dict.admin.vocabulary.addTitle}
+            </DialogTitle>
             <DialogDescription>
-              {editingId ? "Cập nhật thông tin từ vựng." : "Thêm một từ mới vào kho từ vựng."}
+              {editingId ? dict.admin.vocabulary.editDesc : dict.admin.vocabulary.addDesc}
             </DialogDescription>
           </DialogHeader>
 
@@ -371,7 +388,7 @@ export function AdminVocabularyClient({
             )}
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="vocab">Từ (tiếng Anh)</Label>
+              <Label htmlFor="vocab">{dict.admin.vocabulary.wordLabel}</Label>
               <Input
                 id="vocab"
                 value={form.vocab}
@@ -380,7 +397,7 @@ export function AdminVocabularyClient({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="meanVI">Nghĩa tiếng Việt</Label>
+              <Label htmlFor="meanVI">{dict.admin.vocabulary.meanLabel}</Label>
               <Input
                 id="meanVI"
                 value={form.meanVI}
@@ -389,7 +406,7 @@ export function AdminVocabularyClient({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="definition">Định nghĩa (tiếng Anh)</Label>
+              <Label htmlFor="definition">{dict.admin.vocabulary.definitionLabel}</Label>
               <Textarea
                 id="definition"
                 rows={2}
@@ -400,7 +417,7 @@ export function AdminVocabularyClient({
 
             <div className="grid grid-cols-3 gap-3">
               <div className="flex flex-col gap-1.5">
-                <Label>Loại từ</Label>
+                <Label>{dict.admin.vocabulary.posLabel}</Label>
                 <Select
                   value={form.partOfSpeech}
                   onValueChange={(value) =>
@@ -408,12 +425,12 @@ export function AdminVocabularyClient({
                   }
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue>{(value: PartOfSpeech) => posLabel[value]}</SelectValue>
+                    <SelectValue>{(value: PartOfSpeech) => dict.partOfSpeech[value]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {POS_VALUES.map((pos) => (
                       <SelectItem key={pos} value={pos}>
-                        {posLabel[pos]}
+                        {dict.partOfSpeech[pos]}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -421,14 +438,16 @@ export function AdminVocabularyClient({
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label>Chủ đề</Label>
+                <Label>{dict.admin.vocabulary.topicLabel}</Label>
                 <Select
                   value={form.topicId}
                   onValueChange={(value) => setForm((f) => ({ ...f, topicId: value ?? f.topicId }))}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue>
-                      {(value: string) => topics.find((t) => String(t.id) === value)?.topic ?? "Chọn chủ đề"}
+                      {(value: string) =>
+                        topics.find((t) => String(t.id) === value)?.topic ?? dict.admin.vocabulary.chooseTopic
+                      }
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -442,14 +461,16 @@ export function AdminVocabularyClient({
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label>Cấp độ</Label>
+                <Label>{dict.admin.vocabulary.levelLabel}</Label>
                 <Select
                   value={form.levelId}
                   onValueChange={(value) => setForm((f) => ({ ...f, levelId: value ?? f.levelId }))}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue>
-                      {(value: string) => levels.find((l) => l.id === value)?.level ?? "Chọn cấp độ"}
+                      {(value: string) =>
+                        levels.find((l) => l.id === value)?.level ?? dict.admin.vocabulary.chooseLevel
+                      }
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -464,7 +485,9 @@ export function AdminVocabularyClient({
             </div>
 
             <DialogFooter>
-              <Button type="submit">{editingId ? "Lưu thay đổi" : "Thêm từ"}</Button>
+              <Button type="submit">
+                {editingId ? dict.admin.vocabulary.saveSubmit : dict.admin.vocabulary.addSubmit}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>

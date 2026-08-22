@@ -8,9 +8,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { formatMessage } from "@/lib/i18n/format";
 import type { SentencePrompt } from "@/lib/mock-data";
 
-export function SentenceWritingExercise({ prompts }: { prompts: SentencePrompt[] }) {
+export function SentenceWritingExercise({
+  prompts,
+  dict,
+}: {
+  prompts: SentencePrompt[];
+  dict: Dictionary;
+}) {
   const [index, setIndex] = useState(0);
   const [text, setText] = useState("");
   const [showExample, setShowExample] = useState(false);
@@ -54,27 +62,29 @@ export function SentenceWritingExercise({ prompts }: { prompts: SentencePrompt[]
         </div>
         <div className="flex flex-col gap-1">
           <h2 className="font-heading text-2xl font-semibold tracking-tight">
-            Hoàn thành bài viết câu!
+            {dict.writingExercise.finishedTitle}
           </h2>
-          <p className="text-muted-foreground">Bạn đã luyện viết {total} câu.</p>
+          <p className="text-muted-foreground">
+            {formatMessage(dict.writingExercise.finishedSubtitle, { total })}
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="gap-1.5 py-1 text-sm">
             <Check className="size-3.5 text-emerald-600" />
-            Tự tin: {confidentCount}
+            {dict.writingExercise.confidentLabel}: {confidentCount}
           </Badge>
           <Badge variant="outline" className="gap-1.5 py-1 text-sm">
             <RotateCcw className="size-3.5 text-amber-600" />
-            Cần luyện thêm: {practiceCount}
+            {dict.writingExercise.practiceLabel}: {practiceCount}
           </Badge>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" onClick={handleRestart}>
             <RotateCcw className="size-4" />
-            Làm lại
+            {dict.writingExercise.restart}
           </Button>
           <Button nativeButton={false} render={<Link href="/exercises" />}>
-            Chọn dạng khác
+            {dict.writingExercise.changeType}
           </Button>
         </div>
       </div>
@@ -85,12 +95,12 @@ export function SentenceWritingExercise({ prompts }: { prompts: SentencePrompt[]
     <div className="flex flex-col gap-8">
       <Progress value={(index / total) * 100}>
         <ProgressLabel>
-          Câu {index + 1}/{total}
+          {formatMessage(dict.writingExercise.questionCounter, { current: index + 1, total })}
         </ProgressLabel>
       </Progress>
 
       <div className="flex flex-col items-center gap-1 text-center">
-        <p className="text-sm text-muted-foreground">Đặt câu với từ</p>
+        <p className="text-sm text-muted-foreground">{dict.writingExercise.promptLabel}</p>
         <h2 className="font-heading text-2xl font-semibold tracking-tight">{prompt.vocab}</h2>
         <p className="text-sm text-muted-foreground">{prompt.meanVI}</p>
       </div>
@@ -98,7 +108,7 @@ export function SentenceWritingExercise({ prompts }: { prompts: SentencePrompt[]
       <Textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder={`Viết một câu tiếng Anh có dùng từ "${prompt.vocab}"...`}
+        placeholder={formatMessage(dict.writingExercise.textareaPlaceholder, { word: prompt.vocab })}
         rows={4}
       />
 
@@ -106,13 +116,14 @@ export function SentenceWritingExercise({ prompts }: { prompts: SentencePrompt[]
         <div className="flex items-start gap-2 rounded-lg bg-muted p-3 text-sm">
           <Lightbulb className="mt-0.5 size-4 shrink-0 text-amber-500" />
           <p>
-            Câu mẫu: <span className="italic">{prompt.exampleSentence}</span>
+            {dict.writingExercise.exampleLabel}{" "}
+            <span className="italic">{prompt.exampleSentence}</span>
           </p>
         </div>
       ) : (
         <Button variant="outline" size="sm" className="self-start" onClick={() => setShowExample(true)}>
           <Lightbulb className="size-4" />
-          Xem câu mẫu
+          {dict.writingExercise.showExample}
         </Button>
       )}
 
@@ -123,14 +134,14 @@ export function SentenceWritingExercise({ prompts }: { prompts: SentencePrompt[]
           onClick={() => handleSelfMark(false)}
         >
           <X className="size-4" />
-          Cần luyện thêm
+          {dict.writingExercise.practiceLabel}
         </Button>
         <Button
           className="bg-emerald-600 text-white hover:bg-emerald-600/90"
           onClick={() => handleSelfMark(true)}
         >
           <Check className="size-4" />
-          Tôi đã viết đúng
+          {dict.writingExercise.confidentButton}
         </Button>
       </div>
     </div>

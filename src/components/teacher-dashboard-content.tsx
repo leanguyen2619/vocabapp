@@ -38,25 +38,22 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { assignVocabularyToClassAction, type ClassStudentSummary } from "@/lib/actions/teacher";
-import type { Account, AssignmentStatus, Vocabulary } from "@/types";
-
-const statusLabel: Record<AssignmentStatus, string> = {
-  pending: "Chưa làm",
-  in_progress: "Đang làm",
-  done: "Hoàn thành",
-  overdue: "Quá hạn",
-};
+import { formatMessage } from "@/lib/i18n/format";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import type { Account, Vocabulary } from "@/types";
 
 export function TeacherDashboardContent({
   account,
   className: assignedClassName,
   students,
   vocabularyBank,
+  dict,
 }: {
   account: Account;
   className: string | null;
   students: ClassStudentSummary[];
   vocabularyBank: Vocabulary[];
+  dict: Dictionary;
 }) {
   const [selectedVocab, setSelectedVocab] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -91,7 +88,12 @@ export function TeacherDashboardContent({
     }
 
     setDialogOpen(false);
-    toast.success(`Đã giao ${selectedVocab.length} từ vựng cho ${result.studentCount} học sinh.`);
+    toast.success(
+      formatMessage(dict.teacherDashboard.assignSuccess, {
+        count: selectedVocab.length,
+        students: result.studentCount,
+      })
+    );
     setSelectedVocab([]);
   };
 
@@ -100,21 +102,23 @@ export function TeacherDashboardContent({
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div className="flex flex-col gap-1">
           <h1 className="font-heading text-2xl font-semibold tracking-tight">
-            Chào {account.fullName}
+            {formatMessage(dict.teacherDashboard.greeting, { name: account.fullName })}
           </h1>
           <p className="text-muted-foreground">
-            {className ? `Tổng quan ${className} bạn đang phụ trách.` : "Bạn chưa được gán vào lớp nào."}
+            {className
+              ? formatMessage(dict.teacherDashboard.overview, { className })
+              : dict.teacherDashboard.noClass}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/vocabulary" />}>
             <Library className="size-4" />
-            Kho từ vựng
+            {dict.teacherDashboard.myVocabulary}
           </Button>
           <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/exercises" />}>
             <ListChecks className="size-4" />
-            Dạng bài tập
+            {dict.teacherDashboard.exerciseTypes}
           </Button>
 
           <Dialog
@@ -129,12 +133,14 @@ export function TeacherDashboardContent({
           >
             <DialogTrigger render={<Button size="sm" disabled={!className} />}>
               <ClipboardList className="size-4" />
-              Giao từ vựng mới
+              {dict.teacherDashboard.assignVocab}
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Giao từ vựng cho {className}</DialogTitle>
-                <DialogDescription>Chọn từ vựng muốn giao cho toàn bộ học sinh.</DialogDescription>
+                <DialogTitle>
+                  {formatMessage(dict.teacherDashboard.assignVocabTitle, { className: className ?? "" })}
+                </DialogTitle>
+                <DialogDescription>{dict.teacherDashboard.assignVocabDesc}</DialogDescription>
               </DialogHeader>
 
               <div className="relative">
@@ -142,7 +148,7 @@ export function TeacherDashboardContent({
                 <Input
                   value={vocabSearch}
                   onChange={(e) => setVocabSearch(e.target.value)}
-                  placeholder="Tìm từ vựng..."
+                  placeholder={dict.teacherDashboard.searchVocab}
                   className="pl-8"
                 />
               </div>
@@ -165,7 +171,7 @@ export function TeacherDashboardContent({
                 ))}
                 {filteredVocab.length === 0 && (
                   <p className="py-4 text-center text-sm text-muted-foreground">
-                    Không tìm thấy từ vựng phù hợp.
+                    {dict.teacherDashboard.noVocabFound}
                   </p>
                 )}
               </div>
@@ -175,7 +181,9 @@ export function TeacherDashboardContent({
                   disabled={selectedVocab.length === 0 || assigning}
                   onClick={() => void handleAssign()}
                 >
-                  {assigning ? "Đang giao..." : `Giao bài (${selectedVocab.length})`}
+                  {assigning
+                    ? dict.teacherDashboard.assigning
+                    : formatMessage(dict.teacherDashboard.assignButton, { count: selectedVocab.length })}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -187,9 +195,7 @@ export function TeacherDashboardContent({
         <Card>
           <CardContent className="flex flex-col items-center gap-2 py-10 text-center">
             <Users className="size-8 text-muted-foreground" />
-            <p className="text-muted-foreground">
-              Bạn chưa được quản trị viên gán vào lớp nào. Liên hệ admin để bắt đầu quản lý lớp học.
-            </p>
+            <p className="text-muted-foreground">{dict.teacherDashboard.noClassCard}</p>
           </CardContent>
         </Card>
       ) : (
@@ -202,7 +208,7 @@ export function TeacherDashboardContent({
                 </div>
                 <div>
                   <p className="text-lg font-semibold leading-none">{studentCount}</p>
-                  <p className="text-xs text-muted-foreground">Học sinh</p>
+                  <p className="text-xs text-muted-foreground">{dict.teacherDashboard.students}</p>
                 </div>
               </CardContent>
             </Card>
@@ -213,7 +219,7 @@ export function TeacherDashboardContent({
                 </div>
                 <div>
                   <p className="text-lg font-semibold leading-none">{averageScore}%</p>
-                  <p className="text-xs text-muted-foreground">Điểm trung bình</p>
+                  <p className="text-xs text-muted-foreground">{dict.teacherDashboard.averageScore}</p>
                 </div>
               </CardContent>
             </Card>
@@ -226,7 +232,7 @@ export function TeacherDashboardContent({
                   <p className="text-lg font-semibold leading-none">
                     {doneToday}/{studentCount}
                   </p>
-                  <p className="text-xs text-muted-foreground">Hoàn thành hôm nay</p>
+                  <p className="text-xs text-muted-foreground">{dict.teacherDashboard.doneToday}</p>
                 </div>
               </CardContent>
             </Card>
@@ -234,13 +240,15 @@ export function TeacherDashboardContent({
 
           <Card>
             <CardHeader>
-              <CardTitle>Danh sách học sinh</CardTitle>
-              <CardDescription>Tiến độ học tập của {className}</CardDescription>
+              <CardTitle>{dict.teacherDashboard.studentList}</CardTitle>
+              <CardDescription>
+                {formatMessage(dict.teacherDashboard.studentListDesc, { className })}
+              </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-1">
               {students.length === 0 && (
                 <p className="py-6 text-center text-sm text-muted-foreground">
-                  Lớp này chưa có học sinh nào.
+                  {dict.teacherDashboard.noStudents}
                 </p>
               )}
               {students.map((student, index) => (
@@ -256,7 +264,7 @@ export function TeacherDashboardContent({
                       <div>
                         <p className="font-medium">{student.fullName}</p>
                         <p className="text-sm text-muted-foreground">
-                          {student.levelName} · {student.masteredVocab} từ đã thuộc
+                          {student.levelName} · {student.masteredVocab} {dict.teacherDashboard.masteredWords}
                         </p>
                       </div>
                     </div>
@@ -271,7 +279,7 @@ export function TeacherDashboardContent({
                         variant={student.todayStatus === "done" ? "default" : "outline"}
                         className="shrink-0"
                       >
-                        {statusLabel[student.todayStatus]}
+                        {dict.assignmentStatus[student.todayStatus]}
                       </Badge>
                     </div>
                   </div>

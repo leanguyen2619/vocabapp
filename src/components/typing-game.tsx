@@ -8,10 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { formatMessage } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
 import type { Vocabulary } from "@/types";
 
-export function TypingGame({ vocabList }: { vocabList: Vocabulary[] }) {
+export function TypingGame({ vocabList, dict }: { vocabList: Vocabulary[]; dict: Dictionary }) {
   const [index, setIndex] = useState(0);
   const [value, setValue] = useState("");
   const [checked, setChecked] = useState(false);
@@ -60,19 +62,19 @@ export function TypingGame({ vocabList }: { vocabList: Vocabulary[] }) {
         </div>
         <div className="flex flex-col gap-1">
           <h2 className="font-heading text-2xl font-semibold tracking-tight">
-            Hoàn thành bài gõ từ!
+            {dict.typingGame.finishedTitle}
           </h2>
           <p className="text-muted-foreground">
-            Bạn gõ đúng {score}/{total} từ.
+            {formatMessage(dict.typingGame.finishedSubtitle, { score, total })}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" onClick={handleRestart}>
             <RotateCcw className="size-4" />
-            Làm lại
+            {dict.typingGame.restart}
           </Button>
           <Button nativeButton={false} render={<Link href="/exercises" />}>
-            Chọn dạng khác
+            {dict.typingGame.changeType}
           </Button>
         </div>
       </div>
@@ -83,12 +85,12 @@ export function TypingGame({ vocabList }: { vocabList: Vocabulary[] }) {
     <div className="flex flex-col gap-8">
       <Progress value={(index / total) * 100}>
         <ProgressLabel>
-          Từ {index + 1}/{total}
+          {formatMessage(dict.typingGame.wordCounter, { current: index + 1, total })}
         </ProgressLabel>
       </Progress>
 
       <div className="flex flex-col items-center gap-2 text-center">
-        <p className="text-sm text-muted-foreground">Gõ từ tiếng Anh có nghĩa là</p>
+        <p className="text-sm text-muted-foreground">{dict.typingGame.promptLabel}</p>
         <h2 className="font-heading text-2xl font-semibold tracking-tight">{current.meanVI}</h2>
         <p className="max-w-sm text-sm text-muted-foreground">{current.definition}</p>
       </div>
@@ -100,7 +102,7 @@ export function TypingGame({ vocabList }: { vocabList: Vocabulary[] }) {
           disabled={checked}
           autoFocus
           autoComplete="off"
-          placeholder="Nhập từ tiếng Anh..."
+          placeholder={dict.typingGame.inputPlaceholder}
           className={cn(
             "max-w-xs text-center text-lg",
             checked && (isCorrect ? "border-emerald-500 bg-emerald-50" : "border-red-400 bg-red-50")
@@ -112,19 +114,23 @@ export function TypingGame({ vocabList }: { vocabList: Vocabulary[] }) {
             {isCorrect ? (
               <Badge variant="default" className="gap-1">
                 <Check className="size-3.5" />
-                Chính xác!
+                {dict.typingGame.correctBadge}
               </Badge>
             ) : (
               <Badge variant="destructive" className="gap-1">
                 <X className="size-3.5" />
-                Đáp án: {current.vocab}
+                {formatMessage(dict.typingGame.wrongBadge, { answer: current.vocab })}
               </Badge>
             )}
           </div>
         )}
 
         <Button type="submit" disabled={!value.trim()}>
-          {checked ? (index + 1 >= total ? "Xem kết quả" : "Từ tiếp theo") : "Kiểm tra"}
+          {checked
+            ? index + 1 >= total
+              ? dict.typingGame.viewResults
+              : dict.typingGame.nextWord
+            : dict.typingGame.checkButton}
         </Button>
       </form>
     </div>

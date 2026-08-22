@@ -6,6 +6,8 @@ import { PartyPopper, RotateCcw, Timer } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { formatMessage } from "@/lib/i18n/format";
 import { cn, shuffle } from "@/lib/utils";
 import type { Vocabulary } from "@/types";
 
@@ -20,7 +22,7 @@ function formatTime(totalSeconds: number) {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
-export function MatchingGame({ vocabList }: { vocabList: Vocabulary[] }) {
+export function MatchingGame({ vocabList, dict }: { vocabList: Vocabulary[]; dict: Dictionary }) {
   const [leftItems] = useState(() => shuffle(vocabList));
   const [rightItems] = useState(() => shuffle(vocabList));
   const [matchedIds, setMatchedIds] = useState<Set<string>>(new Set());
@@ -80,19 +82,22 @@ export function MatchingGame({ vocabList }: { vocabList: Vocabulary[] }) {
         </div>
         <div className="flex flex-col gap-1">
           <h2 className="font-heading text-2xl font-semibold tracking-tight">
-            Hoàn thành trò chơi nối từ!
+            {dict.matchingGame.finishedTitle}
           </h2>
           <p className="text-muted-foreground">
-            Thời gian: {formatTime(elapsedSec)} · Số lần thử: {attempts}
+            {formatMessage(dict.matchingGame.finishedSubtitle, {
+              time: formatTime(elapsedSec),
+              attempts,
+            })}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" onClick={handleRestart}>
             <RotateCcw className="size-4" />
-            Chơi lại
+            {dict.matchingGame.restart}
           </Button>
           <Button nativeButton={false} render={<Link href="/dashboard" />}>
-            Về Dashboard
+            {dict.errors.backToDashboard}
           </Button>
         </div>
       </div>
@@ -131,17 +136,19 @@ export function MatchingGame({ vocabList }: { vocabList: Vocabulary[] }) {
           {formatTime(elapsedSec)}
         </Badge>
         <p className="text-sm text-muted-foreground">
-          Đã nối {matchedIds.size}/{total} · {attempts} lần thử
+          {formatMessage(dict.matchingGame.progressText, {
+            matched: matchedIds.size,
+            total,
+            attempts,
+          })}
         </p>
       </div>
 
       <div className="flex flex-col gap-2 text-center">
         <h2 className="font-heading text-xl font-semibold tracking-tight">
-          Nối từ tiếng Anh với nghĩa tiếng Việt
+          {dict.matchingGame.title}
         </h2>
-        <p className="text-sm text-muted-foreground">
-          Chọn 1 từ bên trái rồi chọn nghĩa tương ứng bên phải.
-        </p>
+        <p className="text-sm text-muted-foreground">{dict.matchingGame.subtitle}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

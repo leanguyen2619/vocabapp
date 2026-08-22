@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { formatMessage } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
 import type { Vocabulary } from "@/types";
 
@@ -20,7 +22,7 @@ function speak(word: string) {
   window.speechSynthesis.speak(utterance);
 }
 
-export function ListeningGame({ vocabList }: { vocabList: Vocabulary[] }) {
+export function ListeningGame({ vocabList, dict }: { vocabList: Vocabulary[]; dict: Dictionary }) {
   const [index, setIndex] = useState(0);
   const [value, setValue] = useState("");
   const [checked, setChecked] = useState(false);
@@ -83,19 +85,19 @@ export function ListeningGame({ vocabList }: { vocabList: Vocabulary[] }) {
         </div>
         <div className="flex flex-col gap-1">
           <h2 className="font-heading text-2xl font-semibold tracking-tight">
-            Hoàn thành bài nghe từ!
+            {dict.listeningGame.finishedTitle}
           </h2>
           <p className="text-muted-foreground">
-            Bạn nghe đúng {score}/{total} từ.
+            {formatMessage(dict.listeningGame.finishedSubtitle, { score, total })}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" onClick={handleRestart}>
             <RotateCcw className="size-4" />
-            Làm lại
+            {dict.listeningGame.restart}
           </Button>
           <Button nativeButton={false} render={<Link href="/exercises" />}>
-            Chọn dạng khác
+            {dict.listeningGame.changeType}
           </Button>
         </div>
       </div>
@@ -106,26 +108,24 @@ export function ListeningGame({ vocabList }: { vocabList: Vocabulary[] }) {
     <div className="flex flex-col gap-8">
       <Progress value={(index / total) * 100}>
         <ProgressLabel>
-          Từ {index + 1}/{total}
+          {formatMessage(dict.listeningGame.wordCounter, { current: index + 1, total })}
         </ProgressLabel>
       </Progress>
 
       <div className="flex flex-col items-center gap-3 text-center">
-        <p className="text-sm text-muted-foreground">Nghe và gõ lại từ bạn nghe được</p>
+        <p className="text-sm text-muted-foreground">{dict.listeningGame.promptLabel}</p>
         <Button
           type="button"
           variant="outline"
           size="icon-lg"
           className="rounded-full"
-          aria-label="Phát lại"
+          aria-label={dict.listeningGame.replayAriaLabel}
           onClick={() => speak(current.vocab)}
         >
           <Volume2 className="size-6" />
         </Button>
         {!supported && (
-          <p className="text-xs text-destructive">
-            Trình duyệt của bạn không hỗ trợ phát âm. Vui lòng dùng Chrome hoặc Edge.
-          </p>
+          <p className="text-xs text-destructive">{dict.listeningGame.unsupported}</p>
         )}
       </div>
 
@@ -136,7 +136,7 @@ export function ListeningGame({ vocabList }: { vocabList: Vocabulary[] }) {
           disabled={checked}
           autoFocus
           autoComplete="off"
-          placeholder="Nhập từ bạn nghe được..."
+          placeholder={dict.listeningGame.inputPlaceholder}
           className={cn(
             "max-w-xs text-center text-lg",
             checked && (isCorrect ? "border-emerald-500 bg-emerald-50" : "border-red-400 bg-red-50")
@@ -148,12 +148,12 @@ export function ListeningGame({ vocabList }: { vocabList: Vocabulary[] }) {
             {isCorrect ? (
               <Badge variant="default" className="gap-1">
                 <Check className="size-3.5" />
-                Chính xác!
+                {dict.listeningGame.correctBadge}
               </Badge>
             ) : (
               <Badge variant="destructive" className="gap-1">
                 <X className="size-3.5" />
-                Đáp án: {current.vocab}
+                {formatMessage(dict.listeningGame.wrongBadge, { answer: current.vocab })}
               </Badge>
             )}
             <p className="text-sm text-muted-foreground">{current.meanVI}</p>
@@ -161,7 +161,11 @@ export function ListeningGame({ vocabList }: { vocabList: Vocabulary[] }) {
         )}
 
         <Button type="submit" disabled={!value.trim()}>
-          {checked ? (index + 1 >= total ? "Xem kết quả" : "Từ tiếp theo") : "Kiểm tra"}
+          {checked
+            ? index + 1 >= total
+              ? dict.listeningGame.viewResults
+              : dict.listeningGame.nextWord
+            : dict.listeningGame.checkButton}
         </Button>
       </form>
     </div>

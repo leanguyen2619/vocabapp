@@ -35,23 +35,20 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { changePasswordAction, logoutAction, updateFullNameAction } from "@/lib/actions/auth";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { SessionAccount } from "@/lib/session";
-import type { LevelWithProgress, Role } from "@/types";
-
-const roleLabel: Record<Role, string> = {
-  student: "Học sinh",
-  teacher: "Giáo viên",
-  admin: "Quản trị viên",
-};
+import type { LevelWithProgress } from "@/types";
 
 export function ProfileClient({
   account,
   levels,
   className,
+  dict,
 }: {
   account: SessionAccount;
   levels: LevelWithProgress[];
   className: string | null;
+  dict: Dictionary;
 }) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(account.fullName);
@@ -90,7 +87,7 @@ export function ProfileClient({
 
   const handleSave = async () => {
     if (!fullName.trim()) {
-      toast.error("Họ tên không được để trống.");
+      toast.error(dict.profile.errorNameEmpty);
       return;
     }
     const result = await updateFullNameAction(fullName);
@@ -100,7 +97,7 @@ export function ProfileClient({
     }
     setDisplayName(result.fullName);
     setEditing(false);
-    toast.success("Đã cập nhật hồ sơ.");
+    toast.success(dict.profile.successUpdate);
   };
 
   const resetPasswordForm = () => {
@@ -115,15 +112,15 @@ export function ProfileClient({
     setPasswordError(null);
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-      setPasswordError("Vui lòng điền đầy đủ thông tin.");
+      setPasswordError(dict.profile.errorFillAll);
       return;
     }
     if (newPassword.length < 6) {
-      setPasswordError("Mật khẩu mới cần ít nhất 6 ký tự.");
+      setPasswordError(dict.profile.errorPasswordLength);
       return;
     }
     if (newPassword !== confirmPassword) {
-      setPasswordError("Mật khẩu xác nhận không khớp.");
+      setPasswordError(dict.profile.errorPasswordMismatch);
       return;
     }
 
@@ -135,7 +132,7 @@ export function ProfileClient({
 
     setPasswordDialogOpen(false);
     resetPasswordForm();
-    toast.success("Đã đổi mật khẩu.");
+    toast.success(dict.profile.successPassword);
   };
 
   return (
@@ -147,7 +144,7 @@ export function ProfileClient({
             className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="size-4" />
-            Dashboard
+            {dict.common.backToDashboard}
           </Link>
           <div className="flex items-center gap-2">
             <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -176,10 +173,10 @@ export function ProfileClient({
                   />
                   <div className="flex justify-center gap-2 sm:justify-start">
                     <Button size="sm" onClick={handleSave}>
-                      Lưu
+                      {dict.common.save}
                     </Button>
                     <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
-                      Hủy
+                      {dict.common.cancel}
                     </Button>
                   </div>
                 </div>
@@ -191,7 +188,7 @@ export function ProfileClient({
                   <Button
                     variant="ghost"
                     size="icon-xs"
-                    aria-label="Sửa họ tên"
+                    aria-label={dict.profile.editName}
                     onClick={startEditing}
                   >
                     <Pencil className="size-3.5" />
@@ -200,7 +197,7 @@ export function ProfileClient({
               )}
 
               <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-                <Badge variant="secondary">{roleLabel[account.role]}</Badge>
+                <Badge variant="secondary">{dict.roles[account.role]}</Badge>
                 {className && (
                   <span className="flex items-center gap-1 text-sm text-muted-foreground">
                     <GraduationCap className="size-3.5" />
@@ -226,12 +223,12 @@ export function ProfileClient({
               >
                 <DialogTrigger render={<Button variant="outline" size="sm" />}>
                   <KeyRound className="size-4" />
-                  Đổi mật khẩu
+                  {dict.profile.changePassword}
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Đổi mật khẩu</DialogTitle>
-                    <DialogDescription>Nhập mật khẩu hiện tại và mật khẩu mới.</DialogDescription>
+                    <DialogTitle>{dict.profile.changePasswordTitle}</DialogTitle>
+                    <DialogDescription>{dict.profile.changePasswordDesc}</DialogDescription>
                   </DialogHeader>
 
                   <form onSubmit={handleChangePassword} noValidate className="flex flex-col gap-4">
@@ -243,7 +240,7 @@ export function ProfileClient({
                     )}
 
                     <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="currentPassword">Mật khẩu hiện tại</Label>
+                      <Label htmlFor="currentPassword">{dict.profile.currentPassword}</Label>
                       <Input
                         id="currentPassword"
                         type="password"
@@ -254,19 +251,19 @@ export function ProfileClient({
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="newPassword">Mật khẩu mới</Label>
+                      <Label htmlFor="newPassword">{dict.profile.newPassword}</Label>
                       <Input
                         id="newPassword"
                         type="password"
                         autoComplete="new-password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="Tối thiểu 6 ký tự"
+                        placeholder={dict.profile.newPasswordPlaceholder}
                       />
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="confirmPassword">Xác nhận mật khẩu mới</Label>
+                      <Label htmlFor="confirmPassword">{dict.profile.confirmNewPassword}</Label>
                       <Input
                         id="confirmPassword"
                         type="password"
@@ -277,7 +274,7 @@ export function ProfileClient({
                     </div>
 
                     <DialogFooter>
-                      <Button type="submit">Đổi mật khẩu</Button>
+                      <Button type="submit">{dict.profile.changePassword}</Button>
                     </DialogFooter>
                   </form>
                 </DialogContent>
@@ -285,7 +282,7 @@ export function ProfileClient({
 
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 <LogOut className="size-4" />
-                Đăng xuất
+                {dict.common.logout}
               </Button>
             </div>
           </CardContent>
@@ -299,7 +296,7 @@ export function ProfileClient({
               </div>
               <div>
                 <p className="text-lg font-semibold leading-none">{streak}</p>
-                <p className="text-xs text-muted-foreground">Ngày liên tiếp</p>
+                <p className="text-xs text-muted-foreground">{dict.profile.streakDays}</p>
               </div>
             </CardContent>
           </Card>
@@ -312,7 +309,7 @@ export function ProfileClient({
                 <p className="text-lg font-semibold leading-none">
                   {totalMastered}/{totalVocab}
                 </p>
-                <p className="text-xs text-muted-foreground">Từ đã thuộc</p>
+                <p className="text-xs text-muted-foreground">{dict.profile.wordsMastered}</p>
               </div>
             </CardContent>
           </Card>
@@ -323,17 +320,17 @@ export function ProfileClient({
               </div>
               <div>
                 <p className="text-lg font-semibold leading-none">{completedLevels}</p>
-                <p className="text-xs text-muted-foreground">Cấp độ hoàn thành</p>
+                <p className="text-xs text-muted-foreground">{dict.profile.levelsCompleted}</p>
               </div>
             </CardContent>
           </Card>
         </div>
 
         <div className="flex flex-col gap-3">
-          <h2 className="font-heading text-lg font-semibold tracking-tight">Tiến độ theo cấp độ</h2>
+          <h2 className="font-heading text-lg font-semibold tracking-tight">{dict.profile.levelProgress}</h2>
           <div className="grid gap-4 sm:grid-cols-3">
             {levels.map((level) => (
-              <LevelCard key={level.id} level={level} />
+              <LevelCard key={level.id} level={level} dict={dict} />
             ))}
           </div>
         </div>

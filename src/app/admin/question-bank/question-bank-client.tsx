@@ -36,13 +36,9 @@ import {
   setQuestionStatusAction,
   updateQuestionAction,
 } from "@/lib/actions/questions";
+import { formatMessage } from "@/lib/i18n/format";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { QuestionStatus, QuestionWithAnswers, Vocabulary } from "@/types";
-
-const statusLabel: Record<QuestionStatus, string> = {
-  pending: "Chờ duyệt",
-  approved: "Đã duyệt",
-  rejected: "Đã từ chối",
-};
 
 const statusVariant: Record<QuestionStatus, "default" | "outline" | "destructive"> = {
   approved: "default",
@@ -53,9 +49,11 @@ const statusVariant: Record<QuestionStatus, "default" | "outline" | "destructive
 export function AdminQuestionBankClient({
   initialQuestions,
   vocabularyBank,
+  dict,
 }: {
   initialQuestions: QuestionWithAnswers[];
   vocabularyBank: Vocabulary[];
+  dict: Dictionary;
 }) {
   const emptyForm = {
     vocabId: vocabularyBank[0]?.id ?? "",
@@ -116,11 +114,11 @@ export function AdminQuestionBankClient({
     setError(null);
 
     if (!form.questionText.trim()) {
-      setError("Vui lòng nhập nội dung câu hỏi.");
+      setError(dict.admin.questionBank.errorQuestionRequired);
       return;
     }
     if (form.answers.some((a) => !a.trim())) {
-      setError("Vui lòng điền đầy đủ 4 đáp án.");
+      setError(dict.admin.questionBank.errorAnswersRequired);
       return;
     }
 
@@ -136,7 +134,7 @@ export function AdminQuestionBankClient({
         explanation: form.explanation.trim() || undefined,
         answers,
       });
-      toast.success("Đã cập nhật câu hỏi.");
+      toast.success(dict.admin.questionBank.updateSuccess);
     } else {
       await createQuestionAction({
         vocabId: form.vocabId,
@@ -144,7 +142,7 @@ export function AdminQuestionBankClient({
         explanation: form.explanation.trim() || undefined,
         answers,
       });
-      toast.success("Đã thêm câu hỏi mới (chờ duyệt).");
+      toast.success(dict.admin.questionBank.addSuccess);
     }
 
     setQuestions(await listQuestionsAction());
@@ -156,10 +154,10 @@ export function AdminQuestionBankClient({
     setQuestions(await listQuestionsAction());
     toast.success(
       next === "approved"
-        ? `Đã duyệt câu hỏi.`
+        ? dict.admin.questionBank.approveSuccess
         : next === "rejected"
-          ? `Đã từ chối câu hỏi.`
-          : `Đã chuyển câu hỏi về chờ duyệt.`
+          ? dict.admin.questionBank.rejectSuccess
+          : dict.admin.questionBank.pendingSuccess
     );
   };
 
@@ -172,13 +170,13 @@ export function AdminQuestionBankClient({
             className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="size-4" />
-            Dashboard
+            {dict.common.backToDashboard}
           </Link>
           <div className="flex items-center gap-2">
             <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <BookOpen className="size-3.5" />
             </div>
-            <span className="font-heading text-base font-semibold">VocabApp</span>
+            <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
           </div>
         </div>
       </header>
@@ -186,12 +184,14 @@ export function AdminQuestionBankClient({
       <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-10">
         <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div className="flex flex-col gap-1">
-            <h1 className="font-heading text-2xl font-semibold tracking-tight">Question Bank</h1>
-            <p className="text-muted-foreground">Thêm, chỉnh sửa và duyệt câu hỏi trắc nghiệm.</p>
+            <h1 className="font-heading text-2xl font-semibold tracking-tight">
+              {dict.admin.questionBank.title}
+            </h1>
+            <p className="text-muted-foreground">{dict.admin.questionBank.subtitle}</p>
           </div>
           <Button size="sm" onClick={openCreate}>
             <Plus className="size-4" />
-            Thêm câu hỏi
+            {dict.admin.questionBank.addQuestion}
           </Button>
         </div>
 
@@ -203,10 +203,10 @@ export function AdminQuestionBankClient({
           }}
         >
           <TabsList>
-            <TabsTrigger value="all">Tất cả</TabsTrigger>
-            <TabsTrigger value="pending">Chờ duyệt</TabsTrigger>
-            <TabsTrigger value="approved">Đã duyệt</TabsTrigger>
-            <TabsTrigger value="rejected">Đã từ chối</TabsTrigger>
+            <TabsTrigger value="all">{dict.admin.questionBank.all}</TabsTrigger>
+            <TabsTrigger value="pending">{dict.admin.questionBank.pending}</TabsTrigger>
+            <TabsTrigger value="approved">{dict.admin.questionBank.approved}</TabsTrigger>
+            <TabsTrigger value="rejected">{dict.admin.questionBank.rejected}</TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -218,7 +218,7 @@ export function AdminQuestionBankClient({
               setSearch(e.target.value);
               setPage(1);
             }}
-            placeholder="Tìm theo nội dung câu hỏi hoặc từ vựng..."
+            placeholder={dict.admin.questionBank.searchPlaceholder}
             className="pl-8"
           />
         </div>
@@ -231,11 +231,11 @@ export function AdminQuestionBankClient({
                   <div>
                     <p className="font-medium">{q.questionText}</p>
                     <p className="text-xs text-muted-foreground">
-                      Từ: {q.vocab.vocab} ({q.vocab.meanVI})
+                      {dict.admin.questionBank.wordLabel} {q.vocab.vocab} ({q.vocab.meanVI})
                     </p>
                   </div>
                   <Badge variant={statusVariant[q.status]} className="shrink-0">
-                    {statusLabel[q.status]}
+                    {dict.admin.questionBank[q.status]}
                   </Badge>
                 </div>
 
@@ -257,7 +257,7 @@ export function AdminQuestionBankClient({
                 <div className="flex flex-wrap items-center gap-2">
                   <Button variant="outline" size="sm" onClick={() => openEdit(q)}>
                     <Pencil className="size-3.5" />
-                    Sửa
+                    {dict.admin.questionBank.edit}
                   </Button>
                   {q.status !== "approved" && (
                     <Button
@@ -267,7 +267,7 @@ export function AdminQuestionBankClient({
                       onClick={() => void handleSetStatus(q, "approved")}
                     >
                       <Check className="size-3.5" />
-                      Duyệt
+                      {dict.admin.questionBank.approve}
                     </Button>
                   )}
                   {q.status !== "rejected" && (
@@ -278,7 +278,7 @@ export function AdminQuestionBankClient({
                       onClick={() => void handleSetStatus(q, "rejected")}
                     >
                       <X className="size-3.5" />
-                      Từ chối
+                      {dict.admin.questionBank.reject}
                     </Button>
                   )}
                 </div>
@@ -287,7 +287,7 @@ export function AdminQuestionBankClient({
           ))}
           {filtered.length === 0 && (
             <p className="py-10 text-center text-sm text-muted-foreground">
-              Không có câu hỏi nào ở mục này.
+              {dict.admin.questionBank.noneInFilter}
             </p>
           )}
         </div>
@@ -298,11 +298,11 @@ export function AdminQuestionBankClient({
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingId ? "Sửa câu hỏi" : "Thêm câu hỏi"}</DialogTitle>
+            <DialogTitle>
+              {editingId ? dict.admin.questionBank.editTitle : dict.admin.questionBank.addTitle}
+            </DialogTitle>
             <DialogDescription>
-              {editingId
-                ? "Cập nhật nội dung và đáp án của câu hỏi."
-                : "Câu hỏi mới sẽ ở trạng thái chờ duyệt."}
+              {editingId ? dict.admin.questionBank.editDesc : dict.admin.questionBank.addDesc}
             </DialogDescription>
           </DialogHeader>
 
@@ -315,7 +315,7 @@ export function AdminQuestionBankClient({
             )}
 
             <div className="flex flex-col gap-1.5">
-              <Label>Từ vựng</Label>
+              <Label>{dict.admin.questionBank.vocabLabel}</Label>
               <Select
                 value={form.vocabId}
                 onValueChange={(value) => setForm((f) => ({ ...f, vocabId: value ?? f.vocabId }))}
@@ -324,7 +324,7 @@ export function AdminQuestionBankClient({
                   <SelectValue>
                     {(value: string) => {
                       const v = vocabularyBank.find((v) => v.id === value);
-                      return v ? `${v.vocab} — ${v.meanVI}` : "Chọn từ vựng";
+                      return v ? `${v.vocab} — ${v.meanVI}` : dict.admin.questionBank.chooseVocab;
                     }}
                   </SelectValue>
                 </SelectTrigger>
@@ -339,17 +339,17 @@ export function AdminQuestionBankClient({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="questionText">Nội dung câu hỏi</Label>
+              <Label htmlFor="questionText">{dict.admin.questionBank.questionTextLabel}</Label>
               <Input
                 id="questionText"
                 value={form.questionText}
                 onChange={(e) => setForm((f) => ({ ...f, questionText: e.target.value }))}
-                placeholder='Từ nào có nghĩa là "..."?'
+                placeholder={dict.admin.questionBank.questionTextPlaceholder}
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="explanation">Giải thích (tùy chọn)</Label>
+              <Label htmlFor="explanation">{dict.admin.questionBank.explanationLabel}</Label>
               <Textarea
                 id="explanation"
                 rows={2}
@@ -359,7 +359,7 @@ export function AdminQuestionBankClient({
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label>4 đáp án — chọn đáp án đúng</Label>
+              <Label>{dict.admin.questionBank.answersLabel}</Label>
               <RadioGroup
                 value={form.correctIndex}
                 onValueChange={(value) => setForm((f) => ({ ...f, correctIndex: value ?? "0" }))}
@@ -377,7 +377,7 @@ export function AdminQuestionBankClient({
                           return { ...f, answers };
                         })
                       }
-                      placeholder={`Đáp án ${i + 1}`}
+                      placeholder={formatMessage(dict.admin.questionBank.answerPlaceholder, { n: i + 1 })}
                     />
                   </div>
                 ))}
@@ -385,7 +385,9 @@ export function AdminQuestionBankClient({
             </div>
 
             <DialogFooter>
-              <Button type="submit">{editingId ? "Lưu thay đổi" : "Thêm câu hỏi"}</Button>
+              <Button type="submit">
+                {editingId ? dict.admin.questionBank.saveSubmit : dict.admin.questionBank.addSubmit}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>

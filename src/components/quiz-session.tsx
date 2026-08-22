@@ -7,6 +7,8 @@ import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { formatMessage } from "@/lib/i18n/format";
 import { getTopicName } from "@/lib/labels";
 import { cn, shuffle } from "@/lib/utils";
 import type { Topic, Vocabulary } from "@/types";
@@ -23,7 +25,15 @@ function buildQuestions(vocabList: Vocabulary[]): QuizQuestion[] {
   }));
 }
 
-export function QuizSession({ vocabList, topics }: { vocabList: Vocabulary[]; topics: Topic[] }) {
+export function QuizSession({
+  vocabList,
+  topics,
+  dict,
+}: {
+  vocabList: Vocabulary[];
+  topics: Topic[];
+  dict: Dictionary;
+}) {
   const [questions] = useState<QuizQuestion[]>(() => buildQuestions(vocabList));
   const [index, setIndex] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -67,19 +77,19 @@ export function QuizSession({ vocabList, topics }: { vocabList: Vocabulary[]; to
         </div>
         <div className="flex flex-col gap-1">
           <h2 className="font-heading text-2xl font-semibold tracking-tight">
-            Hoàn thành bài kiểm tra!
+            {dict.quizSession.finishedTitle}
           </h2>
           <p className="text-muted-foreground">
-            Bạn trả lời đúng {score}/{total} câu.
+            {formatMessage(dict.quizSession.finishedSubtitle, { score, total })}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" onClick={handleRestart}>
             <RotateCcw className="size-4" />
-            Làm lại
+            {dict.quizSession.restart}
           </Button>
           <Button nativeButton={false} render={<Link href="/dashboard" />}>
-            Về Dashboard
+            {dict.errors.backToDashboard}
           </Button>
         </div>
       </div>
@@ -90,14 +100,14 @@ export function QuizSession({ vocabList, topics }: { vocabList: Vocabulary[]; to
     <div className="flex flex-col gap-8">
       <Progress value={(index / total) * 100}>
         <ProgressLabel>
-          Câu {index + 1}/{total}
+          {formatMessage(dict.quizSession.questionCounter, { current: index + 1, total })}
         </ProgressLabel>
       </Progress>
 
       <div className="flex flex-col items-center gap-2 text-center">
         <Badge variant="secondary">{getTopicName(topics, question.vocab.topicId)}</Badge>
         <h2 className="font-heading text-xl font-semibold tracking-tight sm:text-2xl">
-          Từ nào có nghĩa là &ldquo;{question.vocab.meanVI}&rdquo;?
+          {formatMessage(dict.quizSession.questionPrompt, { mean: question.vocab.meanVI })}
         </h2>
       </div>
 
@@ -135,12 +145,12 @@ export function QuizSession({ vocabList, topics }: { vocabList: Vocabulary[]; to
       {isAnswered && (
         <div className="flex flex-col items-center gap-4 text-center">
           <p className="text-sm text-muted-foreground">
-            {isCorrect ? "Chính xác! " : "Chưa đúng — "}
+            {isCorrect ? dict.quizSession.feedbackCorrect : dict.quizSession.feedbackWrong}
             <span className="font-medium text-foreground">{question.vocab.vocab}</span>:{" "}
             {question.vocab.definition}
           </p>
           <Button onClick={handleNext}>
-            {index + 1 >= total ? "Xem kết quả" : "Câu tiếp theo"}
+            {index + 1 >= total ? dict.quizSession.viewResults : dict.quizSession.nextQuestion}
           </Button>
         </div>
       )}

@@ -26,8 +26,16 @@ import {
   updateClassTargetAction,
   type ClassWithStudentCount,
 } from "@/lib/actions/classes";
+import { formatMessage } from "@/lib/i18n/format";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 
-export function AdminClassesClient({ initialClasses }: { initialClasses: ClassWithStudentCount[] }) {
+export function AdminClassesClient({
+  initialClasses,
+  dict,
+}: {
+  initialClasses: ClassWithStudentCount[];
+  dict: Dictionary;
+}) {
   const [classes, setClasses] = useState(initialClasses);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [className, setClassName] = useState("");
@@ -53,8 +61,9 @@ export function AdminClassesClient({ initialClasses }: { initialClasses: ClassWi
 
     setClasses(await listClassesWithCountsAction());
     setDialogOpen(false);
+    const createdName = className.trim();
     resetForm();
-    toast.success(`Đã tạo lớp ${className.trim()}.`);
+    toast.success(formatMessage(dict.admin.classes.createSuccess, { name: createdName }));
   };
 
   const handleTargetChange = async (id: string, value: string) => {
@@ -73,13 +82,13 @@ export function AdminClassesClient({ initialClasses }: { initialClasses: ClassWi
             className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="size-4" />
-            Dashboard
+            {dict.common.backToDashboard}
           </Link>
           <div className="flex items-center gap-2">
             <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <BookOpen className="size-3.5" />
             </div>
-            <span className="font-heading text-base font-semibold">VocabApp</span>
+            <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
           </div>
         </div>
       </header>
@@ -87,10 +96,10 @@ export function AdminClassesClient({ initialClasses }: { initialClasses: ClassWi
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-10">
         <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div className="flex flex-col gap-1">
-            <h1 className="font-heading text-2xl font-semibold tracking-tight">Lớp học</h1>
-            <p className="text-muted-foreground">
-              Tạo lớp mới và chỉnh số từ vựng mục tiêu mỗi ngày cho từng lớp.
-            </p>
+            <h1 className="font-heading text-2xl font-semibold tracking-tight">
+              {dict.admin.classes.title}
+            </h1>
+            <p className="text-muted-foreground">{dict.admin.classes.subtitle}</p>
           </div>
 
           <Dialog
@@ -102,12 +111,12 @@ export function AdminClassesClient({ initialClasses }: { initialClasses: ClassWi
           >
             <DialogTrigger render={<Button />}>
               <Plus className="size-4" />
-              Tạo lớp
+              {dict.admin.classes.createButton}
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Tạo lớp mới</DialogTitle>
-                <DialogDescription>Đặt tên lớp và số từ vựng mục tiêu mỗi ngày.</DialogDescription>
+                <DialogTitle>{dict.admin.classes.createTitle}</DialogTitle>
+                <DialogDescription>{dict.admin.classes.createDesc}</DialogDescription>
               </DialogHeader>
 
               <form onSubmit={handleCreate} noValidate className="flex flex-col gap-4">
@@ -119,17 +128,17 @@ export function AdminClassesClient({ initialClasses }: { initialClasses: ClassWi
                 )}
 
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="className">Tên lớp</Label>
+                  <Label htmlFor="className">{dict.admin.classes.nameLabel}</Label>
                   <Input
                     id="className"
                     value={className}
                     onChange={(e) => setClassName(e.target.value)}
-                    placeholder="Lớp 10A2"
+                    placeholder={dict.admin.classes.namePlaceholder}
                   />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="dailyWordTarget">Số từ mỗi ngày</Label>
+                  <Label htmlFor="dailyWordTarget">{dict.admin.classes.targetLabel}</Label>
                   <Input
                     id="dailyWordTarget"
                     type="number"
@@ -140,7 +149,7 @@ export function AdminClassesClient({ initialClasses }: { initialClasses: ClassWi
                 </div>
 
                 <DialogFooter>
-                  <Button type="submit">Tạo lớp</Button>
+                  <Button type="submit">{dict.admin.classes.createSubmit}</Button>
                 </DialogFooter>
               </form>
             </DialogContent>
@@ -157,13 +166,13 @@ export function AdminClassesClient({ initialClasses }: { initialClasses: ClassWi
                     <p className="font-medium">{cls.className}</p>
                     <Badge variant="outline" className="mt-1 gap-1">
                       <Users className="size-3" />
-                      {cls.studentCount} học sinh
+                      {cls.studentCount} {dict.admin.classes.studentCount}
                     </Badge>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <Label htmlFor={`target-${cls.id}`} className="text-sm text-muted-foreground">
-                      Số từ/ngày
+                      {dict.admin.classes.targetPerDay}
                     </Label>
                     <Input
                       id={`target-${cls.id}`}

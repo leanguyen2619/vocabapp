@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BookOpen, Flame, LogOut } from "lucide-react";
 
+import { useLocale } from "@/components/locale-provider";
+import { LanguageToggle } from "@/components/language-toggle";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +23,7 @@ export function DashboardShell({
   children: ReactNode;
 }) {
   const router = useRouter();
+  const { dict } = useLocale();
 
   const initials = account.fullName
     .split(" ")
@@ -43,21 +46,22 @@ export function DashboardShell({
             <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <BookOpen className="size-4" />
             </div>
-            <span className="font-heading text-lg font-semibold">VocabApp</span>
+            <span className="font-heading text-lg font-semibold">{dict.common.brand}</span>
           </Link>
           <div className="flex items-center gap-3">
             {account.role === "student" && (
               <Badge variant="outline" className="gap-1">
                 <Flame className="size-3 text-orange-500" />
-                {streak} ngày
+                {streak} {dict.dashboard.streakDays}
               </Badge>
             )}
-            <Link href="/profile" aria-label="Hồ sơ cá nhân">
+            <LanguageToggle />
+            <Link href="/profile" aria-label={dict.common.profile}>
               <Avatar>
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
             </Link>
-            <Button variant="ghost" size="icon-sm" aria-label="Đăng xuất" onClick={handleLogout}>
+            <Button variant="ghost" size="icon-sm" aria-label={dict.common.logout} onClick={handleLogout}>
               <LogOut className="size-4" />
             </Button>
           </div>

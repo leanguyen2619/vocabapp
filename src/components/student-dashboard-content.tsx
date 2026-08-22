@@ -12,6 +12,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { formatMessage } from "@/lib/i18n/format";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { getTopicName } from "@/lib/labels";
 import type {
   Account,
@@ -21,46 +23,45 @@ import type {
   Topic,
 } from "@/types";
 
-const assignmentStatusLabel: Record<AssignmentStatus, string> = {
-  pending: "Chưa làm",
-  in_progress: "Đang làm",
-  done: "Hoàn thành",
-  overdue: "Quá hạn",
-};
-
 export function StudentDashboardContent({
   account,
   dailyAssignments,
   levels,
   topics,
+  dict,
 }: {
   account: Account;
   dailyAssignments: DailyAssignmentWithVocab[];
   levels: LevelWithProgress[];
   topics: Topic[];
+  dict: Dictionary;
 }) {
   const completedCount = dailyAssignments.filter((a) => a.status === "done").length;
+  const assignmentStatusLabel: Record<AssignmentStatus, string> = dict.assignmentStatus;
 
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         <div className="flex flex-col gap-1">
           <h1 className="font-heading text-2xl font-semibold tracking-tight">
-            Chào {account.fullName}, sẵn sàng học chưa?
+            {formatMessage(dict.studentDashboard.greeting, { name: account.fullName })}
           </h1>
           <p className="text-muted-foreground">
-            Bạn đã hoàn thành {completedCount}/{dailyAssignments.length} từ vựng được giao hôm nay.
+            {formatMessage(dict.studentDashboard.progressToday, {
+              done: completedCount,
+              total: dailyAssignments.length,
+            })}
           </p>
         </div>
         <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/vocabulary" />}>
           <Library className="size-4" />
-          Kho từ vựng
+          {dict.studentDashboard.myVocabulary}
         </Button>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
         {levels.map((level) => (
-          <LevelCard key={level.id} level={level} />
+          <LevelCard key={level.id} level={level} dict={dict} />
         ))}
       </div>
 
@@ -68,13 +69,13 @@ export function StudentDashboardContent({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Từ vựng hôm nay</CardTitle>
+              <CardTitle>{dict.studentDashboard.todayWords}</CardTitle>
               <CardDescription>
-                {dailyAssignments.length} từ được giao theo mục tiêu mỗi ngày của lớp
+                {formatMessage(dict.studentDashboard.todayWordsDesc, { count: dailyAssignments.length })}
               </CardDescription>
             </div>
             <Button size="sm" nativeButton={false} render={<Link href="/exercises" />}>
-              Chọn dạng bài tập
+              {dict.studentDashboard.chooseExerciseType}
               <ArrowRight className="size-4" />
             </Button>
           </div>

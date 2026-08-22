@@ -5,12 +5,15 @@ import { ArrowLeft, BookOpen } from "lucide-react";
 import { SentenceWritingExercise } from "@/components/sentence-writing-exercise";
 import { RandomExerciseButton } from "@/components/random-exercise-button";
 import { listExerciseTypesAction } from "@/lib/actions/exercise-types";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
 import { sentencePrompts } from "@/lib/mock-data";
 
 export default async function SentenceWritingPage() {
   const account = await getCurrentAccount();
   if (!account) redirect("/login");
+  const dict = getDictionary(await getLocale());
 
   const exerciseTypes = await listExerciseTypesAction();
 
@@ -24,21 +27,21 @@ export default async function SentenceWritingPage() {
               className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="size-4" />
-              Dạng bài tập
+              {dict.common.backToExercises}
             </Link>
-            <RandomExerciseButton currentCode="sentence_writing" types={exerciseTypes} />
+            <RandomExerciseButton currentCode="sentence_writing" types={exerciseTypes} dict={dict} />
           </div>
           <div className="flex items-center gap-2">
             <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <BookOpen className="size-3.5" />
             </div>
-            <span className="font-heading text-base font-semibold">VocabApp</span>
+            <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
           </div>
         </div>
       </header>
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-10 sm:py-16">
-        <SentenceWritingExercise prompts={sentencePrompts} />
+        <SentenceWritingExercise prompts={sentencePrompts} dict={dict} />
       </main>
     </div>
   );

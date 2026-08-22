@@ -7,6 +7,8 @@ import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { formatMessage } from "@/lib/i18n/format";
 import { getTopicName, posLabel } from "@/lib/labels";
 import { cn, shuffle } from "@/lib/utils";
 import type { PartOfSpeech, Topic, Vocabulary } from "@/types";
@@ -25,7 +27,15 @@ function buildQuestions(bank: Vocabulary[]): PosQuestion[] {
     .map((vocab) => ({ vocab, options: shuffle(POS_OPTIONS) }));
 }
 
-export function PosClassificationGame({ bank, topics }: { bank: Vocabulary[]; topics: Topic[] }) {
+export function PosClassificationGame({
+  bank,
+  topics,
+  dict,
+}: {
+  bank: Vocabulary[];
+  topics: Topic[];
+  dict: Dictionary;
+}) {
   const [questions] = useState<PosQuestion[]>(() => buildQuestions(bank));
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<PartOfSpeech | null>(null);
@@ -69,19 +79,19 @@ export function PosClassificationGame({ bank, topics }: { bank: Vocabulary[]; to
         </div>
         <div className="flex flex-col gap-1">
           <h2 className="font-heading text-2xl font-semibold tracking-tight">
-            Hoàn thành bài tập!
+            {dict.posGame.finishedTitle}
           </h2>
           <p className="text-muted-foreground">
-            Bạn phân loại đúng {score}/{total} từ.
+            {formatMessage(dict.posGame.finishedSubtitle, { score, total })}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" onClick={handleRestart}>
             <RotateCcw className="size-4" />
-            Làm lại
+            {dict.posGame.restart}
           </Button>
           <Button nativeButton={false} render={<Link href="/exercises" />}>
-            Chọn dạng khác
+            {dict.posGame.changeType}
           </Button>
         </div>
       </div>
@@ -92,7 +102,7 @@ export function PosClassificationGame({ bank, topics }: { bank: Vocabulary[]; to
     <div className="flex flex-col gap-8">
       <Progress value={(index / total) * 100}>
         <ProgressLabel>
-          Từ {index + 1}/{total}
+          {formatMessage(dict.posGame.wordCounter, { current: index + 1, total })}
         </ProgressLabel>
       </Progress>
 
@@ -102,7 +112,7 @@ export function PosClassificationGame({ bank, topics }: { bank: Vocabulary[]; to
           {question.vocab.vocab}
         </h2>
         <p className="text-sm text-muted-foreground">{question.vocab.definition}</p>
-        <p className="text-base font-medium">Từ này thuộc loại từ nào?</p>
+        <p className="text-base font-medium">{dict.posGame.questionPrompt}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -139,13 +149,16 @@ export function PosClassificationGame({ bank, topics }: { bank: Vocabulary[]; to
       {isAnswered && (
         <div className="flex flex-col items-center gap-4 text-center">
           <p className="text-sm text-muted-foreground">
-            {isCorrect ? "Chính xác!" : "Chưa đúng."} &ldquo;{question.vocab.vocab}&rdquo; là{" "}
+            {isCorrect ? dict.posGame.feedbackCorrect : dict.posGame.feedbackWrong}{" "}
+            {formatMessage(dict.posGame.resultPrefix, { word: question.vocab.vocab })}{" "}
             <span className="font-medium text-foreground">
               {posLabel[question.vocab.partOfSpeech]}
             </span>
             .
           </p>
-          <Button onClick={handleNext}>{index + 1 >= total ? "Xem kết quả" : "Câu tiếp theo"}</Button>
+          <Button onClick={handleNext}>
+            {index + 1 >= total ? dict.posGame.viewResults : dict.posGame.nextQuestion}
+          </Button>
         </div>
       )}
     </div>

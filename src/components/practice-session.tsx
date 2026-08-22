@@ -7,11 +7,21 @@ import { Check, PartyPopper, RotateCcw, Volume2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { formatMessage } from "@/lib/i18n/format";
 import { getTopicName } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 import type { Topic, Vocabulary } from "@/types";
 
-export function PracticeSession({ vocabList, topics }: { vocabList: Vocabulary[]; topics: Topic[] }) {
+export function PracticeSession({
+  vocabList,
+  topics,
+  dict,
+}: {
+  vocabList: Vocabulary[];
+  topics: Topic[];
+  dict: Dictionary;
+}) {
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [knownCount, setKnownCount] = useState(0);
@@ -53,29 +63,29 @@ export function PracticeSession({ vocabList, topics }: { vocabList: Vocabulary[]
         </div>
         <div className="flex flex-col gap-1">
           <h2 className="font-heading text-2xl font-semibold tracking-tight">
-            Hoàn thành phiên luyện tập!
+            {dict.practiceSession.finishedTitle}
           </h2>
           <p className="text-muted-foreground">
-            Bạn đã ôn {total} từ vựng hôm nay.
+            {formatMessage(dict.practiceSession.finishedSubtitle, { total })}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="gap-1.5 py-1 text-sm">
             <Check className="size-3.5 text-emerald-600" />
-            Đã thuộc: {knownCount}
+            {dict.practiceSession.knownLabel}: {knownCount}
           </Badge>
           <Badge variant="outline" className="gap-1.5 py-1 text-sm">
             <RotateCcw className="size-3.5 text-amber-600" />
-            Cần ôn lại: {reviewCount}
+            {dict.practiceSession.reviewLabel}: {reviewCount}
           </Badge>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" onClick={handleRestart}>
             <RotateCcw className="size-4" />
-            Học lại
+            {dict.practiceSession.restart}
           </Button>
           <Button nativeButton={false} render={<Link href="/dashboard" />}>
-            Về Dashboard
+            {dict.errors.backToDashboard}
           </Button>
         </div>
       </div>
@@ -86,7 +96,7 @@ export function PracticeSession({ vocabList, topics }: { vocabList: Vocabulary[]
     <div className="flex flex-col gap-8">
       <Progress value={(index / total) * 100}>
         <ProgressLabel>
-          Từ {index + 1}/{total}
+          {formatMessage(dict.practiceSession.wordCounter, { current: index + 1, total })}
         </ProgressLabel>
       </Progress>
 
@@ -94,7 +104,7 @@ export function PracticeSession({ vocabList, topics }: { vocabList: Vocabulary[]
         <button
           type="button"
           onClick={() => setFlipped((f) => !f)}
-          aria-label="Lật thẻ"
+          aria-label={dict.practiceSession.flipCardAriaLabel}
           className={cn(
             "relative h-72 w-full cursor-pointer rounded-3xl transition-transform duration-500 [transform-style:preserve-3d] sm:h-80",
             flipped && "[transform:rotateY(180deg)]"
@@ -110,7 +120,7 @@ export function PracticeSession({ vocabList, topics }: { vocabList: Vocabulary[]
               <Volume2 className="size-4" />
               {current.partOfSpeech}
             </span>
-            <p className="mt-4 text-sm text-muted-foreground">Nhấn để xem nghĩa</p>
+            <p className="mt-4 text-sm text-muted-foreground">{dict.practiceSession.tapToReveal}</p>
           </div>
 
           {/* Back */}
@@ -131,7 +141,7 @@ export function PracticeSession({ vocabList, topics }: { vocabList: Vocabulary[]
           onClick={() => handleMark(false)}
         >
           <X className="size-4" />
-          Cần ôn lại
+          {dict.practiceSession.reviewLabel}
         </Button>
         <Button
           size="lg"
@@ -139,7 +149,7 @@ export function PracticeSession({ vocabList, topics }: { vocabList: Vocabulary[]
           onClick={() => handleMark(true)}
         >
           <Check className="size-4" />
-          Đã thuộc
+          {dict.practiceSession.knownLabel}
         </Button>
       </div>
     </div>

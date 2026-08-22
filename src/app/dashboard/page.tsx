@@ -8,12 +8,15 @@ import { listClassesAction } from "@/lib/actions/classes";
 import { getMyLevelsAction } from "@/lib/actions/levels";
 import { getMyClassStudentsAction } from "@/lib/actions/teacher";
 import { getMyDailyAssignmentsAction, listTopicsAction, listVocabularyAction } from "@/lib/actions/vocabulary";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
 import { DashboardShell } from "./dashboard-client";
 
 export default async function DashboardPage() {
   const account = await getCurrentAccount();
   if (!account) redirect("/login");
+  const dict = getDictionary(await getLocale());
 
   if (account.role === "admin") {
     const [accounts, classes, vocabulary] = await Promise.all([
@@ -30,6 +33,7 @@ export default async function DashboardPage() {
           studentCount={studentCount}
           classCount={classes.length}
           vocabCount={vocabulary.length}
+          dict={dict}
         />
       </DashboardShell>
     );
@@ -50,6 +54,7 @@ export default async function DashboardPage() {
           className={className}
           students={students}
           vocabularyBank={vocabularyBank}
+          dict={dict}
         />
       </DashboardShell>
     );
@@ -69,6 +74,7 @@ export default async function DashboardPage() {
         dailyAssignments={dailyAssignments}
         levels={levels}
         topics={topics}
+        dict={dict}
       />
     </DashboardShell>
   );

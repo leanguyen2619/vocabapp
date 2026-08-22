@@ -4,7 +4,9 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { BookOpen, RotateCcw, TriangleAlert } from "lucide-react";
 
+import { useLocale } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
+import { formatMessage } from "@/lib/i18n/format";
 
 export default function Error({
   error,
@@ -13,6 +15,8 @@ export default function Error({
   error: Error & { digest?: string };
   unstable_retry: () => void;
 }) {
+  const { dict } = useLocale();
+
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -27,20 +31,22 @@ export default function Error({
         <div className="flex size-12 items-center justify-center rounded-full bg-destructive/10">
           <TriangleAlert className="size-6 text-destructive" />
         </div>
-        <h1 className="font-heading text-xl font-semibold tracking-tight">Đã có lỗi xảy ra</h1>
-        <p className="max-w-sm text-sm text-muted-foreground">
-          Rất tiếc, trang này gặp sự cố. Bạn có thể thử lại hoặc quay về Dashboard.
-        </p>
-        {error.digest && <p className="text-xs text-muted-foreground">Mã lỗi: {error.digest}</p>}
+        <h1 className="font-heading text-xl font-semibold tracking-tight">{dict.errors.title}</h1>
+        <p className="max-w-sm text-sm text-muted-foreground">{dict.errors.subtitle}</p>
+        {error.digest && (
+          <p className="text-xs text-muted-foreground">
+            {formatMessage(dict.errors.errorCode, { digest: error.digest })}
+          </p>
+        )}
       </div>
 
       <div className="flex items-center gap-3">
         <Button variant="outline" onClick={() => unstable_retry()}>
           <RotateCcw className="size-4" />
-          Thử lại
+          {dict.errors.retry}
         </Button>
         <Button nativeButton={false} render={<Link href="/dashboard" />}>
-          Về Dashboard
+          {dict.errors.backToDashboard}
         </Button>
       </div>
     </div>

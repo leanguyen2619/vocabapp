@@ -15,14 +15,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getLevelName, getTopicName, posLabel } from "@/lib/labels";
+import { formatMessage } from "@/lib/i18n/format";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { getLevelName, getTopicName } from "@/lib/labels";
 import type { Level, LearningStatus, Topic, VocabularyWithProgress } from "@/types";
-
-const statusLabel: Record<LearningStatus, string> = {
-  new: "Chưa học",
-  learning: "Đang học",
-  mastered: "Đã thuộc",
-};
 
 const statusVariant: Record<LearningStatus, "default" | "outline" | "secondary"> = {
   mastered: "default",
@@ -34,10 +30,12 @@ export function VocabularyClient({
   myVocabulary,
   levels,
   topics,
+  dict,
 }: {
   myVocabulary: VocabularyWithProgress[];
   levels: Level[];
   topics: Topic[];
+  dict: Dictionary;
 }) {
   const [levelFilter, setLevelFilter] = useState("all");
   const [topicFilter, setTopicFilter] = useState("all");
@@ -68,41 +66,44 @@ export function VocabularyClient({
             className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="size-4" />
-            Dashboard
+            {dict.common.backToDashboard}
           </Link>
           <div className="flex items-center gap-2">
             <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <BookOpen className="size-3.5" />
             </div>
-            <span className="font-heading text-base font-semibold">VocabApp</span>
+            <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
           </div>
         </div>
       </header>
 
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-10">
         <div className="flex flex-col gap-1">
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">My Vocabulary</h1>
+          <h1 className="font-heading text-2xl font-semibold tracking-tight">{dict.vocabulary.title}</h1>
           <p className="text-muted-foreground">
-            {filtered.length}/{myVocabulary.length} từ — tiến độ học của riêng bạn.
+            {formatMessage(dict.vocabulary.subtitle, {
+              filtered: filtered.length,
+              total: myVocabulary.length,
+            })}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="default" className="gap-1">
-            Đã thuộc: {masteredCount}
+            {dict.vocabulary.mastered}: {masteredCount}
           </Badge>
           <Badge variant="outline" className="gap-1">
-            Đang học: {learningCount}
+            {dict.vocabulary.learning}: {learningCount}
           </Badge>
           <Badge variant="secondary" className="gap-1">
-            Chưa học: {newCount}
+            {dict.vocabulary.new}: {newCount}
           </Badge>
         </div>
 
         <div className="flex flex-col gap-3">
           <Tabs value={levelFilter} onValueChange={(value) => setLevelFilter(value as string)}>
             <TabsList>
-              <TabsTrigger value="all">Tất cả cấp độ</TabsTrigger>
+              <TabsTrigger value="all">{dict.vocabulary.allLevels}</TabsTrigger>
               {levels.map((level) => (
                 <TabsTrigger key={level.id} value={level.id}>
                   {level.level}
@@ -116,24 +117,26 @@ export function VocabularyClient({
             onValueChange={(value) => setStatusFilter(value as "all" | LearningStatus)}
           >
             <TabsList>
-              <TabsTrigger value="all">Tất cả trạng thái</TabsTrigger>
-              <TabsTrigger value="mastered">Đã thuộc</TabsTrigger>
-              <TabsTrigger value="learning">Cần review</TabsTrigger>
-              <TabsTrigger value="new">Chưa học</TabsTrigger>
+              <TabsTrigger value="all">{dict.vocabulary.allStatus}</TabsTrigger>
+              <TabsTrigger value="mastered">{dict.vocabulary.mastered}</TabsTrigger>
+              <TabsTrigger value="learning">{dict.vocabulary.review}</TabsTrigger>
+              <TabsTrigger value="new">{dict.vocabulary.new}</TabsTrigger>
             </TabsList>
           </Tabs>
 
           <div className="flex items-center gap-2">
             <Select value={topicFilter} onValueChange={(value) => setTopicFilter(value as string)}>
               <SelectTrigger className="w-40">
-                <SelectValue placeholder="Chủ đề">
+                <SelectValue placeholder={dict.vocabulary.topicPlaceholder}>
                   {(value: string) =>
-                    value === "all" ? "Tất cả chủ đề" : (topics.find((t) => String(t.id) === value)?.topic ?? "Chủ đề")
+                    value === "all"
+                      ? dict.vocabulary.allTopics
+                      : (topics.find((t) => String(t.id) === value)?.topic ?? dict.vocabulary.topicPlaceholder)
                   }
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tất cả chủ đề</SelectItem>
+                <SelectItem value="all">{dict.vocabulary.allTopics}</SelectItem>
                 {topics.map((topic) => (
                   <SelectItem key={topic.id} value={String(topic.id)}>
                     {topic.topic}
@@ -147,7 +150,7 @@ export function VocabularyClient({
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Tìm từ vựng..."
+                placeholder={dict.vocabulary.searchPlaceholder}
                 className="w-44 pl-8"
               />
             </div>
@@ -157,7 +160,7 @@ export function VocabularyClient({
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-16 text-center text-muted-foreground">
             <Search className="size-8" />
-            <p>Không tìm thấy từ vựng phù hợp.</p>
+            <p>{dict.vocabulary.noResults}</p>
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -167,10 +170,10 @@ export function VocabularyClient({
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="text-lg font-semibold">{word.vocab}</p>
-                      <p className="text-xs text-muted-foreground">{posLabel[word.partOfSpeech]}</p>
+                      <p className="text-xs text-muted-foreground">{dict.partOfSpeech[word.partOfSpeech]}</p>
                     </div>
                     <Badge variant={statusVariant[word.learningStatus]} className="shrink-0">
-                      {statusLabel[word.learningStatus]}
+                      {dict.learningStatus[word.learningStatus]}
                     </Badge>
                   </div>
 

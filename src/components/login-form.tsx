@@ -9,10 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { loginAction } from "@/lib/actions/auth";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 
 type InvalidField = "email" | "password" | null;
 
-export function LoginForm() {
+export function LoginForm({ dict }: { dict: Dictionary }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,7 +27,7 @@ export function LoginForm() {
     setInvalidField(null);
 
     if (!email.trim() || !password) {
-      setError("Vui lòng nhập đầy đủ email và mật khẩu.");
+      setError(dict.login.errorFillAll);
       setInvalidField(!email.trim() ? "email" : "password");
       return;
     }
@@ -55,7 +56,7 @@ export function LoginForm() {
       )}
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">{dict.login.emailLabel}</Label>
         <Input
           id="email"
           type="email"
@@ -68,7 +69,7 @@ export function LoginForm() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="password">Mật khẩu</Label>
+        <Label htmlFor="password">{dict.login.passwordLabel}</Label>
         <Input
           id="password"
           type="password"
@@ -81,7 +82,7 @@ export function LoginForm() {
       </div>
 
       <Button type="submit" size="lg" className="mt-2 h-10" disabled={submitting}>
-        {submitting ? "Đang đăng nhập..." : "Đăng nhập"}
+        {submitting ? dict.login.submitting : dict.login.submit}
       </Button>
     </form>
   );

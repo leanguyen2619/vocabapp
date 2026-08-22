@@ -1,15 +1,18 @@
 "use client";
 
-import { useMemo, useState, type SubmitEvent } from "react";
+import { useCallback, useMemo, useState, type SubmitEvent } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
   AlertCircle,
   ArrowLeft,
   BookOpen,
+  GraduationCap,
+  IdCard,
   KeyRound,
   Lock,
   LockOpen,
+  Mail,
   Pencil,
   Plus,
   Search,
@@ -40,6 +43,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import {
   createAccountByAdminAction,
   listAccountsAction,
@@ -48,25 +52,24 @@ import {
   updateAccountByAdminAction,
   type AccountSummary,
 } from "@/lib/actions/accounts";
+import { formatMessage } from "@/lib/i18n/format";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Account, Role, SchoolClass } from "@/types";
-
-const roleLabel: Record<Role, string> = {
-  student: "Học sinh",
-  teacher: "Giáo viên",
-  admin: "Quản trị viên",
-};
 
 const NONE_CLASS = "none";
 const PAGE_SIZE = 10;
+type SortMode = "default" | "class";
 
 export function AdminAccountsClient({
   adminAccount,
   initialAccounts,
   classes,
+  dict,
 }: {
   adminAccount: Account;
   initialAccounts: AccountSummary[];
   classes: SchoolClass[];
+  dict: Dictionary;
 }) {
   const [accounts, setAccounts] = useState(initialAccounts);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -82,17 +85,21 @@ export function AdminAccountsClient({
   const [newPassword, setNewPassword] = useState("");
   const [resetError, setResetError] = useState<string | null>(null);
 
-  const [editTarget, setEditTarget] = useState<Account | null>(null);
+  const [detailTarget, setDetailTarget] = useState<AccountSummary | null>(null);
   const [editFullName, setEditFullName] = useState("");
   const [editClassId, setEditClassId] = useState<string>(NONE_CLASS);
   const [editError, setEditError] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
+  const [sortMode, setSortMode] = useState<SortMode>("default");
   const [page, setPage] = useState(1);
 
-  const className = (id: string | null) => classes.find((c) => c.id === id)?.className ?? null;
+  const className = useCallback(
+    (id: string | null) => classes.find((c) => c.id === id)?.className ?? null,
+    [classes]
+  );
   const classSelectLabel = (value: string) =>
-    value === NONE_CLASS ? "Chưa có lớp" : (className(value) ?? "Chọn lớp");
+    value === NONE_CLASS ? dict.admin.accounts.noClass : (className(value) ?? dict.admin.accounts.chooseClass);
 
   const query = search.trim().toLowerCase();
   const filteredAccounts = useMemo(
@@ -107,9 +114,22 @@ export function AdminAccountsClient({
       }),
     [accounts, query]
   );
-  const totalPages = Math.max(1, Math.ceil(filteredAccounts.length / PAGE_SIZE));
+
+  const sortedAccounts = useMemo(() => {
+    if (sortMode !== "class") return filteredAccounts;
+    return [...filteredAccounts].sort((a, b) => {
+      const classA = className(a.account.classId) ?? "";
+      const classB = className(b.account.classId) ?? "";
+      if (classA === classB) return a.account.fullName.localeCompare(b.account.fullName);
+      if (!classA) return 1;
+      if (!classB) return -1;
+      return classA.localeCompare(classB);
+    });
+  }, [filteredAccounts, sortMode, className]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedAccounts.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
-  const pagedAccounts = filteredAccounts.slice(
+  const pagedAccounts = sortedAccounts.slice(
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE
   );
@@ -144,9 +164,10 @@ export function AdminAccountsClient({
     setDialogOpen(false);
     const createdName = fullName.trim();
     resetForm();
-    toast.success(`Đã tạo tài khoản cho ${createdName}. Mã đăng nhập: ${result.id_login}`, {
-      duration: 10000,
-    });
+    toast.success(
+      formatMessage(dict.admin.accounts.createSuccess, { name: createdName, id: result.id_login }),
+      { duration: 10000 }
+    );
   };
 
   const handleResetPasswordSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
@@ -160,22 +181,23 @@ export function AdminAccountsClient({
       return;
     }
 
-    toast.success(`Đã đặt lại mật khẩu cho ${resetTarget.fullName}.`);
+    toast.success(formatMessage(dict.admin.accounts.resetSuccess, { name: resetTarget.fullName }));
     setResetTarget(null);
     setNewPassword("");
   };
 
-  const openEdit = (acc: Account) => {
-    setEditTarget(acc);
-    setEditFullName(acc.fullName);
-    setEditClassId(acc.classId ?? NONE_CLASS);
+  const openDetail = (summary: AccountSummary) => {
+    setDetailTarget(summary);
+    setEditFullName(summary.account.fullName);
+    setEditClassId(summary.account.classId ?? NONE_CLASS);
     setEditError(null);
   };
 
   const handleEditSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     setEditError(null);
-    if (!editTarget) return;
+    if (!detailTarget) return;
+    const editTarget = detailTarget.account;
 
     const result = await updateAccountByAdminAction(editTarget.id_login, {
       fullName: editFullName,
@@ -186,15 +208,22 @@ export function AdminAccountsClient({
       return;
     }
 
-    setAccounts(await listAccountsAction());
-    setEditTarget(null);
-    toast.success(`Đã cập nhật tài khoản ${editFullName.trim()}.`);
+    const updatedAccounts = await listAccountsAction();
+    setAccounts(updatedAccounts);
+    const refreshed = updatedAccounts.find((a) => a.account.id_login === editTarget.id_login);
+    if (refreshed) setDetailTarget(refreshed);
+    toast.success(formatMessage(dict.admin.accounts.saveSuccess, { name: editFullName.trim() }));
   };
 
   const handleToggleStatus = async (id_login: string, name: string, active: boolean) => {
     await setAccountStatusAction(id_login, active ? "inactive" : "active");
     setAccounts(await listAccountsAction());
-    toast.success(`Đã ${active ? "khóa" : "mở khóa"} tài khoản ${name}.`);
+    toast.success(
+      formatMessage(dict.admin.accounts.lockSuccess, {
+        action: active ? dict.admin.accounts.lockAction : dict.admin.accounts.unlockAction,
+        name,
+      })
+    );
   };
 
   return (
@@ -206,13 +235,13 @@ export function AdminAccountsClient({
             className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="size-4" />
-            Dashboard
+            {dict.common.backToDashboard}
           </Link>
           <div className="flex items-center gap-2">
             <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <BookOpen className="size-3.5" />
             </div>
-            <span className="font-heading text-base font-semibold">VocabApp</span>
+            <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
           </div>
         </div>
       </header>
@@ -221,11 +250,9 @@ export function AdminAccountsClient({
         <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div className="flex flex-col gap-1">
             <h1 className="font-heading text-2xl font-semibold tracking-tight">
-              Quản lý tài khoản
+              {dict.admin.accounts.title}
             </h1>
-            <p className="text-muted-foreground">
-              Tạo tài khoản, đặt lại mật khẩu, khóa/mở khóa học sinh và giáo viên.
-            </p>
+            <p className="text-muted-foreground">{dict.admin.accounts.subtitle}</p>
           </div>
 
           <Dialog
@@ -237,14 +264,12 @@ export function AdminAccountsClient({
           >
             <DialogTrigger render={<Button />}>
               <Plus className="size-4" />
-              Tạo tài khoản
+              {dict.admin.accounts.createButton}
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Tạo tài khoản mới</DialogTitle>
-                <DialogDescription>
-                  Tài khoản sẽ có thể đăng nhập ngay bằng email và mật khẩu bên dưới.
-                </DialogDescription>
+                <DialogTitle>{dict.admin.accounts.createTitle}</DialogTitle>
+                <DialogDescription>{dict.admin.accounts.createDesc}</DialogDescription>
               </DialogHeader>
 
               <form onSubmit={handleCreate} noValidate className="flex flex-col gap-4">
@@ -256,39 +281,39 @@ export function AdminAccountsClient({
                 )}
 
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="fullName">Họ và tên</Label>
+                  <Label htmlFor="fullName">{dict.admin.accounts.fullNameLabel}</Label>
                   <Input
                     id="fullName"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Nguyễn Văn A"
+                    placeholder={dict.register.fullNamePlaceholder}
                   />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{dict.admin.accounts.emailLabel}</Label>
                   <Input
                     id="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="ban@vocabapp.vn"
+                    placeholder="you@vocabapp.vn"
                   />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="password">Mật khẩu</Label>
+                  <Label htmlFor="password">{dict.admin.accounts.passwordLabel}</Label>
                   <Input
                     id="password"
                     type="text"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Tối thiểu 6 ký tự"
+                    placeholder={dict.register.passwordPlaceholder}
                   />
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <Label>Vai trò</Label>
+                  <Label>{dict.admin.accounts.roleLabel}</Label>
                   <RadioGroup
                     value={role}
                     onValueChange={(value) => setRole(value as Role)}
@@ -296,24 +321,26 @@ export function AdminAccountsClient({
                   >
                     <Label className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 has-data-checked:border-primary">
                       <RadioGroupItem value="student" />
-                      Học sinh
+                      {dict.roles.student}
                     </Label>
                     <Label className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 has-data-checked:border-primary">
                       <RadioGroupItem value="teacher" />
-                      Giáo viên
+                      {dict.roles.teacher}
                     </Label>
                   </RadioGroup>
                 </div>
 
                 {role !== "admin" && (
                   <div className="flex flex-col gap-1.5">
-                    <Label>Lớp</Label>
+                    <Label>{dict.admin.accounts.classLabel}</Label>
                     <Select value={classId} onValueChange={(value) => setClassId(value ?? NONE_CLASS)}>
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Chọn lớp">{classSelectLabel}</SelectValue>
+                        <SelectValue placeholder={dict.admin.accounts.chooseClass}>
+                          {classSelectLabel}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={NONE_CLASS}>Chưa có lớp</SelectItem>
+                        <SelectItem value={NONE_CLASS}>{dict.admin.accounts.noClass}</SelectItem>
                         {classes.map((c) => (
                           <SelectItem key={c.id} value={c.id}>
                             {c.className}
@@ -325,34 +352,63 @@ export function AdminAccountsClient({
                 )}
 
                 <DialogFooter>
-                  <Button type="submit">Tạo tài khoản</Button>
+                  <Button type="submit">{dict.admin.accounts.createSubmit}</Button>
                 </DialogFooter>
               </form>
             </DialogContent>
           </Dialog>
         </div>
 
-        <div className="relative max-w-sm">
-          <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            placeholder="Tìm theo tên, mã đăng nhập, email..."
-            className="pl-8"
-          />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative max-w-sm flex-1">
+            <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              placeholder={dict.admin.accounts.searchPlaceholder}
+              className="pl-8"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Label className="text-sm text-muted-foreground whitespace-nowrap">
+              {dict.admin.accounts.sortLabel}
+            </Label>
+            <Select
+              value={sortMode}
+              onValueChange={(value) => {
+                setSortMode((value as SortMode) ?? "default");
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue>
+                  {(value: SortMode) =>
+                    value === "class" ? dict.admin.accounts.sortByClass : dict.admin.accounts.sortDefault
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">{dict.admin.accounts.sortDefault}</SelectItem>
+                <SelectItem value="class">{dict.admin.accounts.sortByClass}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <Card>
           <CardContent className="flex flex-col gap-1 py-4">
             {pagedAccounts.length === 0 && (
               <p className="py-6 text-center text-sm text-muted-foreground">
-                Không tìm thấy tài khoản phù hợp.
+                {dict.admin.accounts.noResults}
               </p>
             )}
-            {pagedAccounts.map(({ account: acc, email: accEmail }, index) => {
+            {pagedAccounts.map((summary, index) => {
+              const acc = summary.account;
+              const accEmail = summary.email;
               const isSelf = acc.id_login === adminAccount.id_login;
               const isActive = acc.status === "active";
               const initials = acc.fullName
@@ -372,24 +428,33 @@ export function AdminAccountsClient({
                       </Avatar>
                       <div>
                         <p className="font-medium">
-                          {acc.fullName} {isSelf && <span className="text-muted-foreground">(Bạn)</span>}
+                          {acc.fullName}{" "}
+                          {isSelf && <span className="text-muted-foreground">{dict.admin.accounts.you}</span>}
                         </p>
-                        <p className="text-sm text-muted-foreground">
-                          Mã: <span className="font-mono">{acc.id_login}</span> · {accEmail}
-                          {acc.classId && <> · {className(acc.classId)}</>}
-                        </p>
+                        <div className="flex flex-col text-sm text-muted-foreground">
+                          <span>
+                            {dict.admin.accounts.idLabel}: <span className="font-mono">{acc.id_login}</span>
+                          </span>
+                          <span>{accEmail}</span>
+                          {acc.role !== "admin" && (
+                            <span>
+                              {dict.admin.accounts.classShort}:{" "}
+                              {acc.classId ? className(acc.classId) : dict.admin.accounts.noClass}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant="secondary">{roleLabel[acc.role]}</Badge>
+                      <Badge variant="secondary">{dict.roles[acc.role]}</Badge>
                       <Badge variant={isActive ? "default" : "destructive"}>
-                        {isActive ? "Hoạt động" : "Đã khóa"}
+                        {isActive ? dict.accountStatus.active : dict.accountStatus.inactive}
                       </Badge>
 
-                      <Button variant="outline" size="sm" onClick={() => openEdit(acc)}>
-                        <Pencil className="size-3.5" />
-                        Sửa
+                      <Button variant="outline" size="sm" onClick={() => openDetail(summary)}>
+                        <IdCard className="size-3.5" />
+                        {dict.admin.accounts.detailButton}
                       </Button>
 
                       {!isSelf && (
@@ -404,7 +469,7 @@ export function AdminAccountsClient({
                             }}
                           >
                             <KeyRound className="size-3.5" />
-                            Đặt lại mật khẩu
+                            {dict.admin.accounts.resetPasswordButton}
                           </Button>
                           <Button
                             variant="outline"
@@ -414,12 +479,12 @@ export function AdminAccountsClient({
                             {isActive ? (
                               <>
                                 <Lock className="size-3.5" />
-                                Khóa
+                                {dict.admin.accounts.lockButton}
                               </>
                             ) : (
                               <>
                                 <LockOpen className="size-3.5" />
-                                Mở khóa
+                                {dict.admin.accounts.unlockButton}
                               </>
                             )}
                           </Button>
@@ -448,9 +513,11 @@ export function AdminAccountsClient({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Đặt lại mật khẩu</DialogTitle>
+            <DialogTitle>{dict.admin.accounts.resetPasswordTitle}</DialogTitle>
             <DialogDescription>
-              Đặt mật khẩu mới cho {resetTarget?.fullName}. Mật khẩu cũ sẽ không còn dùng được.
+              {formatMessage(dict.admin.accounts.resetPasswordDesc, {
+                name: resetTarget?.fullName ?? "",
+              })}
             </DialogDescription>
           </DialogHeader>
 
@@ -463,82 +530,149 @@ export function AdminAccountsClient({
             )}
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="newPassword">Mật khẩu mới</Label>
+              <Label htmlFor="newPassword">{dict.admin.accounts.newPasswordLabel}</Label>
               <Input
                 id="newPassword"
                 type="text"
                 autoFocus
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Tối thiểu 6 ký tự"
+                placeholder={dict.register.passwordPlaceholder}
               />
             </div>
 
             <DialogFooter>
-              <Button type="submit">Đặt lại mật khẩu</Button>
+              <Button type="submit">{dict.admin.accounts.resetSubmit}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
       <Dialog
-        open={editTarget !== null}
+        open={detailTarget !== null}
         onOpenChange={(open) => {
           if (!open) {
-            setEditTarget(null);
+            setDetailTarget(null);
             setEditError(null);
           }
         }}
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Sửa tài khoản</DialogTitle>
-            <DialogDescription>
-              Cập nhật họ tên{editTarget && editTarget.role !== "admin" ? " và lớp phụ trách" : ""}.
-            </DialogDescription>
+            <DialogTitle>{dict.admin.accounts.detailTitle}</DialogTitle>
+            <DialogDescription>{dict.admin.accounts.detailDesc}</DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleEditSubmit} noValidate className="flex flex-col gap-4">
-            {editError && (
-              <Alert variant="destructive">
-                <AlertCircle />
-                <AlertDescription>{editError}</AlertDescription>
-              </Alert>
-            )}
-
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="editFullName">Họ và tên</Label>
-              <Input
-                id="editFullName"
-                autoFocus
-                value={editFullName}
-                onChange={(e) => setEditFullName(e.target.value)}
-              />
-            </div>
-
-            {editTarget && editTarget.role !== "admin" && (
-              <div className="flex flex-col gap-1.5">
-                <Label>{editTarget.role === "teacher" ? "Lớp phụ trách" : "Lớp"}</Label>
-                <Select value={editClassId} onValueChange={(value) => setEditClassId(value ?? NONE_CLASS)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Chọn lớp">{classSelectLabel}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NONE_CLASS}>Chưa có lớp</SelectItem>
-                    {classes.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.className}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          {detailTarget && (
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <Avatar className="size-12">
+                  <AvatarFallback>
+                    {detailTarget.account.fullName
+                      .split(" ")
+                      .map((p) => p[0])
+                      .slice(-2)
+                      .join("")
+                      .toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col gap-1">
+                  <p className="font-medium">{detailTarget.account.fullName}</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="secondary">{dict.roles[detailTarget.account.role]}</Badge>
+                    <Badge variant={detailTarget.account.status === "active" ? "default" : "destructive"}>
+                      {detailTarget.account.status === "active"
+                        ? dict.accountStatus.active
+                        : dict.accountStatus.inactive}
+                    </Badge>
+                  </div>
+                </div>
               </div>
-            )}
 
-            <DialogFooter>
-              <Button type="submit">Lưu thay đổi</Button>
-            </DialogFooter>
-          </form>
+              <div className="flex flex-col gap-2 text-sm">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <IdCard className="size-3.5 shrink-0" />
+                  <span>
+                    {dict.admin.accounts.idLabel}:{" "}
+                    <span className="font-mono">{detailTarget.account.id_login}</span>
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Mail className="size-3.5 shrink-0" />
+                  <span>{detailTarget.email}</span>
+                </div>
+                {detailTarget.account.role !== "admin" && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <GraduationCap className="size-3.5 shrink-0" />
+                    <span>
+                      {detailTarget.account.classId
+                        ? className(detailTarget.account.classId)
+                        : dict.admin.accounts.noClass}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Pencil className="size-3.5" />
+                  {dict.admin.accounts.editSection}
+                </div>
+
+                <form onSubmit={handleEditSubmit} noValidate className="flex flex-col gap-4">
+                  {editError && (
+                    <Alert variant="destructive">
+                      <AlertCircle />
+                      <AlertDescription>{editError}</AlertDescription>
+                    </Alert>
+                  )}
+
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="editFullName">{dict.admin.accounts.fullNameLabel}</Label>
+                    <Input
+                      id="editFullName"
+                      value={editFullName}
+                      onChange={(e) => setEditFullName(e.target.value)}
+                    />
+                  </div>
+
+                  {detailTarget.account.role !== "admin" && (
+                    <div className="flex flex-col gap-1.5">
+                      <Label>
+                        {detailTarget.account.role === "teacher"
+                          ? dict.admin.accounts.classInChargeLabel
+                          : dict.admin.accounts.classLabel}
+                      </Label>
+                      <Select
+                        value={editClassId}
+                        onValueChange={(value) => setEditClassId(value ?? NONE_CLASS)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder={dict.admin.accounts.chooseClass}>
+                            {classSelectLabel}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={NONE_CLASS}>{dict.admin.accounts.noClass}</SelectItem>
+                          {classes.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {c.className}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  <DialogFooter>
+                    <Button type="submit">{dict.common.saveChanges}</Button>
+                  </DialogFooter>
+                </form>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
