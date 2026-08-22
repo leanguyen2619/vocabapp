@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 
 import { prisma } from "@/lib/prisma";
@@ -26,8 +27,12 @@ export async function createSession(accountId: string) {
 /**
  * Reads the session cookie and joins back to Account.status on every call, so a locked/banned
  * account is invalidated on its very next request without any separate revalidation step.
+ *
+ * Wrapped in React's `cache()` so the many independent callers on a single page (the page itself
+ * plus every Server Action it invokes, each re-checking auth on principle) share one DB round
+ * trip per request instead of issuing a fresh session lookup each time.
  */
-export async function getCurrentAccount(): Promise<SessionAccount | null> {
+export const getCurrentAccount = cache(async (): Promise<SessionAccount | null> => {
   const cookieStore = await cookies();
   const sessionId = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionId) return null;
@@ -42,7 +47,7 @@ export async function getCurrentAccount(): Promise<SessionAccount | null> {
   }
 
   return session.account;
-}
+});
 
 /** Call only from a Server Action / Route Handler. */
 export async function destroySession() {
