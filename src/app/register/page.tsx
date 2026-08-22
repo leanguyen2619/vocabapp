@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
 
@@ -29,9 +28,7 @@ export default async function RegisterPage() {
           <CardDescription>{dict.register.subtitle}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Suspense fallback={null}>
-            <RegisterForm dict={dict} />
-          </Suspense>
+          <RegisterForm dict={dict} />
         </CardContent>
       </Card>
 

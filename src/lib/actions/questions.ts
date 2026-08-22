@@ -117,3 +117,12 @@ export async function setQuestionStatusAction(id: string, status: QuestionStatus
   await prisma.question.update({ where: { id }, data: { status } }).catch(() => null);
   return true;
 }
+
+export async function deleteQuestionAction(id: string): Promise<{ error: string } | { error?: undefined }> {
+  const admin = await requireAdmin();
+  if (!admin) return { error: "Bạn không có quyền thực hiện thao tác này." };
+
+  const deleted = await prisma.question.delete({ where: { id } }).catch(() => null);
+  if (!deleted) return { error: "Không thể xóa câu hỏi này. Câu hỏi có thể đã có học sinh làm bài." };
+  return {};
+}

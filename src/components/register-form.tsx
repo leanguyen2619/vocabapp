@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type SubmitEvent } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -9,11 +9,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { registerAction } from "@/lib/actions/auth";
 import { formatMessage } from "@/lib/i18n/format";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
-import type { Role } from "@/types";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -21,14 +19,10 @@ type InvalidField = "fullName" | "email" | "password" | "confirmPassword" | null
 
 export function RegisterForm({ dict }: { dict: Dictionary }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState<Role>(() =>
-    searchParams.get("role") === "teacher" ? "teacher" : "student"
-  );
   const [error, setError] = useState<string | null>(null);
   const [invalidField, setInvalidField] = useState<InvalidField>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -69,7 +63,7 @@ export function RegisterForm({ dict }: { dict: Dictionary }) {
     }
 
     setSubmitting(true);
-    const result = await registerAction({ fullName: fullName.trim(), email: email.trim(), password, role });
+    const result = await registerAction({ fullName: fullName.trim(), email: email.trim(), password });
     setSubmitting(false);
 
     if (result.error !== undefined) {
@@ -141,24 +135,6 @@ export function RegisterForm({ dict }: { dict: Dictionary }) {
           placeholder={dict.register.confirmPasswordPlaceholder}
           aria-invalid={invalidField === "confirmPassword"}
         />
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <Label>{dict.register.roleLabel}</Label>
-        <RadioGroup
-          value={role}
-          onValueChange={(value) => setRole(value as Role)}
-          className="grid-cols-2"
-        >
-          <Label className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 has-data-checked:border-primary">
-            <RadioGroupItem value="student" />
-            {dict.register.roleStudent}
-          </Label>
-          <Label className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 has-data-checked:border-primary">
-            <RadioGroupItem value="teacher" />
-            {dict.register.roleTeacher}
-          </Label>
-        </RadioGroup>
       </div>
 
       <Button type="submit" size="lg" className="mt-2 h-10" disabled={submitting}>

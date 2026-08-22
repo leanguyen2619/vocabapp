@@ -5,7 +5,6 @@ import bcrypt from "bcryptjs";
 import { generateLoginId } from "@/lib/id-gen";
 import { prisma } from "@/lib/prisma";
 import { createSession, destroySession, getCurrentAccount } from "@/lib/session";
-import type { Role } from "@/types";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -30,11 +29,15 @@ export async function loginAction(email: string, password: string): Promise<Auth
   return { id_login: account.id_login };
 }
 
+/**
+ * Public self-registration is student-only by design — a teacher account grants access to
+ * assign vocabulary and view real student data, so it must be created by an admin (see
+ * createAccountByAdminAction) rather than claimed by anyone who finds this form.
+ */
 export async function registerAction(input: {
   fullName: string;
   email: string;
   password: string;
-  role: Role;
 }): Promise<AuthResult> {
   const fullName = input.fullName.trim();
   const email = input.email.trim().toLowerCase();
@@ -42,16 +45,15 @@ export async function registerAction(input: {
   if (!fullName) return { error: "Vui lòng nhập họ và tên." };
   if (!EMAIL_PATTERN.test(email)) return { error: "Email không đúng định dạng." };
   if (input.password.length < 6) return { error: "Mật khẩu cần ít nhất 6 ký tự." };
-  if (input.role !== "student" && input.role !== "teacher") return { error: "Vai trò không hợp lệ." };
 
   const existing = await prisma.account.findUnique({ where: { email } });
   if (existing) return { error: "Email này đã được sử dụng." };
 
-  const id_login = await generateLoginId(input.role);
+  const id_login = await generateLoginId("student");
   const passwordHash = await bcrypt.hash(input.password, 10);
 
   const account = await prisma.account.create({
-    data: { id_login, fullName, email, role: input.role, passwordHash },
+    data: { id_login, fullName, email, role: "student", passwordHash },
   });
 
   await createSession(account.id_login);

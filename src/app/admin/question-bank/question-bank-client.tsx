@@ -3,7 +3,7 @@
 import { useMemo, useState, type SubmitEvent } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { AlertCircle, ArrowLeft, BookOpen, Check, Pencil, Plus, Search, X } from "lucide-react";
+import { AlertCircle, ArrowLeft, BookOpen, Check, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 
 import { PaginationControls } from "@/components/pagination-controls";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -32,6 +32,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
   createQuestionAction,
+  deleteQuestionAction,
   listQuestionsAction,
   setQuestionStatusAction,
   updateQuestionAction,
@@ -72,6 +73,10 @@ export function AdminQuestionBankClient({
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+
+  const [deleteTarget, setDeleteTarget] = useState<QuestionWithAnswers | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const PAGE_SIZE = 10;
   const query = search.trim().toLowerCase();
@@ -147,6 +152,22 @@ export function AdminQuestionBankClient({
 
     setQuestions(await listQuestionsAction());
     setDialogOpen(false);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const result = await deleteQuestionAction(deleteTarget.id);
+    setDeleting(false);
+
+    if (result.error !== undefined) {
+      setDeleteError(result.error);
+      return;
+    }
+
+    setQuestions((prev) => prev.filter((q) => q.id !== deleteTarget.id));
+    toast.success(dict.admin.questionBank.deleteSuccess);
+    setDeleteTarget(null);
   };
 
   const handleSetStatus = async (q: QuestionWithAnswers, next: QuestionStatus) => {
@@ -281,6 +302,17 @@ export function AdminQuestionBankClient({
                       {dict.admin.questionBank.reject}
                     </Button>
                   )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setDeleteTarget(q);
+                      setDeleteError(null);
+                    }}
+                  >
+                    <Trash2 className="size-3.5" />
+                    {dict.common.delete}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -390,6 +422,39 @@ export function AdminQuestionBankClient({
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteTarget(null);
+            setDeleteError(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{dict.admin.questionBank.deleteConfirmTitle}</DialogTitle>
+            <DialogDescription>{dict.admin.questionBank.deleteConfirmDesc}</DialogDescription>
+          </DialogHeader>
+
+          {deleteError && (
+            <Alert variant="destructive">
+              <AlertCircle />
+              <AlertDescription>{deleteError}</AlertDescription>
+            </Alert>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+              {dict.common.cancel}
+            </Button>
+            <Button variant="destructive" disabled={deleting} onClick={() => void handleDelete()}>
+              {dict.common.delete}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
