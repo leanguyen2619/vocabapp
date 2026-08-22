@@ -11,17 +11,9 @@ import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { recordVocabAttemptAction } from "@/lib/actions/progress";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
+import { speakWord } from "@/lib/speech";
 import { cn } from "@/lib/utils";
 import type { Vocabulary } from "@/types";
-
-function speak(word: string) {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(word);
-  utterance.lang = "en-US";
-  utterance.rate = 0.85;
-  window.speechSynthesis.speak(utterance);
-}
 
 export function ListeningGame({ vocabList, dict }: { vocabList: Vocabulary[]; dict: Dictionary }) {
   const [index, setIndex] = useState(0);
@@ -44,7 +36,7 @@ export function ListeningGame({ vocabList, dict }: { vocabList: Vocabulary[]; di
   }, []);
 
   useEffect(() => {
-    if (!finished && current) speak(current.vocab);
+    if (!finished && current) speakWord(current.vocab);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, finished]);
 
@@ -122,7 +114,7 @@ export function ListeningGame({ vocabList, dict }: { vocabList: Vocabulary[]; di
           size="icon-lg"
           className="rounded-full"
           aria-label={dict.listeningGame.replayAriaLabel}
-          onClick={() => speak(current.vocab)}
+          onClick={() => speakWord(current.vocab)}
         >
           <Volume2 className="size-6" />
         </Button>

@@ -219,6 +219,7 @@ const en: Dictionary = {
     topicPlaceholder: "Topic",
     searchPlaceholder: "Search vocabulary...",
     noResults: "No matching vocabulary found.",
+    playPronunciation: "Listen to pronunciation",
   },
   exercises: {
     title: "Choose an exercise type",

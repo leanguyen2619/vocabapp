@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, Search } from "lucide-react";
+import { ArrowLeft, BookOpen, Search, Volume2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,6 +19,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatMessage } from "@/lib/i18n/format";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { getLevelName, getTopicName } from "@/lib/labels";
+import { speakWord } from "@/lib/speech";
 import type { Level, LearningStatus, Topic, VocabularyWithProgress } from "@/types";
 
 const statusVariant: Record<LearningStatus, "default" | "outline" | "secondary"> = {
@@ -169,7 +171,17 @@ export function VocabularyClient({
                 <CardContent className="flex flex-col gap-2 py-4">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="text-lg font-semibold">{word.vocab}</p>
+                      <div className="flex items-center gap-1">
+                        <p className="text-lg font-semibold">{word.vocab}</p>
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          aria-label={dict.vocabulary.playPronunciation}
+                          onClick={() => speakWord(word.vocab)}
+                        >
+                          <Volume2 className="size-3.5" />
+                        </Button>
+                      </div>
                       <p className="text-xs text-muted-foreground">{dict.partOfSpeech[word.partOfSpeech]}</p>
                     </div>
                     <Badge variant={statusVariant[word.learningStatus]} className="shrink-0">

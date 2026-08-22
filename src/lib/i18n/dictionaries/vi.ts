@@ -217,6 +217,7 @@ const vi = {
     topicPlaceholder: "Chủ đề",
     searchPlaceholder: "Tìm từ vựng...",
     noResults: "Không tìm thấy từ vựng phù hợp.",
+    playPronunciation: "Nghe phát âm",
   },
   exercises: {
     title: "Chọn dạng bài tập",
