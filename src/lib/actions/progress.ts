@@ -2,9 +2,10 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentAccount } from "@/lib/session";
-import type { LearningStatus } from "@/types";
+import type { AccountLevelStatus, LearningStatus } from "@/types";
 
 const STATUS_ORDER: LearningStatus[] = ["new", "learning", "mastered"];
+const LEVEL_STATUS_RANK: Record<AccountLevelStatus, number> = { locked: 0, in_progress: 1, completed: 2 };
 
 function nextStatus(current: LearningStatus, isCorrect: boolean): LearningStatus {
   const index = STATUS_ORDER.indexOf(current);
@@ -29,19 +30,27 @@ async function recordForVocab(
     create: { accountId, vocabId, status },
   });
 
-  const [level, levelVocab, levelHistory] = await Promise.all([
+  const [level, levelVocab, levelHistory, existingAccountLevel] = await Promise.all([
     prisma.level.findUnique({ where: { id: levelId } }),
     prisma.vocabulary.findMany({ where: { levelId }, select: { id: true } }),
     prisma.learningHistory.findMany({
       where: { accountId, vocab: { levelId } },
       select: { status: true },
     }),
+    prisma.accountLevel.findUnique({ where: { accountId_levelId: { accountId, levelId } } }),
   ]);
   if (!level) return status;
 
   const masteredCount = levelHistory.filter((h) => h.status === "mastered").length;
   const score = levelVocab.length > 0 ? Math.round((masteredCount / levelVocab.length) * 100) : 0;
-  const levelStatus = score >= level.maxScore ? "completed" : "in_progress";
+  const naturalStatus: AccountLevelStatus = score >= level.maxScore ? "completed" : "in_progress";
+
+  // Never let this auto-recompute demote a level's status — only ever match or improve on
+  // whatever it already was. This keeps an admin's manual "completed" override durable instead
+  // of it silently reverting the next time the student answers something in that level.
+  const currentStatus = existingAccountLevel?.status ?? "locked";
+  const levelStatus =
+    LEVEL_STATUS_RANK[naturalStatus] > LEVEL_STATUS_RANK[currentStatus] ? naturalStatus : currentStatus;
 
   await prisma.accountLevel.upsert({
     where: { accountId_levelId: { accountId, levelId } },

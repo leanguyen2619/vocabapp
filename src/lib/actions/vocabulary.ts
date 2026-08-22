@@ -47,13 +47,16 @@ export async function getMyVocabularyWithProgressAction(): Promise<VocabularyWit
 }
 
 /**
- * Words the student's teacher explicitly assigned (not yet mastered) come first; if that doesn't
- * fill the class's daily target, the rest is topped up from the whole bank same as before.
+ * Words the student's teacher explicitly assigned (not yet mastered) come first, regardless of
+ * level — a teacher can deliberately assign ahead of the student's unlocked level. If that
+ * doesn't fill the class's daily target, the rest is topped up from the bank same as before, but
+ * only from levels the student has actually unlocked, so auto-fill can't silently "complete" a
+ * level the student hasn't reached yet.
  */
 async function computeDailyWords(
   account: SessionAccount
 ): Promise<{ vocab: Vocabulary; status: LearningStatus }[]> {
-  const [cls, vocabulary, history, assignments] = await Promise.all([
+  const [cls, vocabulary, history, assignments, levels, accountLevels] = await Promise.all([
     account.classId ? prisma.schoolClass.findUnique({ where: { id: account.classId } }) : null,
     prisma.vocabulary.findMany({ orderBy: { id: "asc" } }),
     prisma.learningHistory.findMany({ where: { accountId: account.id_login } }),
@@ -62,7 +65,18 @@ async function computeDailyWords(
       select: { vocabId: true },
       distinct: ["vocabId"],
     }),
+    prisma.level.findMany({ orderBy: { id: "asc" } }),
+    prisma.accountLevel.findMany({ where: { accountId: account.id_login } }),
   ]);
+
+  // Same sequential-unlock rule as getMyStudentLevelIndexAction: level 1 is open by default,
+  // each further level opens once the previous one is in_progress/completed.
+  let unlockedIndex = 1;
+  levels.forEach((level, index) => {
+    const status = accountLevels.find((al) => al.levelId === level.id)?.status ?? "locked";
+    if (status === "completed" || status === "in_progress") unlockedIndex = index + 1;
+  });
+  const unlockedLevelIds = new Set(levels.slice(0, unlockedIndex).map((l) => l.id));
 
   const target = cls?.dailyWordTarget ?? 5;
   const priority: Record<LearningStatus, number> = { new: 0, learning: 1, mastered: 2 };
@@ -81,7 +95,11 @@ async function computeDailyWords(
   }
 
   const remaining = withStatus
-    .filter((w) => !assignedIds.has(w.vocab.id) || w.status === "mastered")
+    .filter(
+      (w) =>
+        (!assignedIds.has(w.vocab.id) || w.status === "mastered") &&
+        unlockedLevelIds.has(w.vocab.levelId)
+    )
     .sort((a, b) => priority[a.status] - priority[b.status]);
 
   return [...assignedWords, ...remaining].slice(0, Math.max(1, target));
