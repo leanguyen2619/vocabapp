@@ -4,10 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
+  AlertCircle,
   CheckCircle2,
   Circle,
   ClipboardList,
+  Copy,
   Flame,
+  IdCard,
+  KeyRound,
   Library,
   ListChecks,
   Search,
@@ -15,6 +19,7 @@ import {
   X,
 } from "lucide-react";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -41,17 +46,28 @@ import { Separator } from "@/components/ui/separator";
 import {
   assignVocabularyToClassAction,
   cancelAssignmentAction,
+  getStudentDetailAction,
   listMyAssignedVocabAction,
+  resetStudentPasswordAction,
+  updateMyClassTargetAction,
   type AssignedVocabSummary,
   type ClassStudentSummary,
+  type StudentDetail,
 } from "@/lib/actions/teacher";
 import { formatMessage } from "@/lib/i18n/format";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Account, Vocabulary } from "@/types";
 
+interface KnownCredentials {
+  fullName: string;
+  email: string;
+  password: string;
+}
+
 export function TeacherDashboardContent({
   account,
   className: assignedClassName,
+  dailyWordTarget,
   students,
   vocabularyBank,
   assignedVocab: initialAssignedVocab,
@@ -59,6 +75,7 @@ export function TeacherDashboardContent({
 }: {
   account: Account;
   className: string | null;
+  dailyWordTarget: number;
   students: ClassStudentSummary[];
   vocabularyBank: Vocabulary[];
   assignedVocab: AssignedVocabSummary[];
@@ -70,6 +87,14 @@ export function TeacherDashboardContent({
   const [assigning, setAssigning] = useState(false);
   const [assignedVocab, setAssignedVocab] = useState(initialAssignedVocab);
   const [cancelingId, setCancelingId] = useState<string | null>(null);
+  const [targetValue, setTargetValue] = useState(String(dailyWordTarget));
+
+  const [detailStudentId, setDetailStudentId] = useState<string | null>(null);
+  const [detailData, setDetailData] = useState<StudentDetail | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
+  const [knownCredentials, setKnownCredentials] = useState<Record<string, KnownCredentials>>({});
 
   const className = assignedClassName ?? null;
   const studentCount = students.length;
@@ -115,6 +140,58 @@ export function TeacherDashboardContent({
     setCancelingId(null);
     setAssignedVocab((prev) => prev.filter((v) => v.vocabId !== entry.vocabId));
     toast.success(formatMessage(dict.teacherDashboard.cancelSuccess, { word: entry.vocab }));
+  };
+
+  const handleTargetChange = async (value: string) => {
+    setTargetValue(value);
+    const target = Number(value);
+    if (!Number.isInteger(target) || target < 1) return;
+    const ok = await updateMyClassTargetAction(target);
+    if (ok && className) {
+      toast.success(formatMessage(dict.teacherDashboard.targetUpdateSuccess, { className }));
+    }
+  };
+
+  const openDetail = async (studentId: string) => {
+    setDetailStudentId(studentId);
+    setDetailData(null);
+    setNewPassword("");
+    setResetError(null);
+    setDetailData(await getStudentDetailAction(studentId));
+  };
+
+  const buildCredentialsText = (entry: KnownCredentials) =>
+    `${entry.fullName}\n${dict.admin.accounts.emailLabel}: ${entry.email}\n${dict.admin.accounts.passwordLabel}: ${entry.password}`;
+
+  const handleCopyCredentials = async (studentId: string) => {
+    const entry = knownCredentials[studentId];
+    if (!entry) return;
+    try {
+      await navigator.clipboard.writeText(buildCredentialsText(entry));
+      toast.success(formatMessage(dict.admin.accounts.copyCredentialsSuccess, { name: entry.fullName }));
+    } catch {
+      toast.error(dict.admin.accounts.copyFailed);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!detailData) return;
+    setResetError(null);
+    setResetting(true);
+    const result = await resetStudentPasswordAction(detailData.id_login, newPassword);
+    setResetting(false);
+
+    if (result.error !== undefined) {
+      setResetError(result.error);
+      return;
+    }
+
+    setKnownCredentials((prev) => ({
+      ...prev,
+      [detailData.id_login]: { fullName: detailData.fullName, email: detailData.email, password: newPassword },
+    }));
+    toast.success(formatMessage(dict.teacherDashboard.resetSuccess, { name: detailData.fullName }));
+    setNewPassword("");
   };
 
   return (
@@ -258,6 +335,20 @@ export function TeacherDashboardContent({
             </Card>
           </div>
 
+          <div className="flex items-center gap-2">
+            <Label htmlFor="dailyTarget" className="text-sm text-muted-foreground whitespace-nowrap">
+              {dict.teacherDashboard.targetLabel}
+            </Label>
+            <Input
+              id="dailyTarget"
+              type="number"
+              min={1}
+              value={targetValue}
+              onChange={(e) => void handleTargetChange(e.target.value)}
+              className="w-20"
+            />
+          </div>
+
           <Card>
             <CardHeader>
               <CardTitle>{dict.teacherDashboard.assignedTitle}</CardTitle>
@@ -332,8 +423,8 @@ export function TeacherDashboardContent({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 sm:w-64">
-                      <Progress value={student.score} className="flex-1" />
+                    <div className="flex flex-wrap items-center gap-3 sm:w-auto">
+                      <Progress value={student.score} className="flex-1 sm:w-32" />
                       <Badge variant="outline" className="gap-1 shrink-0">
                         <Flame className="size-3 text-orange-500" />
                         {student.streak}
@@ -344,6 +435,14 @@ export function TeacherDashboardContent({
                       >
                         {dict.assignmentStatus[student.todayStatus]}
                       </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void openDetail(student.id_login)}
+                      >
+                        <IdCard className="size-3.5" />
+                        {dict.teacherDashboard.detailButton}
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -352,6 +451,121 @@ export function TeacherDashboardContent({
           </Card>
         </>
       )}
+
+      <Dialog
+        open={detailStudentId !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDetailStudentId(null);
+            setDetailData(null);
+            setResetError(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{dict.teacherDashboard.detailTitle}</DialogTitle>
+            <DialogDescription>{dict.teacherDashboard.detailDesc}</DialogDescription>
+          </DialogHeader>
+
+          {detailData && (
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1">
+                <p className="font-medium">{detailData.fullName}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="secondary">{detailData.levelName}</Badge>
+                  <Badge variant="outline" className="gap-1">
+                    <Flame className="size-3 text-orange-500" />
+                    {detailData.streak}
+                  </Badge>
+                  <Badge variant="outline">
+                    {dict.common.score}: {detailData.score}%
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="default">
+                  {dict.vocabulary.mastered}: {detailData.masteredCount}
+                </Badge>
+                <Badge variant="outline">
+                  {dict.vocabulary.learning}: {detailData.learningCount}
+                </Badge>
+                <Badge variant="secondary">
+                  {dict.vocabulary.new}: {detailData.newCount}
+                </Badge>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium">{dict.teacherDashboard.learningWordsTitle}</p>
+                {detailData.learningWords.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">{dict.teacherDashboard.noLearningWords}</p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5">
+                    {detailData.learningWords.map((w) => (
+                      <Badge key={w.vocab} variant="outline">
+                        {w.vocab} — {w.meanVI}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {knownCredentials[detailData.id_login] && (
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/50 px-3 py-2">
+                  <span className="text-sm text-muted-foreground">
+                    {dict.admin.accounts.credentialsKnownLabel}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void handleCopyCredentials(detailData.id_login)}
+                  >
+                    <Copy className="size-3.5" />
+                    {dict.admin.accounts.copyCredentials}
+                  </Button>
+                </div>
+              )}
+
+              <Separator />
+
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <KeyRound className="size-3.5" />
+                  {dict.teacherDashboard.resetPasswordTitle}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {formatMessage(dict.teacherDashboard.resetPasswordDesc, { name: detailData.fullName })}
+                </p>
+
+                {resetError && (
+                  <Alert variant="destructive">
+                    <AlertCircle />
+                    <AlertDescription>{resetError}</AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="teacherNewPassword">{dict.admin.accounts.newPasswordLabel}</Label>
+                  <Input
+                    id="teacherNewPassword"
+                    type="text"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder={dict.register.passwordPlaceholder}
+                  />
+                </div>
+
+                <DialogFooter>
+                  <Button disabled={resetting} onClick={() => void handleResetPassword()}>
+                    {dict.teacherDashboard.resetSubmit}
+                  </Button>
+                </DialogFooter>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

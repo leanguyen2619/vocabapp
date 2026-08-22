@@ -1,5 +1,7 @@
 "use server";
 
+import bcrypt from "bcryptjs";
+
 import { prisma } from "@/lib/prisma";
 import { getCurrentAccount } from "@/lib/session";
 import type { AssignmentStatus } from "@/types";
@@ -168,4 +170,91 @@ export async function cancelAssignmentAction(vocabId: string): Promise<boolean> 
 
   await prisma.dailyAssignment.deleteMany({ where: { accountId: { in: studentIds }, vocabId } });
   return true;
+}
+
+/** Sets the daily word target for the signed-in teacher's own class only. */
+export async function updateMyClassTargetAction(dailyWordTarget: number): Promise<boolean> {
+  const teacher = await requireTeacher();
+  if (!teacher || !teacher.classId) return false;
+  if (!Number.isInteger(dailyWordTarget) || dailyWordTarget < 1) return false;
+
+  const updated = await prisma.schoolClass
+    .update({ where: { id: teacher.classId }, data: { dailyWordTarget } })
+    .catch(() => null);
+  return updated !== null;
+}
+
+/**
+ * Resets a student's password — scoped to students in the signed-in teacher's own class only
+ * (re-verified server-side against teacher.classId, not just filtered client-side).
+ */
+export async function resetStudentPasswordAction(
+  studentId: string,
+  newPassword: string
+): Promise<{ error: string } | { error?: undefined }> {
+  const teacher = await requireTeacher();
+  if (!teacher || !teacher.classId) return { error: "Bạn không có quyền thực hiện thao tác này." };
+  if (newPassword.length < 6) return { error: "Mật khẩu cần ít nhất 6 ký tự." };
+
+  const student = await prisma.account.findFirst({
+    where: { id_login: studentId, classId: teacher.classId, role: "student" },
+  });
+  if (!student) return { error: "Không tìm thấy học sinh này trong lớp bạn phụ trách." };
+
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  await prisma.account.update({ where: { id_login: studentId }, data: { passwordHash } });
+  return {};
+}
+
+export interface StudentDetail {
+  id_login: string;
+  fullName: string;
+  email: string;
+  levelName: string;
+  score: number;
+  streak: number;
+  masteredCount: number;
+  learningCount: number;
+  newCount: number;
+  learningWords: { vocab: string; meanVI: string }[];
+}
+
+/** Full progress detail for one student — only reachable for students in the teacher's own class. */
+export async function getStudentDetailAction(studentId: string): Promise<StudentDetail | null> {
+  const teacher = await requireTeacher();
+  if (!teacher || !teacher.classId) return null;
+
+  const student = await prisma.account.findFirst({
+    where: { id_login: studentId, classId: teacher.classId, role: "student" },
+  });
+  if (!student) return null;
+
+  const [levels, accountLevels, history, totalVocab] = await Promise.all([
+    prisma.level.findMany({ orderBy: { id: "asc" } }),
+    prisma.accountLevel.findMany({ where: { accountId: studentId } }),
+    prisma.learningHistory.findMany({ where: { accountId: studentId }, include: { vocab: true } }),
+    prisma.vocabulary.count(),
+  ]);
+
+  const activeLevel =
+    accountLevels.find((al) => al.status === "in_progress") ??
+    [...accountLevels].reverse().find((al) => al.status === "completed");
+  const levelName = levels.find((l) => l.id === activeLevel?.levelId)?.level ?? levels[0]?.level ?? "-";
+  const streak = Math.max(0, ...accountLevels.map((al) => al.streak), 0);
+
+  const masteredCount = history.filter((h) => h.status === "mastered").length;
+  const learningEntries = history.filter((h) => h.status === "learning");
+
+  return {
+    id_login: student.id_login,
+    fullName: student.fullName,
+    email: student.email,
+    levelName,
+    score: activeLevel?.score ?? 0,
+    streak,
+    masteredCount,
+    learningCount: learningEntries.length,
+    newCount: Math.max(0, totalVocab - masteredCount - learningEntries.length),
+    learningWords: learningEntries.slice(0, 20).map((h) => ({ vocab: h.vocab.vocab, meanVI: h.vocab.meanVI })),
+  };
 }

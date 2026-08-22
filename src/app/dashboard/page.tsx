@@ -46,13 +46,14 @@ export default async function DashboardPage() {
       listVocabularyAction(),
       listMyAssignedVocabAction(),
     ]);
-    const className = classes.find((c) => c.id === account.classId)?.className ?? null;
+    const myClass = classes.find((c) => c.id === account.classId) ?? null;
 
     return (
       <DashboardShell account={account} streak={0}>
         <TeacherDashboardContent
           account={account}
-          className={className}
+          className={myClass?.className ?? null}
+          dailyWordTarget={myClass?.dailyWordTarget ?? 5}
           students={students}
           vocabularyBank={vocabularyBank}
           assignedVocab={assignedVocab}
