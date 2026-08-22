@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
+import { recordVocabAttemptByWordAction } from "@/lib/actions/progress";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import type { SentencePrompt } from "@/lib/mock-data";
@@ -42,6 +43,7 @@ export function SentenceWritingExercise({
   const handleSelfMark = (confident: boolean) => {
     if (confident) setConfidentCount((c) => c + 1);
     else setPracticeCount((c) => c + 1);
+    void recordVocabAttemptByWordAction(prompt.vocab, confident);
     goNext();
   };
 

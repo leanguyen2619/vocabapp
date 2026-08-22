@@ -7,6 +7,7 @@ import { Check, Delete, PartyPopper, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
+import { recordVocabAttemptByWordAction } from "@/lib/actions/progress";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import type { WordFormationPrompt } from "@/lib/mock-data";
@@ -57,9 +58,11 @@ export function WordFormationGame({
       const attempt = nextIds.map((id) => prompt.tiles.find((t) => t.id === id)!.char).join("");
       if (attempt === prompt.word) {
         setSolved(true);
+        void recordVocabAttemptByWordAction(prompt.word, true);
       } else {
         setWrongFlash(true);
         setWrongAttempts((c) => c + 1);
+        void recordVocabAttemptByWordAction(prompt.word, false);
         setTimeout(() => {
           setWrongFlash(false);
           setPlacedIds([]);

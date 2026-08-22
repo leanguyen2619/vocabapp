@@ -6,6 +6,7 @@ import { PartyPopper, RotateCcw, Timer } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { recordVocabAttemptAction } from "@/lib/actions/progress";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { cn, shuffle } from "@/lib/utils";
@@ -56,6 +57,7 @@ export function MatchingGame({ vocabList, dict }: { vocabList: Vocabulary[]; dic
     if (selected.id === id) {
       setMatchedIds((prev) => new Set(prev).add(id));
       setSelected(null);
+      void recordVocabAttemptAction(id, true);
     } else {
       const wrongPair = [selected.id, id];
       setWrongIds(wrongPair);

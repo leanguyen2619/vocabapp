@@ -7,6 +7,7 @@ import { Check, PartyPopper, RotateCcw, Volume2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
+import { recordVocabAttemptAction } from "@/lib/actions/progress";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { getTopicName } from "@/lib/labels";
@@ -37,6 +38,7 @@ export function PracticeSession({
     } else {
       setReviewCount((c) => c + 1);
     }
+    void recordVocabAttemptAction(current.id, known);
 
     if (index + 1 >= total) {
       setFinished(true);

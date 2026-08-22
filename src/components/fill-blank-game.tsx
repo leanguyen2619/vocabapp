@@ -6,6 +6,7 @@ import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
+import { recordVocabAttemptByWordAction } from "@/lib/actions/progress";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import type { FillBlankQuestion } from "@/lib/mock-data";
@@ -41,9 +42,11 @@ export function FillBlankGame({
   const handleSelect = (option: string) => {
     if (isAnswered) return;
     setSelected(option);
-    if (option === question.correctAnswer) {
+    const correct = option === question.correctAnswer;
+    if (correct) {
       setScore((s) => s + 1);
     }
+    void recordVocabAttemptByWordAction(question.correctAnswer, correct);
   };
 
   const handleNext = () => {

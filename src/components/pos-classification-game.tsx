@@ -7,6 +7,7 @@ import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
+import { recordVocabAttemptAction } from "@/lib/actions/progress";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { getTopicName, posLabel } from "@/lib/labels";
@@ -50,9 +51,11 @@ export function PosClassificationGame({
   const handleSelect = (option: PartOfSpeech) => {
     if (isAnswered) return;
     setSelected(option);
-    if (option === question.vocab.partOfSpeech) {
+    const correct = option === question.vocab.partOfSpeech;
+    if (correct) {
       setScore((s) => s + 1);
     }
+    void recordVocabAttemptAction(question.vocab.id, correct);
   };
 
   const handleNext = () => {

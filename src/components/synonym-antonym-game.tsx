@@ -7,6 +7,7 @@ import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
+import { recordVocabAttemptByWordAction } from "@/lib/actions/progress";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import type { SynonymAntonymQuestion } from "@/lib/mock-data";
@@ -45,9 +46,11 @@ export function SynonymAntonymGame({
   const handleSelect = (option: string) => {
     if (isAnswered) return;
     setSelected(option);
-    if (option === question.correctAnswer) {
+    const correct = option === question.correctAnswer;
+    if (correct) {
       setScore((s) => s + 1);
     }
+    void recordVocabAttemptByWordAction(question.word, correct);
   };
 
   const handleNext = () => {

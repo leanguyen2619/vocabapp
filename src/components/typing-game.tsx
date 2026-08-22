@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
+import { recordVocabAttemptAction } from "@/lib/actions/progress";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
@@ -41,6 +42,7 @@ export function TypingGame({ vocabList, dict }: { vocabList: Vocabulary[]; dict:
     if (!checked) {
       setChecked(true);
       if (isCorrect) setScore((s) => s + 1);
+      void recordVocabAttemptAction(current.id, isCorrect);
       return;
     }
     handleNext();
