@@ -408,7 +408,7 @@ export function AdminVocabularyClient({
                   }
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue />
+                    <SelectValue>{(value: PartOfSpeech) => posLabel[value]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {POS_VALUES.map((pos) => (
@@ -427,7 +427,9 @@ export function AdminVocabularyClient({
                   onValueChange={(value) => setForm((f) => ({ ...f, topicId: value ?? f.topicId }))}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue />
+                    <SelectValue>
+                      {(value: string) => topics.find((t) => String(t.id) === value)?.topic ?? "Chọn chủ đề"}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {topics.map((t) => (
@@ -446,7 +448,9 @@ export function AdminVocabularyClient({
                   onValueChange={(value) => setForm((f) => ({ ...f, levelId: value ?? f.levelId }))}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue />
+                    <SelectValue>
+                      {(value: string) => levels.find((l) => l.id === value)?.level ?? "Chọn cấp độ"}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {levels.map((l) => (

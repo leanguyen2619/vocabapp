@@ -97,7 +97,12 @@ export function AdminLevelsClient({
               <label className="text-sm font-medium">Học viên</label>
               <Select value={selectedId} onValueChange={(v) => v && void handleSelectStudent(v)}>
                 <SelectTrigger className="w-full sm:w-72">
-                  <SelectValue />
+                  <SelectValue>
+                    {(value: string) => {
+                      const s = students.find((s) => s.id_login === value);
+                      return s ? `${s.fullName} (${s.email})` : "Chọn học viên";
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {students.map((s) => (
@@ -135,7 +140,9 @@ export function AdminLevelsClient({
                             }
                           >
                             <SelectTrigger size="sm" className="w-36">
-                              <SelectValue />
+                              <SelectValue>
+                                {(value: AccountLevelStatus) => statusLabel[value] ?? "Chọn trạng thái"}
+                              </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="locked">Khóa</SelectItem>

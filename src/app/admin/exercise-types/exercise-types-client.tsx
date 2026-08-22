@@ -70,7 +70,7 @@ export function AdminExerciseTypesClient({ initialTypes }: { initialTypes: Exerc
                 }}
               >
                 <SelectTrigger size="sm" className="w-24">
-                  <SelectValue />
+                  <SelectValue>{(value: string) => `Lv${value}`}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {[1, 2, 3, 4].map((lv) => (

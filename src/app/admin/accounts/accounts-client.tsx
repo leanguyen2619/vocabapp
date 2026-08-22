@@ -91,6 +91,8 @@ export function AdminAccountsClient({
   const [page, setPage] = useState(1);
 
   const className = (id: string | null) => classes.find((c) => c.id === id)?.className ?? null;
+  const classSelectLabel = (value: string) =>
+    value === NONE_CLASS ? "Chưa có lớp" : (className(value) ?? "Chọn lớp");
 
   const query = search.trim().toLowerCase();
   const filteredAccounts = useMemo(
@@ -308,7 +310,7 @@ export function AdminAccountsClient({
                     <Label>Lớp</Label>
                     <Select value={classId} onValueChange={(value) => setClassId(value ?? NONE_CLASS)}>
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Chọn lớp" />
+                        <SelectValue placeholder="Chọn lớp">{classSelectLabel}</SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value={NONE_CLASS}>Chưa có lớp</SelectItem>
@@ -519,7 +521,7 @@ export function AdminAccountsClient({
                 <Label>{editTarget.role === "teacher" ? "Lớp phụ trách" : "Lớp"}</Label>
                 <Select value={editClassId} onValueChange={(value) => setEditClassId(value ?? NONE_CLASS)}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Chọn lớp" />
+                    <SelectValue placeholder="Chọn lớp">{classSelectLabel}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={NONE_CLASS}>Chưa có lớp</SelectItem>

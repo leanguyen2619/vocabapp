@@ -126,7 +126,11 @@ export function VocabularyClient({
           <div className="flex items-center gap-2">
             <Select value={topicFilter} onValueChange={(value) => setTopicFilter(value as string)}>
               <SelectTrigger className="w-40">
-                <SelectValue placeholder="Chủ đề" />
+                <SelectValue placeholder="Chủ đề">
+                  {(value: string) =>
+                    value === "all" ? "Tất cả chủ đề" : (topics.find((t) => String(t.id) === value)?.topic ?? "Chủ đề")
+                  }
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tất cả chủ đề</SelectItem>

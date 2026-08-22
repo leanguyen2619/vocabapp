@@ -321,7 +321,12 @@ export function AdminQuestionBankClient({
                 onValueChange={(value) => setForm((f) => ({ ...f, vocabId: value ?? f.vocabId }))}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue />
+                  <SelectValue>
+                    {(value: string) => {
+                      const v = vocabularyBank.find((v) => v.id === value);
+                      return v ? `${v.vocab} — ${v.meanVI}` : "Chọn từ vựng";
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {vocabularyBank.map((v) => (
