@@ -147,6 +147,12 @@ const en: Dictionary = {
     studentListDesc: "Learning progress for {className}",
     noStudents: "This class has no students yet.",
     masteredWords: "words mastered",
+    assignedTitle: "Recently assigned",
+    assignedDesc: "Vocabulary assigned to {className} — cancel if you picked the wrong one.",
+    assignedEmpty: "No vocabulary assigned to this class yet.",
+    assignedStudentCount: "{count} students",
+    cancelButton: "Cancel",
+    cancelSuccess: 'Unassigned "{word}".',
   },
   adminDashboard: {
     greeting: "Hi {name}",

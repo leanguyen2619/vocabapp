@@ -46,14 +46,22 @@ export async function getMyVocabularyWithProgressAction(): Promise<VocabularyWit
   }));
 }
 
-/** Not-yet-mastered words first, sized to the account's class daily target (default 5). */
+/**
+ * Words the student's teacher explicitly assigned (not yet mastered) come first; if that doesn't
+ * fill the class's daily target, the rest is topped up from the whole bank same as before.
+ */
 async function computeDailyWords(
   account: SessionAccount
 ): Promise<{ vocab: Vocabulary; status: LearningStatus }[]> {
-  const [cls, vocabulary, history] = await Promise.all([
+  const [cls, vocabulary, history, assignments] = await Promise.all([
     account.classId ? prisma.schoolClass.findUnique({ where: { id: account.classId } }) : null,
     prisma.vocabulary.findMany({ orderBy: { id: "asc" } }),
     prisma.learningHistory.findMany({ where: { accountId: account.id_login } }),
+    prisma.dailyAssignment.findMany({
+      where: { accountId: account.id_login },
+      select: { vocabId: true },
+      distinct: ["vocabId"],
+    }),
   ]);
 
   const target = cls?.dailyWordTarget ?? 5;
@@ -61,11 +69,22 @@ async function computeDailyWords(
   const statusOf = (vocabId: string): LearningStatus =>
     history.find((h) => h.vocabId === vocabId)?.status ?? "new";
 
-  const sorted = [...vocabulary]
-    .map((vocab) => ({ vocab, status: statusOf(vocab.id) }))
+  const assignedIds = new Set(assignments.map((a) => a.vocabId));
+  const withStatus = vocabulary.map((vocab) => ({ vocab, status: statusOf(vocab.id) }));
+
+  const assignedWords = withStatus
+    .filter((w) => assignedIds.has(w.vocab.id) && w.status !== "mastered")
     .sort((a, b) => priority[a.status] - priority[b.status]);
 
-  return sorted.slice(0, Math.max(1, target));
+  if (assignedWords.length >= target) {
+    return assignedWords.slice(0, Math.max(1, target));
+  }
+
+  const remaining = withStatus
+    .filter((w) => !assignedIds.has(w.vocab.id) || w.status === "mastered")
+    .sort((a, b) => priority[a.status] - priority[b.status]);
+
+  return [...assignedWords, ...remaining].slice(0, Math.max(1, target));
 }
 
 export async function getMyDailyWordsAction(): Promise<Vocabulary[]> {

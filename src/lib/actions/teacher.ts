@@ -101,3 +101,71 @@ export async function assignVocabularyToClassAction(
 
   return { studentCount: students.length };
 }
+
+export interface AssignedVocabSummary {
+  vocabId: string;
+  vocab: string;
+  meanVI: string;
+  assignedDate: string;
+  studentCount: number;
+}
+
+/** Distinct words currently assigned to the teacher's class, most recent first. */
+export async function listMyAssignedVocabAction(): Promise<AssignedVocabSummary[]> {
+  const teacher = await requireTeacher();
+  if (!teacher || !teacher.classId) return [];
+
+  const students = await prisma.account.findMany({
+    where: { classId: teacher.classId, role: "student" },
+    select: { id_login: true },
+  });
+  const studentIds = students.map((s) => s.id_login);
+  if (studentIds.length === 0) return [];
+
+  const assignments = await prisma.dailyAssignment.findMany({
+    where: { accountId: { in: studentIds } },
+    include: { vocab: true },
+  });
+
+  const byVocab = new Map<string, { vocab: string; meanVI: string; assignedDate: Date; count: number }>();
+  for (const a of assignments) {
+    const existing = byVocab.get(a.vocabId);
+    if (existing) {
+      existing.count += 1;
+      if (a.assignedDate > existing.assignedDate) existing.assignedDate = a.assignedDate;
+    } else {
+      byVocab.set(a.vocabId, {
+        vocab: a.vocab.vocab,
+        meanVI: a.vocab.meanVI,
+        assignedDate: a.assignedDate,
+        count: 1,
+      });
+    }
+  }
+
+  return [...byVocab.entries()]
+    .map(([vocabId, v]) => ({
+      vocabId,
+      vocab: v.vocab,
+      meanVI: v.meanVI,
+      assignedDate: v.assignedDate.toISOString(),
+      studentCount: v.count,
+    }))
+    .sort((a, b) => b.assignedDate.localeCompare(a.assignedDate));
+}
+
+/** Removes this word's assignment for every student in the teacher's class. */
+export async function cancelAssignmentAction(vocabId: string): Promise<boolean> {
+  const teacher = await requireTeacher();
+  if (!teacher || !teacher.classId) return false;
+
+  const students = await prisma.account.findMany({
+    where: { classId: teacher.classId, role: "student" },
+    select: { id_login: true },
+  });
+  const studentIds = students.map((s) => s.id_login);
+  if (studentIds.length === 0) return false;
+
+  await prisma.dailyAssignment.deleteMany({ where: { accountId: { in: studentIds }, vocabId } });
+  return true;
+}

@@ -145,6 +145,12 @@ const vi = {
     studentListDesc: "Tiến độ học tập của {className}",
     noStudents: "Lớp này chưa có học sinh nào.",
     masteredWords: "từ đã thuộc",
+    assignedTitle: "Đã giao gần đây",
+    assignedDesc: "Từ vựng đã giao cho {className}, có thể hủy nếu chọn nhầm.",
+    assignedEmpty: "Chưa giao từ vựng nào cho lớp này.",
+    assignedStudentCount: "{count} học sinh",
+    cancelButton: "Hủy",
+    cancelSuccess: 'Đã hủy giao từ "{word}".',
   },
   adminDashboard: {
     greeting: "Chào {name}",

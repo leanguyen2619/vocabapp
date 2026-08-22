@@ -12,6 +12,7 @@ import {
   ListChecks,
   Search,
   Users,
+  X,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -37,7 +38,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { assignVocabularyToClassAction, type ClassStudentSummary } from "@/lib/actions/teacher";
+import {
+  assignVocabularyToClassAction,
+  cancelAssignmentAction,
+  listMyAssignedVocabAction,
+  type AssignedVocabSummary,
+  type ClassStudentSummary,
+} from "@/lib/actions/teacher";
 import { formatMessage } from "@/lib/i18n/format";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Account, Vocabulary } from "@/types";
@@ -47,18 +54,22 @@ export function TeacherDashboardContent({
   className: assignedClassName,
   students,
   vocabularyBank,
+  assignedVocab: initialAssignedVocab,
   dict,
 }: {
   account: Account;
   className: string | null;
   students: ClassStudentSummary[];
   vocabularyBank: Vocabulary[];
+  assignedVocab: AssignedVocabSummary[];
   dict: Dictionary;
 }) {
   const [selectedVocab, setSelectedVocab] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [vocabSearch, setVocabSearch] = useState("");
   const [assigning, setAssigning] = useState(false);
+  const [assignedVocab, setAssignedVocab] = useState(initialAssignedVocab);
+  const [cancelingId, setCancelingId] = useState<string | null>(null);
 
   const className = assignedClassName ?? null;
   const studentCount = students.length;
@@ -95,6 +106,15 @@ export function TeacherDashboardContent({
       })
     );
     setSelectedVocab([]);
+    setAssignedVocab(await listMyAssignedVocabAction());
+  };
+
+  const handleCancel = async (entry: AssignedVocabSummary) => {
+    setCancelingId(entry.vocabId);
+    await cancelAssignmentAction(entry.vocabId);
+    setCancelingId(null);
+    setAssignedVocab((prev) => prev.filter((v) => v.vocabId !== entry.vocabId));
+    toast.success(formatMessage(dict.teacherDashboard.cancelSuccess, { word: entry.vocab }));
   };
 
   return (
@@ -237,6 +257,49 @@ export function TeacherDashboardContent({
               </CardContent>
             </Card>
           </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{dict.teacherDashboard.assignedTitle}</CardTitle>
+              <CardDescription>
+                {formatMessage(dict.teacherDashboard.assignedDesc, { className })}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-1">
+              {assignedVocab.length === 0 && (
+                <p className="py-4 text-center text-sm text-muted-foreground">
+                  {dict.teacherDashboard.assignedEmpty}
+                </p>
+              )}
+              {assignedVocab.map((entry, index) => (
+                <div key={entry.vocabId}>
+                  {index > 0 && <Separator className="my-2" />}
+                  <div className="flex items-center justify-between gap-3 py-1">
+                    <div>
+                      <span className="font-medium">{entry.vocab}</span>{" "}
+                      <span className="text-sm text-muted-foreground">— {entry.meanVI}</span>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <Badge variant="outline">
+                        {formatMessage(dict.teacherDashboard.assignedStudentCount, {
+                          count: entry.studentCount,
+                        })}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={dict.teacherDashboard.cancelButton}
+                        disabled={cancelingId === entry.vocabId}
+                        onClick={() => void handleCancel(entry)}
+                      >
+                        <X className="size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader>
