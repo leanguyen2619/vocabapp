@@ -64,3 +64,17 @@ export async function updateClassTargetAction(id: string, dailyWordTarget: numbe
     .catch(() => null);
   return updated !== null;
 }
+
+export async function deleteClassAction(id: string): Promise<{ error: string } | { error?: undefined }> {
+  const admin = await requireAdmin();
+  if (!admin) return { error: "Bạn không có quyền thực hiện thao tác này." };
+
+  const memberCount = await prisma.account.count({ where: { classId: id } });
+  if (memberCount > 0) {
+    return { error: "Không thể xóa lớp vì vẫn còn tài khoản (học sinh/giáo viên) thuộc lớp này." };
+  }
+
+  const deleted = await prisma.schoolClass.delete({ where: { id } }).catch(() => null);
+  if (!deleted) return { error: "Không tìm thấy lớp này." };
+  return {};
+}

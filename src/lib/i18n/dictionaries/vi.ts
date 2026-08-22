@@ -411,6 +411,9 @@ const vi = {
       errorTargetInvalid: "Số từ mỗi ngày phải là số nguyên dương.",
       studentCount: "học sinh",
       targetPerDay: "Số từ/ngày",
+      deleteConfirmTitle: "Xóa lớp?",
+      deleteConfirmDesc: "Xóa lớp {name}? Hành động này không thể hoàn tác.",
+      deleteSuccess: "Đã xóa lớp {name}.",
     },
     vocabulary: {
       title: "Từ vựng",

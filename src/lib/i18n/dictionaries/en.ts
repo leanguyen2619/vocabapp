@@ -413,6 +413,9 @@ const en: Dictionary = {
       errorTargetInvalid: "Words per day must be a positive integer.",
       studentCount: "students",
       targetPerDay: "Words/day",
+      deleteConfirmTitle: "Delete class?",
+      deleteConfirmDesc: "Delete class {name}? This action cannot be undone.",
+      deleteSuccess: "Deleted class {name}.",
     },
     vocabulary: {
       title: "Vocabulary",

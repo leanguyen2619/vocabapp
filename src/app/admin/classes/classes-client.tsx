@@ -3,7 +3,7 @@
 import { useState, type SubmitEvent } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { AlertCircle, ArrowLeft, BookOpen, Plus, Users } from "lucide-react";
+import { AlertCircle, ArrowLeft, BookOpen, Plus, Trash2, Users } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   createClassAction,
+  deleteClassAction,
   listClassesWithCountsAction,
   updateClassTargetAction,
   type ClassWithStudentCount,
@@ -41,6 +42,10 @@ export function AdminClassesClient({
   const [className, setClassName] = useState("");
   const [dailyWordTarget, setDailyWordTarget] = useState("5");
   const [error, setError] = useState<string | null>(null);
+
+  const [deleteTarget, setDeleteTarget] = useState<ClassWithStudentCount | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const resetForm = () => {
     setClassName("");
@@ -71,6 +76,22 @@ export function AdminClassesClient({
     if (!Number.isInteger(target) || target < 0) return;
     setClasses((prev) => prev.map((c) => (c.id === id ? { ...c, dailyWordTarget: target } : c)));
     await updateClassTargetAction(id, target);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const result = await deleteClassAction(deleteTarget.id);
+    setDeleting(false);
+
+    if (result.error !== undefined) {
+      setDeleteError(result.error);
+      return;
+    }
+
+    setClasses((prev) => prev.filter((c) => c.id !== deleteTarget.id));
+    toast.success(formatMessage(dict.admin.classes.deleteSuccess, { name: deleteTarget.className }));
+    setDeleteTarget(null);
   };
 
   return (
@@ -182,6 +203,17 @@ export function AdminClassesClient({
                       onChange={(e) => void handleTargetChange(cls.id, e.target.value)}
                       className="w-20"
                     />
+                    <Button
+                      variant="outline"
+                      size="icon-sm"
+                      aria-label={dict.common.delete}
+                      onClick={() => {
+                        setDeleteTarget(cls);
+                        setDeleteError(null);
+                      }}
+                    >
+                      <Trash2 className="size-3.5" />
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -189,6 +221,43 @@ export function AdminClassesClient({
           </CardContent>
         </Card>
       </main>
+
+      <Dialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteTarget(null);
+            setDeleteError(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{dict.admin.classes.deleteConfirmTitle}</DialogTitle>
+            <DialogDescription>
+              {formatMessage(dict.admin.classes.deleteConfirmDesc, {
+                name: deleteTarget?.className ?? "",
+              })}
+            </DialogDescription>
+          </DialogHeader>
+
+          {deleteError && (
+            <Alert variant="destructive">
+              <AlertCircle />
+              <AlertDescription>{deleteError}</AlertDescription>
+            </Alert>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+              {dict.common.cancel}
+            </Button>
+            <Button variant="destructive" disabled={deleting} onClick={() => void handleDelete()}>
+              {dict.common.delete}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
