@@ -7,6 +7,7 @@ import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
+import { recordVocabAttemptAction } from "@/lib/actions/progress";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { getTopicName } from "@/lib/labels";
@@ -48,9 +49,11 @@ export function QuizSession({
   const handleSelect = (optionId: string) => {
     if (isAnswered) return;
     setSelectedId(optionId);
-    if (optionId === question.vocab.id) {
+    const correct = optionId === question.vocab.id;
+    if (correct) {
       setScore((s) => s + 1);
     }
+    void recordVocabAttemptAction(question.vocab.id, correct);
   };
 
   const handleNext = () => {
