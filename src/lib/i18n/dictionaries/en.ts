@@ -445,6 +445,9 @@ const en: Dictionary = {
       importError: "Could not read the file. Please check the .xlsx format.",
       searchPlaceholder: "Search word or meaning...",
       noResults: "No matching vocabulary found.",
+      sortLabel: "Sort",
+      sortDefault: "Default",
+      sortByLevel: "By level",
     },
     questionBank: {
       title: "Question Bank",

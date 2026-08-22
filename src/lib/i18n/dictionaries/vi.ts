@@ -443,6 +443,9 @@ const vi = {
       importError: "Không đọc được file. Vui lòng kiểm tra định dạng .xlsx.",
       searchPlaceholder: "Tìm từ vựng hoặc nghĩa...",
       noResults: "Không tìm thấy từ vựng phù hợp.",
+      sortLabel: "Sắp xếp",
+      sortDefault: "Mặc định",
+      sortByLevel: "Theo level",
     },
     questionBank: {
       title: "Question Bank",

@@ -99,6 +99,7 @@ export function AdminVocabularyClient({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [search, setSearch] = useState("");
+  const [sortMode, setSortMode] = useState<"default" | "level">("default");
   const [page, setPage] = useState(1);
 
   const PAGE_SIZE = 10;
@@ -110,9 +111,18 @@ export function AdminVocabularyClient({
       ),
     [words, query]
   );
-  const totalPages = Math.max(1, Math.ceil(filteredWords.length / PAGE_SIZE));
+
+  const sortedWords = useMemo(() => {
+    if (sortMode !== "level") return filteredWords;
+    const levelOrdinal = new Map(levels.map((l, i) => [l.id, i]));
+    return [...filteredWords].sort(
+      (a, b) => (levelOrdinal.get(a.levelId) ?? 0) - (levelOrdinal.get(b.levelId) ?? 0)
+    );
+  }, [filteredWords, sortMode, levels]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedWords.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
-  const pagedWords = filteredWords.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const pagedWords = sortedWords.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const openCreate = () => {
     setEditingId(null);
@@ -301,17 +311,44 @@ export function AdminVocabularyClient({
           </div>
         </div>
 
-        <div className="relative max-w-sm">
-          <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            placeholder={dict.admin.vocabulary.searchPlaceholder}
-            className="pl-8"
-          />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative max-w-sm flex-1">
+            <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              placeholder={dict.admin.vocabulary.searchPlaceholder}
+              className="pl-8"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Label className="text-sm text-muted-foreground whitespace-nowrap">
+              {dict.admin.vocabulary.sortLabel}
+            </Label>
+            <Select
+              value={sortMode}
+              onValueChange={(value) => {
+                setSortMode((value as "default" | "level") ?? "default");
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue>
+                  {(value: "default" | "level") =>
+                    value === "level" ? dict.admin.vocabulary.sortByLevel : dict.admin.vocabulary.sortDefault
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">{dict.admin.vocabulary.sortDefault}</SelectItem>
+                <SelectItem value="level">{dict.admin.vocabulary.sortByLevel}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <Card>
