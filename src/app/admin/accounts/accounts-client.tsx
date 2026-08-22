@@ -7,6 +7,7 @@ import {
   AlertCircle,
   ArrowLeft,
   BookOpen,
+  Copy,
   GraduationCap,
   IdCard,
   KeyRound,
@@ -60,6 +61,12 @@ const NONE_CLASS = "none";
 const PAGE_SIZE = 10;
 type SortMode = "default" | "class";
 
+interface KnownCredentials {
+  fullName: string;
+  email: string;
+  password: string;
+}
+
 export function AdminAccountsClient({
   adminAccount,
   initialAccounts,
@@ -81,7 +88,6 @@ export function AdminAccountsClient({
   const [classId, setClassId] = useState<string>(NONE_CLASS);
   const [error, setError] = useState<string | null>(null);
 
-  const [resetTarget, setResetTarget] = useState<{ id_login: string; fullName: string } | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [resetError, setResetError] = useState<string | null>(null);
 
@@ -89,6 +95,8 @@ export function AdminAccountsClient({
   const [editFullName, setEditFullName] = useState("");
   const [editClassId, setEditClassId] = useState<string>(NONE_CLASS);
   const [editError, setEditError] = useState<string | null>(null);
+
+  const [knownCredentials, setKnownCredentials] = useState<Record<string, KnownCredentials>>({});
 
   const [search, setSearch] = useState("");
   const [sortMode, setSortMode] = useState<SortMode>("default");
@@ -134,6 +142,43 @@ export function AdminAccountsClient({
     currentPage * PAGE_SIZE
   );
 
+  const buildCredentialsText = (entry: KnownCredentials) =>
+    `${entry.fullName}\n${dict.admin.accounts.emailLabel}: ${entry.email}\n${dict.admin.accounts.passwordLabel}: ${entry.password}`;
+
+  const copyText = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleCopyCredentials = async (id_login: string) => {
+    const entry = knownCredentials[id_login];
+    if (!entry) return;
+    const ok = await copyText(buildCredentialsText(entry));
+    if (ok) {
+      toast.success(formatMessage(dict.admin.accounts.copyCredentialsSuccess, { name: entry.fullName }));
+    } else {
+      toast.error(dict.admin.accounts.copyFailed);
+    }
+  };
+
+  const handleCopyAll = async () => {
+    const entries = Object.values(knownCredentials);
+    if (entries.length === 0) {
+      toast.error(dict.admin.accounts.copyAllEmpty);
+      return;
+    }
+    const ok = await copyText(entries.map(buildCredentialsText).join("\n\n"));
+    if (ok) {
+      toast.success(formatMessage(dict.admin.accounts.copyAllSuccess, { count: entries.length }));
+    } else {
+      toast.error(dict.admin.accounts.copyFailed);
+    }
+  };
+
   const resetForm = () => {
     setFullName("");
     setEmail("");
@@ -163,6 +208,12 @@ export function AdminAccountsClient({
     setAccounts(await listAccountsAction());
     setDialogOpen(false);
     const createdName = fullName.trim();
+    const createdEmail = email.trim();
+    const createdPassword = password;
+    setKnownCredentials((prev) => ({
+      ...prev,
+      [result.id_login]: { fullName: createdName, email: createdEmail, password: createdPassword },
+    }));
     resetForm();
     toast.success(
       formatMessage(dict.admin.accounts.createSuccess, { name: createdName, id: result.id_login }),
@@ -173,16 +224,20 @@ export function AdminAccountsClient({
   const handleResetPasswordSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     setResetError(null);
-    if (!resetTarget) return;
+    if (!detailTarget) return;
+    const target = detailTarget.account;
 
-    const result = await resetPasswordByAdminAction(resetTarget.id_login, newPassword);
+    const result = await resetPasswordByAdminAction(target.id_login, newPassword);
     if (result.error !== undefined) {
       setResetError(result.error);
       return;
     }
 
-    toast.success(formatMessage(dict.admin.accounts.resetSuccess, { name: resetTarget.fullName }));
-    setResetTarget(null);
+    setKnownCredentials((prev) => ({
+      ...prev,
+      [target.id_login]: { fullName: target.fullName, email: detailTarget.email, password: newPassword },
+    }));
+    toast.success(formatMessage(dict.admin.accounts.resetSuccess, { name: target.fullName }));
     setNewPassword("");
   };
 
@@ -191,6 +246,8 @@ export function AdminAccountsClient({
     setEditFullName(summary.account.fullName);
     setEditClassId(summary.account.classId ?? NONE_CLASS);
     setEditError(null);
+    setNewPassword("");
+    setResetError(null);
   };
 
   const handleEditSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
@@ -374,6 +431,11 @@ export function AdminAccountsClient({
           </div>
 
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => void handleCopyAll()}>
+              <Copy className="size-3.5" />
+              {dict.admin.accounts.copyAllButton}
+            </Button>
+
             <Label className="text-sm text-muted-foreground whitespace-nowrap">
               {dict.admin.accounts.sortLabel}
             </Label>
@@ -462,18 +524,6 @@ export function AdminAccountsClient({
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => {
-                              setResetTarget({ id_login: acc.id_login, fullName: acc.fullName });
-                              setNewPassword("");
-                              setResetError(null);
-                            }}
-                          >
-                            <KeyRound className="size-3.5" />
-                            {dict.admin.accounts.resetPasswordButton}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
                             onClick={() => void handleToggleStatus(acc.id_login, acc.fullName, isActive)}
                           >
                             {isActive ? (
@@ -500,53 +550,6 @@ export function AdminAccountsClient({
 
         <PaginationControls page={currentPage} totalPages={totalPages} onPageChange={setPage} />
       </main>
-
-      <Dialog
-        open={resetTarget !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setResetTarget(null);
-            setNewPassword("");
-            setResetError(null);
-          }
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{dict.admin.accounts.resetPasswordTitle}</DialogTitle>
-            <DialogDescription>
-              {formatMessage(dict.admin.accounts.resetPasswordDesc, {
-                name: resetTarget?.fullName ?? "",
-              })}
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleResetPasswordSubmit} noValidate className="flex flex-col gap-4">
-            {resetError && (
-              <Alert variant="destructive">
-                <AlertCircle />
-                <AlertDescription>{resetError}</AlertDescription>
-              </Alert>
-            )}
-
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="newPassword">{dict.admin.accounts.newPasswordLabel}</Label>
-              <Input
-                id="newPassword"
-                type="text"
-                autoFocus
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder={dict.register.passwordPlaceholder}
-              />
-            </div>
-
-            <DialogFooter>
-              <Button type="submit">{dict.admin.accounts.resetSubmit}</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
 
       <Dialog
         open={detailTarget !== null}
@@ -613,6 +616,22 @@ export function AdminAccountsClient({
                 )}
               </div>
 
+              {knownCredentials[detailTarget.account.id_login] && (
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/50 px-3 py-2">
+                  <span className="text-sm text-muted-foreground">
+                    {dict.admin.accounts.credentialsKnownLabel}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void handleCopyCredentials(detailTarget.account.id_login)}
+                  >
+                    <Copy className="size-3.5" />
+                    {dict.admin.accounts.copyCredentials}
+                  </Button>
+                </div>
+              )}
+
               <Separator />
 
               <div className="flex flex-col gap-3">
@@ -671,6 +690,48 @@ export function AdminAccountsClient({
                   </DialogFooter>
                 </form>
               </div>
+
+              {detailTarget.account.id_login !== adminAccount.id_login && (
+                <>
+                  <Separator />
+
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <KeyRound className="size-3.5" />
+                      {dict.admin.accounts.resetPasswordTitle}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {formatMessage(dict.admin.accounts.resetPasswordDesc, {
+                        name: detailTarget.account.fullName,
+                      })}
+                    </p>
+
+                    <form onSubmit={handleResetPasswordSubmit} noValidate className="flex flex-col gap-4">
+                      {resetError && (
+                        <Alert variant="destructive">
+                          <AlertCircle />
+                          <AlertDescription>{resetError}</AlertDescription>
+                        </Alert>
+                      )}
+
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="newPassword">{dict.admin.accounts.newPasswordLabel}</Label>
+                        <Input
+                          id="newPassword"
+                          type="text"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder={dict.register.passwordPlaceholder}
+                        />
+                      </div>
+
+                      <DialogFooter>
+                        <Button type="submit">{dict.admin.accounts.resetSubmit}</Button>
+                      </DialogFooter>
+                    </form>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </DialogContent>

@@ -390,6 +390,13 @@ const en: Dictionary = {
       editSection: "Edit details",
       classInChargeLabel: "Class in charge",
       saveSuccess: "Updated account {name}.",
+      credentialsKnownLabel: "Password set during this session",
+      copyCredentials: "Copy account & password",
+      copyCredentialsSuccess: "Copied account & password for {name}.",
+      copyAllButton: "Copy all",
+      copyAllSuccess: "Copied login info for {count} accounts.",
+      copyAllEmpty: "No account has had a password set during this session yet.",
+      copyFailed: "Couldn't copy. Please try again.",
     },
     classes: {
       title: "Classes",

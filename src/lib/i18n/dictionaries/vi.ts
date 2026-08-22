@@ -388,6 +388,13 @@ const vi = {
       editSection: "Sửa thông tin",
       classInChargeLabel: "Lớp phụ trách",
       saveSuccess: "Đã cập nhật tài khoản {name}.",
+      credentialsKnownLabel: "Mật khẩu đã đặt trong phiên làm việc này",
+      copyCredentials: "Sao chép tài khoản & mật khẩu",
+      copyCredentialsSuccess: "Đã sao chép tài khoản & mật khẩu của {name}.",
+      copyAllButton: "Sao chép tất cả",
+      copyAllSuccess: "Đã sao chép thông tin đăng nhập của {count} tài khoản.",
+      copyAllEmpty: "Chưa có tài khoản nào được đặt mật khẩu trong phiên làm việc này.",
+      copyFailed: "Không sao chép được. Vui lòng thử lại.",
     },
     classes: {
       title: "Lớp học",
