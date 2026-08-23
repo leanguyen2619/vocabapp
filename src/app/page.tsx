@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { BookOpen, ChevronDown, Search } from "lucide-react";
 
 import { FeatureCarousel } from "@/components/feature-carousel";
@@ -12,6 +13,7 @@ import { getCurrentAccount } from "@/lib/session";
 
 export default async function Home() {
   const [account, locale] = await Promise.all([getCurrentAccount(), getLocale()]);
+  if (account) redirect("/dashboard");
   const dict = getDictionary(locale);
 
   return (
