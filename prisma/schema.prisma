@@ -47,6 +47,11 @@ enum WordRelationType {
   related
 }
 
+enum PasswordResetRequestStatus {
+  pending
+  resolved
+}
+
 enum PracticeTypeCode {
   multiple_choice
   flashcard
@@ -99,11 +104,29 @@ model Account {
 
   class SchoolClass? @relation(fields: [classId], references: [id])
 
-  sessions         Session[]
-  accountLevels    AccountLevel[]
-  learningHistory  LearningHistory[]
-  exerciseAttempts ExerciseAttempt[]
-  dailyAssignments DailyAssignment[]
+  sessions              Session[]
+  accountLevels         AccountLevel[]
+  learningHistory       LearningHistory[]
+  exerciseAttempts      ExerciseAttempt[]
+  dailyAssignments      DailyAssignment[]
+  passwordResetRequests PasswordResetRequest[]
+}
+
+// ---------- Password reset requests (new — self-service "forgot password" without email) ----------
+// A student/teacher who forgot their password submits a request here; their teacher (or admin)
+// sees it and resets the password through the existing admin/teacher reset-password flow, which
+// marks the request resolved.
+
+model PasswordResetRequest {
+  id         String                      @id @default(cuid())
+  accountId  String
+  status     PasswordResetRequestStatus  @default(pending)
+  createdAt  DateTime                    @default(now())
+  resolvedAt DateTime?
+
+  account Account @relation(fields: [accountId], references: [id_login], onDelete: Cascade)
+
+  @@index([accountId])
 }
 
 // ---------- Sessions (new — real auth, not in the original ERD) ----------

@@ -53,6 +53,7 @@ import {
   updateAccountByAdminAction,
   type AccountSummary,
 } from "@/lib/actions/accounts";
+import type { PendingResetRequest } from "@/lib/actions/password-reset-requests";
 import { formatMessage } from "@/lib/i18n/format";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Account, Role, SchoolClass } from "@/types";
@@ -71,11 +72,13 @@ export function AdminAccountsClient({
   adminAccount,
   initialAccounts,
   classes,
+  resetRequests: initialResetRequests,
   dict,
 }: {
   adminAccount: Account;
   initialAccounts: AccountSummary[];
   classes: SchoolClass[];
+  resetRequests: PendingResetRequest[];
   dict: Dictionary;
 }) {
   const [accounts, setAccounts] = useState(initialAccounts);
@@ -97,6 +100,7 @@ export function AdminAccountsClient({
   const [editError, setEditError] = useState<string | null>(null);
 
   const [knownCredentials, setKnownCredentials] = useState<Record<string, KnownCredentials>>({});
+  const [resetRequests, setResetRequests] = useState(initialResetRequests);
 
   const [search, setSearch] = useState("");
   const [sortMode, setSortMode] = useState<SortMode>("default");
@@ -237,8 +241,14 @@ export function AdminAccountsClient({
       ...prev,
       [target.id_login]: { fullName: target.fullName, email: detailTarget.email, password: newPassword },
     }));
+    setResetRequests((prev) => prev.filter((r) => r.accountId !== target.id_login));
     toast.success(formatMessage(dict.admin.accounts.resetSuccess, { name: target.fullName }));
     setNewPassword("");
+  };
+
+  const openDetailByAccountId = (accountId: string) => {
+    const summary = accounts.find((a) => a.account.id_login === accountId);
+    if (summary) openDetail(summary);
   };
 
   const openDetail = (summary: AccountSummary) => {
@@ -415,6 +425,33 @@ export function AdminAccountsClient({
             </DialogContent>
           </Dialog>
         </div>
+
+        {resetRequests.length > 0 && (
+          <Card>
+            <CardContent className="flex flex-col gap-1 py-4">
+              <p className="mb-2 text-sm font-medium">{dict.admin.accounts.resetRequestsTitle}</p>
+              {resetRequests.map((req, index) => (
+                <div key={req.id}>
+                  {index > 0 && <div className="my-2 h-px bg-border" />}
+                  <div className="flex items-center justify-between gap-3 py-1">
+                    <div>
+                      <span className="font-medium">{req.fullName}</span>{" "}
+                      <span className="text-sm text-muted-foreground">— {req.email}</span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openDetailByAccountId(req.accountId)}
+                    >
+                      <KeyRound className="size-3.5" />
+                      {dict.admin.accounts.resetRequestButton}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative max-w-sm flex-1">

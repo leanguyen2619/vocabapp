@@ -54,6 +54,7 @@ import {
   type ClassStudentSummary,
   type StudentDetail,
 } from "@/lib/actions/teacher";
+import type { PendingResetRequest } from "@/lib/actions/password-reset-requests";
 import { formatMessage } from "@/lib/i18n/format";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Account, Vocabulary } from "@/types";
@@ -71,6 +72,7 @@ export function TeacherDashboardContent({
   students,
   vocabularyBank,
   assignedVocab: initialAssignedVocab,
+  resetRequests: initialResetRequests,
   dict,
 }: {
   account: Account;
@@ -79,6 +81,7 @@ export function TeacherDashboardContent({
   students: ClassStudentSummary[];
   vocabularyBank: Vocabulary[];
   assignedVocab: AssignedVocabSummary[];
+  resetRequests: PendingResetRequest[];
   dict: Dictionary;
 }) {
   const [selectedVocab, setSelectedVocab] = useState<string[]>([]);
@@ -95,6 +98,7 @@ export function TeacherDashboardContent({
   const [resetError, setResetError] = useState<string | null>(null);
   const [resetting, setResetting] = useState(false);
   const [knownCredentials, setKnownCredentials] = useState<Record<string, KnownCredentials>>({});
+  const [resetRequests, setResetRequests] = useState(initialResetRequests);
 
   const className = assignedClassName ?? null;
   const studentCount = students.length;
@@ -190,6 +194,7 @@ export function TeacherDashboardContent({
       ...prev,
       [detailData.id_login]: { fullName: detailData.fullName, email: detailData.email, password: newPassword },
     }));
+    setResetRequests((prev) => prev.filter((r) => r.accountId !== detailData.id_login));
     toast.success(formatMessage(dict.teacherDashboard.resetSuccess, { name: detailData.fullName }));
     setNewPassword("");
   };
@@ -348,6 +353,36 @@ export function TeacherDashboardContent({
               className="w-20"
             />
           </div>
+
+          {resetRequests.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>{dict.teacherDashboard.resetRequestsTitle}</CardTitle>
+                <CardDescription>{dict.teacherDashboard.resetRequestsDesc}</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-1">
+                {resetRequests.map((req, index) => (
+                  <div key={req.id}>
+                    {index > 0 && <Separator className="my-2" />}
+                    <div className="flex items-center justify-between gap-3 py-1">
+                      <div>
+                        <span className="font-medium">{req.fullName}</span>{" "}
+                        <span className="text-sm text-muted-foreground">— {req.email}</span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void openDetail(req.accountId)}
+                      >
+                        <KeyRound className="size-3.5" />
+                        {dict.teacherDashboard.resetRequestButton}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>

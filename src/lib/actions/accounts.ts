@@ -79,6 +79,11 @@ export async function resetPasswordByAdminAction(
     .catch(() => null);
   if (!updated) return { error: "Không tìm thấy tài khoản." };
 
+  await prisma.passwordResetRequest.updateMany({
+    where: { accountId: id_login, status: "pending" },
+    data: { status: "resolved", resolvedAt: new Date() },
+  });
+
   return {};
 }
 

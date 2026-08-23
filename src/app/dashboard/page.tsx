@@ -7,6 +7,7 @@ import { listAccountsAction } from "@/lib/actions/accounts";
 import { listClassesAction } from "@/lib/actions/classes";
 import { getMyLevelsAction } from "@/lib/actions/levels";
 import { getMyClassStudentsAction, listMyAssignedVocabAction } from "@/lib/actions/teacher";
+import { listMyClassResetRequestsAction } from "@/lib/actions/password-reset-requests";
 import { getMyDailyAssignmentsAction, listTopicsAction, listVocabularyAction } from "@/lib/actions/vocabulary";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
@@ -40,11 +41,12 @@ export default async function DashboardPage() {
   }
 
   if (account.role === "teacher") {
-    const [classes, students, vocabularyBank, assignedVocab] = await Promise.all([
+    const [classes, students, vocabularyBank, assignedVocab, resetRequests] = await Promise.all([
       listClassesAction(),
       getMyClassStudentsAction(),
       listVocabularyAction(),
       listMyAssignedVocabAction(),
+      listMyClassResetRequestsAction(),
     ]);
     const myClass = classes.find((c) => c.id === account.classId) ?? null;
 
@@ -57,6 +59,7 @@ export default async function DashboardPage() {
           students={students}
           vocabularyBank={vocabularyBank}
           assignedVocab={assignedVocab}
+          resetRequests={resetRequests}
           dict={dict}
         />
       </DashboardShell>

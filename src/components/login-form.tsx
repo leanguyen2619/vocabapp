@@ -3,12 +3,23 @@
 import { useState, type SubmitEvent } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { loginAction } from "@/lib/actions/auth";
+import { createPasswordResetRequestAction } from "@/lib/actions/password-reset-requests";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 
 type InvalidField = "email" | "password" | null;
@@ -20,6 +31,11 @@ export function LoginForm({ dict }: { dict: Dictionary }) {
   const [error, setError] = useState<string | null>(null);
   const [invalidField, setInvalidField] = useState<InvalidField>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotError, setForgotError] = useState<string | null>(null);
+  const [forgotSubmitting, setForgotSubmitting] = useState(false);
 
   const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -46,6 +62,24 @@ export function LoginForm({ dict }: { dict: Dictionary }) {
     router.refresh();
   };
 
+  const handleForgotSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setForgotError(null);
+
+    if (!forgotEmail.trim()) {
+      setForgotError(dict.login.forgotPasswordErrorFillEmail);
+      return;
+    }
+
+    setForgotSubmitting(true);
+    await createPasswordResetRequestAction(forgotEmail);
+    setForgotSubmitting(false);
+
+    setForgotOpen(false);
+    setForgotEmail("");
+    toast.success(dict.login.forgotPasswordSuccess, { duration: 8000 });
+  };
+
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
       {error && (
@@ -69,7 +103,60 @@ export function LoginForm({ dict }: { dict: Dictionary }) {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="password">{dict.login.passwordLabel}</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password">{dict.login.passwordLabel}</Label>
+          <Dialog
+            open={forgotOpen}
+            onOpenChange={(open) => {
+              setForgotOpen(open);
+              if (!open) {
+                setForgotEmail("");
+                setForgotError(null);
+              }
+            }}
+          >
+            <DialogTrigger
+              render={
+                <button type="button" className="text-xs font-medium text-primary hover:underline" />
+              }
+            >
+              {dict.login.forgotPassword}
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{dict.login.forgotPasswordTitle}</DialogTitle>
+                <DialogDescription>{dict.login.forgotPasswordDesc}</DialogDescription>
+              </DialogHeader>
+
+              <form onSubmit={handleForgotSubmit} noValidate className="flex flex-col gap-4">
+                {forgotError && (
+                  <Alert variant="destructive">
+                    <AlertCircle />
+                    <AlertDescription>{forgotError}</AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="forgotEmail">{dict.login.forgotPasswordEmailLabel}</Label>
+                  <Input
+                    id="forgotEmail"
+                    type="email"
+                    autoComplete="email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder="ban@vocabapp.vn"
+                  />
+                </div>
+
+                <DialogFooter>
+                  <Button type="submit" disabled={forgotSubmitting}>
+                    {forgotSubmitting ? dict.login.forgotPasswordSubmitting : dict.login.forgotPasswordSubmit}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
         <Input
           id="password"
           type="password"

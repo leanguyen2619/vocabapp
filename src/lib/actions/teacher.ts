@@ -203,6 +203,12 @@ export async function resetStudentPasswordAction(
 
   const passwordHash = await bcrypt.hash(newPassword, 10);
   await prisma.account.update({ where: { id_login: studentId }, data: { passwordHash } });
+
+  await prisma.passwordResetRequest.updateMany({
+    where: { accountId: studentId, status: "pending" },
+    data: { status: "resolved", resolvedAt: new Date() },
+  });
+
   return {};
 }
 
