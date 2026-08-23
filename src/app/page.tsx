@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { BookOpen, ChevronDown, Search } from "lucide-react";
+import { BookOpen, Search } from "lucide-react";
 
 import { FeatureCarousel } from "@/components/feature-carousel";
 import { HeaderAuthActions } from "@/components/header-auth-actions";
@@ -26,15 +26,6 @@ export default async function Home() {
             </div>
             <span className="font-heading text-lg font-semibold">{dict.common.brand}</span>
           </Link>
-
-          <nav className="hidden shrink-0 items-center gap-5 text-sm font-medium text-muted-foreground md:flex">
-            <span className="flex cursor-default items-center gap-1 transition-colors hover:text-foreground">
-              {dict.landing.navTools} <ChevronDown className="size-3.5" />
-            </span>
-            <span className="flex cursor-default items-center gap-1 transition-colors hover:text-foreground">
-              {dict.landing.navTopics} <ChevronDown className="size-3.5" />
-            </span>
-          </nav>
 
           <div className="hidden flex-1 md:block">
             <div className="relative mx-auto max-w-md">

@@ -68,8 +68,6 @@ const en: Dictionary = {
     interjection: "interjection",
   },
   landing: {
-    navTools: "Learning tools",
-    navTopics: "Topics",
     searchPlaceholder: "Search questions",
     heroTitle: "How do you want to learn vocabulary?",
     heroSubtitle:

@@ -66,8 +66,6 @@ const vi = {
     interjection: "thán từ",
   },
   landing: {
-    navTools: "Công cụ học",
-    navTopics: "Chủ đề",
     searchPlaceholder: "Tìm kiếm câu hỏi",
     heroTitle: "Bạn muốn học từ vựng như thế nào?",
     heroSubtitle:
