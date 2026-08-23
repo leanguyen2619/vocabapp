@@ -7,10 +7,10 @@ import { Check, Delete, PartyPopper, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
-import { recordVocabAttemptByWordAction } from "@/lib/actions/progress";
+import { recordVocabAttemptAction } from "@/lib/actions/progress";
+import type { WordFormationItem } from "@/lib/actions/practice-content";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
-import type { WordFormationPrompt } from "@/lib/mock-data";
 import { cn, shuffle } from "@/lib/utils";
 
 interface Tile {
@@ -18,11 +18,11 @@ interface Tile {
   char: string;
 }
 
-interface PreparedPrompt extends WordFormationPrompt {
+interface PreparedPrompt extends WordFormationItem {
   tiles: Tile[];
 }
 
-function prepare(prompts: WordFormationPrompt[]): PreparedPrompt[] {
+function prepare(prompts: WordFormationItem[]): PreparedPrompt[] {
   return shuffle(prompts).map((p) => ({
     ...p,
     tiles: shuffle(p.word.split("").map((char, id) => ({ id, char }))),
@@ -33,7 +33,7 @@ export function WordFormationGame({
   prompts,
   dict,
 }: {
-  prompts: WordFormationPrompt[];
+  prompts: WordFormationItem[];
   dict: Dictionary;
 }) {
   const [prepared] = useState<PreparedPrompt[]>(() => prepare(prompts));
@@ -45,6 +45,18 @@ export function WordFormationGame({
   const [finished, setFinished] = useState(false);
 
   const total = prepared.length;
+
+  if (total === 0) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
+        <p>{dict.wordFormationGame.noQuestions}</p>
+        <Button nativeButton={false} render={<Link href="/exercises" />}>
+          {dict.wordFormationGame.changeType}
+        </Button>
+      </div>
+    );
+  }
+
   const prompt = prepared[index];
   const answer = placedIds.map((id) => prompt.tiles.find((t) => t.id === id)!.char).join("");
 
@@ -58,11 +70,11 @@ export function WordFormationGame({
       const attempt = nextIds.map((id) => prompt.tiles.find((t) => t.id === id)!.char).join("");
       if (attempt === prompt.word) {
         setSolved(true);
-        void recordVocabAttemptByWordAction(prompt.word, true);
+        void recordVocabAttemptAction(prompt.vocabId, true);
       } else {
         setWrongFlash(true);
         setWrongAttempts((c) => c + 1);
-        void recordVocabAttemptByWordAction(prompt.word, false);
+        void recordVocabAttemptAction(prompt.vocabId, false);
         setTimeout(() => {
           setWrongFlash(false);
           setPlacedIds([]);

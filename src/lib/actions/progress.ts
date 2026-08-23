@@ -13,6 +13,26 @@ function nextStatus(current: LearningStatus, isCorrect: boolean): LearningStatus
   return STATUS_ORDER[nextIndex];
 }
 
+function isSameCalendarDay(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
+function isNextCalendarDay(previous: Date, current: Date): boolean {
+  const prevDay = new Date(previous.getFullYear(), previous.getMonth(), previous.getDate());
+  const currentDay = new Date(current.getFullYear(), current.getMonth(), current.getDate());
+  const diffDays = Math.round((currentDay.getTime() - prevDay.getTime()) / 86_400_000);
+  return diffDays === 1;
+}
+
+/** Consecutive-day streak: +1 if practiced the day right after the last activity, reset to 1 on
+ * any gap, unchanged if already counted today. */
+function computeStreak(currentStreak: number, lastActivityDate: Date | null, now: Date): number {
+  if (!lastActivityDate) return 1;
+  if (isSameCalendarDay(lastActivityDate, now)) return Math.max(currentStreak, 1);
+  if (isNextCalendarDay(lastActivityDate, now)) return currentStreak + 1;
+  return 1;
+}
+
 async function recordForVocab(
   accountId: string,
   vocabId: string,
@@ -52,10 +72,17 @@ async function recordForVocab(
   const levelStatus =
     LEVEL_STATUS_RANK[naturalStatus] > LEVEL_STATUS_RANK[currentStatus] ? naturalStatus : currentStatus;
 
+  const now = new Date();
+  const streak = computeStreak(
+    existingAccountLevel?.streak ?? 0,
+    existingAccountLevel?.lastActivityDate ?? null,
+    now
+  );
+
   await prisma.accountLevel.upsert({
     where: { accountId_levelId: { accountId, levelId } },
-    update: { score, status: levelStatus },
-    create: { accountId, levelId, score, status: levelStatus },
+    update: { score, status: levelStatus, streak, lastActivityDate: now },
+    create: { accountId, levelId, score, status: levelStatus, streak, lastActivityDate: now },
   });
 
   return status;
@@ -78,26 +105,5 @@ export async function recordVocabAttemptAction(
   if (!vocab) return { error: "Không tìm thấy từ vựng này." };
 
   const status = await recordForVocab(account.id_login, vocabId, vocab.levelId, isCorrect);
-  return { status };
-}
-
-/**
- * Same as recordVocabAttemptAction, but for the handful of practice games (synonym/antonym,
- * fill-blank, word-formation, sentence-writing) still built on a static content pool that
- * predates the real Vocabulary table and has no vocabId of its own. Looks up the matching
- * Vocabulary row by exact word text and silently no-ops if none exists, rather than erroring —
- * this is a best-effort bridge, not a guarantee, until that content is migrated into the DB.
- */
-export async function recordVocabAttemptByWordAction(
-  word: string,
-  isCorrect: boolean
-): Promise<{ status: LearningStatus } | { skipped: true } | { error: string }> {
-  const account = await getCurrentAccount();
-  if (!account) return { error: "Bạn cần đăng nhập." };
-
-  const vocab = await prisma.vocabulary.findFirst({ where: { vocab: { equals: word, mode: "insensitive" } } });
-  if (!vocab) return { skipped: true };
-
-  const status = await recordForVocab(account.id_login, vocab.id, vocab.levelId, isCorrect);
   return { status };
 }

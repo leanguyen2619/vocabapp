@@ -1,12 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { BookOpen, Search } from "lucide-react";
+import { BookOpen } from "lucide-react";
 
 import { FeatureCarousel } from "@/components/feature-carousel";
 import { HeaderAuthActions } from "@/components/header-auth-actions";
 import { LanguageToggle } from "@/components/language-toggle";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
@@ -26,13 +25,6 @@ export default async function Home() {
             </div>
             <span className="font-heading text-lg font-semibold">{dict.common.brand}</span>
           </Link>
-
-          <div className="hidden flex-1 md:block">
-            <div className="relative mx-auto max-w-md">
-              <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder={dict.landing.searchPlaceholder} className="h-10 pl-9" />
-            </div>
-          </div>
 
           <div className="ml-auto flex items-center gap-2">
             <LanguageToggle />

@@ -5,17 +5,20 @@ import { ArrowLeft, BookOpen } from "lucide-react";
 import { SynonymAntonymGame } from "@/components/synonym-antonym-game";
 import { RandomExerciseButton } from "@/components/random-exercise-button";
 import { listExerciseTypesAction } from "@/lib/actions/exercise-types";
+import { getSynonymAntonymQuestionsAction } from "@/lib/actions/practice-content";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
-import { synonymAntonymQuestions } from "@/lib/mock-data";
 
 export default async function SynonymAntonymPage() {
   const account = await getCurrentAccount();
   if (!account) redirect("/login");
   const dict = getDictionary(await getLocale());
 
-  const exerciseTypes = await listExerciseTypesAction();
+  const [exerciseTypes, questions] = await Promise.all([
+    listExerciseTypesAction(),
+    getSynonymAntonymQuestionsAction(),
+  ]);
 
   return (
     <div className="flex flex-1 flex-col bg-background">
@@ -41,7 +44,7 @@ export default async function SynonymAntonymPage() {
       </header>
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-10 sm:py-16">
-        <SynonymAntonymGame questions={synonymAntonymQuestions} dict={dict} />
+        <SynonymAntonymGame questions={questions} dict={dict} />
       </main>
     </div>
   );

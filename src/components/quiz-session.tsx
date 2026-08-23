@@ -8,34 +8,22 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { recordVocabAttemptAction } from "@/lib/actions/progress";
+import type { QuizQuestionItem } from "@/lib/actions/vocabulary";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { getTopicName } from "@/lib/labels";
-import { cn, shuffle } from "@/lib/utils";
-import type { Topic, Vocabulary } from "@/types";
-
-interface QuizQuestion {
-  vocab: Vocabulary;
-  options: Vocabulary[];
-}
-
-function buildQuestions(vocabList: Vocabulary[]): QuizQuestion[] {
-  return shuffle(vocabList).map((vocab) => ({
-    vocab,
-    options: shuffle(vocabList),
-  }));
-}
+import { cn } from "@/lib/utils";
+import type { Topic } from "@/types";
 
 export function QuizSession({
-  vocabList,
+  questions,
   topics,
   dict,
 }: {
-  vocabList: Vocabulary[];
+  questions: QuizQuestionItem[];
   topics: Topic[];
   dict: Dictionary;
 }) {
-  const [questions] = useState<QuizQuestion[]>(() => buildQuestions(vocabList));
   const [index, setIndex] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [score, setScore] = useState(0);
@@ -44,16 +32,16 @@ export function QuizSession({
   const total = questions.length;
   const question = questions[index];
   const isAnswered = selectedId !== null;
-  const isCorrect = selectedId === question.vocab.id;
+  const isCorrect = selectedId === question.correctOptionId;
 
   const handleSelect = (optionId: string) => {
     if (isAnswered) return;
     setSelectedId(optionId);
-    const correct = optionId === question.vocab.id;
+    const correct = optionId === question.correctOptionId;
     if (correct) {
       setScore((s) => s + 1);
     }
-    void recordVocabAttemptAction(question.vocab.id, correct);
+    void recordVocabAttemptAction(question.vocabId, correct);
   };
 
   const handleNext = () => {
@@ -108,15 +96,15 @@ export function QuizSession({
       </Progress>
 
       <div className="flex flex-col items-center gap-2 text-center">
-        <Badge variant="secondary">{getTopicName(topics, question.vocab.topicId)}</Badge>
+        <Badge variant="secondary">{getTopicName(topics, question.topicId)}</Badge>
         <h2 className="font-heading text-xl font-semibold tracking-tight sm:text-2xl">
-          {formatMessage(dict.quizSession.questionPrompt, { mean: question.vocab.meanVI })}
+          {question.questionText}
         </h2>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         {question.options.map((option) => {
-          const isThisCorrect = option.id === question.vocab.id;
+          const isThisCorrect = option.id === question.correctOptionId;
           const isSelected = option.id === selectedId;
 
           return (
@@ -135,7 +123,7 @@ export function QuizSession({
                   "border-red-400 bg-red-50 text-red-700"
               )}
             >
-              {option.vocab}
+              {option.text}
               {isAnswered && isThisCorrect && <Check className="size-5 shrink-0 text-emerald-600" />}
               {isAnswered && isSelected && !isThisCorrect && (
                 <X className="size-5 shrink-0 text-red-500" />
@@ -149,8 +137,9 @@ export function QuizSession({
         <div className="flex flex-col items-center gap-4 text-center">
           <p className="text-sm text-muted-foreground">
             {isCorrect ? dict.quizSession.feedbackCorrect : dict.quizSession.feedbackWrong}
-            <span className="font-medium text-foreground">{question.vocab.vocab}</span>:{" "}
-            {question.vocab.definition}
+            <span className="font-medium text-foreground">{question.vocabWord}</span>:{" "}
+            {question.definition}
+            {question.explanation && <span className="block italic">{question.explanation}</span>}
           </p>
           <Button onClick={handleNext}>
             {index + 1 >= total ? dict.quizSession.viewResults : dict.quizSession.nextQuestion}

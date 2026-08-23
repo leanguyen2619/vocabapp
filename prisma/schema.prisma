@@ -144,12 +144,13 @@ model Level {
 // ---------- Accounts_Level ----------
 
 model AccountLevel {
-  accountId  String
-  levelId    String
-  score      Int                @default(0)
-  streak     Int                @default(0)
-  manualNote String?
-  status     AccountLevelStatus @default(locked)
+  accountId        String
+  levelId          String
+  score            Int                @default(0)
+  streak           Int                @default(0)
+  lastActivityDate DateTime?
+  manualNote       String?
+  status           AccountLevelStatus @default(locked)
 
   account Account @relation(fields: [accountId], references: [id_login], onDelete: Cascade)
   level   Level   @relation(fields: [levelId], references: [id], onDelete: Cascade)

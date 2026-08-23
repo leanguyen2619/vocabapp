@@ -7,50 +7,53 @@ import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
-import { recordVocabAttemptByWordAction } from "@/lib/actions/progress";
+import { recordVocabAttemptAction } from "@/lib/actions/progress";
+import type { SynonymAntonymItem } from "@/lib/actions/practice-content";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
-import type { SynonymAntonymQuestion } from "@/lib/mock-data";
 import { cn, shuffle } from "@/lib/utils";
-
-interface PreparedQuestion extends SynonymAntonymQuestion {
-  shuffledOptions: string[];
-}
-
-function prepare(questions: SynonymAntonymQuestion[]): PreparedQuestion[] {
-  return shuffle(questions).map((q) => ({ ...q, shuffledOptions: shuffle(q.options) }));
-}
 
 export function SynonymAntonymGame({
   questions,
   dict,
 }: {
-  questions: SynonymAntonymQuestion[];
+  questions: SynonymAntonymItem[];
   dict: Dictionary;
 }) {
-  const relationLabel = {
-    synonym: dict.synonymAntonymGame.relationSynonym,
-    antonym: dict.synonymAntonymGame.relationAntonym,
-  };
-  const [prepared] = useState<PreparedQuestion[]>(() => prepare(questions));
+  const [prepared] = useState(() =>
+    shuffle(questions).map((q) => ({ ...q, options: shuffle(q.options) }))
+  );
   const [index, setIndex] = useState(0);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
 
   const total = prepared.length;
-  const question = prepared[index];
-  const isAnswered = selected !== null;
-  const isCorrect = selected === question.correctAnswer;
 
-  const handleSelect = (option: string) => {
+  if (total === 0) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
+        <p>{dict.synonymAntonymGame.noQuestions}</p>
+        <Button nativeButton={false} render={<Link href="/exercises" />}>
+          {dict.synonymAntonymGame.changeType}
+        </Button>
+      </div>
+    );
+  }
+
+  const question = prepared[index];
+  const isAnswered = selectedId !== null;
+  const isCorrect = selectedId === question.correctOptionId;
+  const correctOption = question.options.find((o) => o.id === question.correctOptionId)!;
+
+  const handleSelect = (optionId: string) => {
     if (isAnswered) return;
-    setSelected(option);
-    const correct = option === question.correctAnswer;
+    setSelectedId(optionId);
+    const correct = optionId === question.correctOptionId;
     if (correct) {
       setScore((s) => s + 1);
     }
-    void recordVocabAttemptByWordAction(question.word, correct);
+    void recordVocabAttemptAction(question.vocabId, correct);
   };
 
   const handleNext = () => {
@@ -59,12 +62,12 @@ export function SynonymAntonymGame({
       return;
     }
     setIndex((i) => i + 1);
-    setSelected(null);
+    setSelectedId(null);
   };
 
   const handleRestart = () => {
     setIndex(0);
-    setSelected(null);
+    setSelectedId(null);
     setScore(0);
     setFinished(false);
   };
@@ -105,26 +108,24 @@ export function SynonymAntonymGame({
       </Progress>
 
       <div className="flex flex-col items-center gap-2 text-center">
-        <Badge variant="secondary">{relationLabel[question.relation]}</Badge>
+        <Badge variant="secondary">
+          {question.word} — {question.meanVI}
+        </Badge>
         <h2 className="font-heading text-xl font-semibold tracking-tight sm:text-2xl">
-          {formatMessage(dict.synonymAntonymGame.questionPrompt, {
-            relation: relationLabel[question.relation],
-            word: question.word,
-          })}
+          {question.questionText}
         </h2>
-        <p className="text-sm text-muted-foreground">{question.meanVI}</p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        {question.shuffledOptions.map((option) => {
-          const isThisCorrect = option === question.correctAnswer;
-          const isSelected = option === selected;
+        {question.options.map((option) => {
+          const isThisCorrect = option.id === question.correctOptionId;
+          const isSelected = option.id === selectedId;
 
           return (
             <button
-              key={option}
+              key={option.id}
               type="button"
-              onClick={() => handleSelect(option)}
+              onClick={() => handleSelect(option.id)}
               disabled={isAnswered}
               className={cn(
                 "flex items-center justify-between rounded-2xl border-2 border-border bg-card px-4 py-3 text-left text-base font-medium transition-colors disabled:cursor-default",
@@ -136,7 +137,7 @@ export function SynonymAntonymGame({
                   "border-red-400 bg-red-50 text-red-700"
               )}
             >
-              {option}
+              {option.text}
               {isAnswered && isThisCorrect && <Check className="size-5 shrink-0 text-emerald-600" />}
               {isAnswered && isSelected && !isThisCorrect && (
                 <X className="size-5 shrink-0 text-red-500" />
@@ -151,9 +152,7 @@ export function SynonymAntonymGame({
           <p className="text-sm text-muted-foreground">
             {isCorrect
               ? dict.synonymAntonymGame.feedbackCorrect
-              : formatMessage(dict.synonymAntonymGame.feedbackWrong, {
-                  answer: question.correctAnswer,
-                })}
+              : formatMessage(dict.synonymAntonymGame.feedbackWrong, { answer: correctOption.text })}
           </p>
           <Button onClick={handleNext}>
             {index + 1 >= total

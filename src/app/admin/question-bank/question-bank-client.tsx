@@ -39,7 +39,7 @@ import {
 } from "@/lib/actions/questions";
 import { formatMessage } from "@/lib/i18n/format";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
-import type { QuestionStatus, QuestionWithAnswers, Vocabulary } from "@/types";
+import type { PracticeTypeCode, QuestionStatus, QuestionWithAnswers, Vocabulary } from "@/types";
 
 const statusVariant: Record<QuestionStatus, "default" | "outline" | "destructive"> = {
   approved: "default",
@@ -47,13 +47,17 @@ const statusVariant: Record<QuestionStatus, "default" | "outline" | "destructive
   rejected: "destructive",
 };
 
+const ANSWER_TYPES: PracticeTypeCode[] = ["multiple_choice", "synonym_antonym", "fill_blank"];
+
 export function AdminQuestionBankClient({
   initialQuestions,
   vocabularyBank,
+  practiceTypes,
   dict,
 }: {
   initialQuestions: QuestionWithAnswers[];
   vocabularyBank: Vocabulary[];
+  practiceTypes: { code: PracticeTypeCode; name: string }[];
   dict: Dictionary;
 }) {
   const emptyForm = {
@@ -64,7 +68,11 @@ export function AdminQuestionBankClient({
     correctIndex: "0",
   };
 
+  const [activeType, setActiveType] = useState<PracticeTypeCode>(
+    practiceTypes[0]?.code ?? "multiple_choice"
+  );
   const [questions, setQuestions] = useState<QuestionWithAnswers[]>(initialQuestions);
+  const [loadingType, setLoadingType] = useState(false);
   const [filter, setFilter] = useState<"all" | QuestionStatus>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -77,6 +85,9 @@ export function AdminQuestionBankClient({
   const [deleteTarget, setDeleteTarget] = useState<QuestionWithAnswers | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const needsAnswers = ANSWER_TYPES.includes(activeType);
+  const isSentenceWriting = activeType === "sentence_writing";
 
   const PAGE_SIZE = 10;
   const query = search.trim().toLowerCase();
@@ -94,6 +105,16 @@ export function AdminQuestionBankClient({
   const currentPage = Math.min(page, totalPages);
   const pagedQuestions = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
+  const switchType = async (code: PracticeTypeCode) => {
+    setActiveType(code);
+    setFilter("all");
+    setSearch("");
+    setPage(1);
+    setLoadingType(true);
+    setQuestions(await listQuestionsAction(code));
+    setLoadingType(false);
+  };
+
   const openCreate = () => {
     setEditingId(null);
     setForm(emptyForm);
@@ -107,8 +128,8 @@ export function AdminQuestionBankClient({
       vocabId: q.vocabId,
       questionText: q.questionText,
       explanation: q.explanation ?? "",
-      answers: q.answers.map((a) => a.ansText),
-      correctIndex: String(q.answers.findIndex((a) => a.isCorrect)),
+      answers: q.answers.length > 0 ? q.answers.map((a) => a.ansText) : ["", "", "", ""],
+      correctIndex: String(Math.max(0, q.answers.findIndex((a) => a.isCorrect))),
     });
     setError(null);
     setDialogOpen(true);
@@ -122,26 +143,32 @@ export function AdminQuestionBankClient({
       setError(dict.admin.questionBank.errorQuestionRequired);
       return;
     }
-    if (form.answers.some((a) => !a.trim())) {
+    if (needsAnswers && form.answers.some((a) => !a.trim())) {
       setError(dict.admin.questionBank.errorAnswersRequired);
       return;
     }
+    if (isSentenceWriting && !form.explanation.trim()) {
+      setError(dict.admin.questionBank.errorExampleRequired);
+      return;
+    }
 
-    const answers = form.answers.map((ansText, i) => ({
-      ansText: ansText.trim(),
-      isCorrect: i === Number(form.correctIndex),
-    }));
+    const answers = needsAnswers
+      ? form.answers.map((ansText, i) => ({
+          ansText: ansText.trim(),
+          isCorrect: i === Number(form.correctIndex),
+        }))
+      : [];
 
     if (editingId) {
       await updateQuestionAction(editingId, {
         vocabId: form.vocabId,
         questionText: form.questionText.trim(),
         explanation: form.explanation.trim() || undefined,
-        answers,
+        answers: needsAnswers ? answers : undefined,
       });
       toast.success(dict.admin.questionBank.updateSuccess);
     } else {
-      await createQuestionAction({
+      await createQuestionAction(activeType, {
         vocabId: form.vocabId,
         questionText: form.questionText.trim(),
         explanation: form.explanation.trim() || undefined,
@@ -150,7 +177,7 @@ export function AdminQuestionBankClient({
       toast.success(dict.admin.questionBank.addSuccess);
     }
 
-    setQuestions(await listQuestionsAction());
+    setQuestions(await listQuestionsAction(activeType));
     setDialogOpen(false);
   };
 
@@ -172,7 +199,7 @@ export function AdminQuestionBankClient({
 
   const handleSetStatus = async (q: QuestionWithAnswers, next: QuestionStatus) => {
     await setQuestionStatusAction(q.id, next);
-    setQuestions(await listQuestionsAction());
+    setQuestions(await listQuestionsAction(activeType));
     toast.success(
       next === "approved"
         ? dict.admin.questionBank.approveSuccess
@@ -216,6 +243,19 @@ export function AdminQuestionBankClient({
           </Button>
         </div>
 
+        <div className="flex flex-col gap-1.5">
+          <Label className="text-sm text-muted-foreground">{dict.admin.questionBank.typeLabel}</Label>
+          <Tabs value={activeType} onValueChange={(value) => void switchType(value as PracticeTypeCode)}>
+            <TabsList>
+              {practiceTypes.map((t) => (
+                <TabsTrigger key={t.code} value={t.code}>
+                  {t.name}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </div>
+
         <Tabs
           value={filter}
           onValueChange={(value) => {
@@ -245,79 +285,88 @@ export function AdminQuestionBankClient({
         </div>
 
         <div className="flex flex-col gap-4">
-          {pagedQuestions.map((q) => (
-            <Card key={q.id}>
-              <CardContent className="flex flex-col gap-3 py-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-medium">{q.questionText}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {dict.admin.questionBank.wordLabel} {q.vocab.vocab} ({q.vocab.meanVI})
-                    </p>
-                  </div>
-                  <Badge variant={statusVariant[q.status]} className="shrink-0">
-                    {dict.admin.questionBank[q.status]}
-                  </Badge>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  {q.answers.map((a) => (
-                    <div
-                      key={a.ansId}
-                      className={`rounded-lg border px-3 py-1.5 text-sm ${
-                        a.isCorrect
-                          ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                          : "border-border text-muted-foreground"
-                      }`}
-                    >
-                      {a.ansText}
+          {!loadingType &&
+            pagedQuestions.map((q) => (
+              <Card key={q.id}>
+                <CardContent className="flex flex-col gap-3 py-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium">{q.questionText}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {dict.admin.questionBank.wordLabel} {q.vocab.vocab} ({q.vocab.meanVI})
+                      </p>
                     </div>
-                  ))}
-                </div>
+                    <Badge variant={statusVariant[q.status]} className="shrink-0">
+                      {dict.admin.questionBank[q.status]}
+                    </Badge>
+                  </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={() => openEdit(q)}>
-                    <Pencil className="size-3.5" />
-                    {dict.admin.questionBank.edit}
-                  </Button>
-                  {q.status !== "approved" && (
+                  {q.answers.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      {q.answers.map((a) => (
+                        <div
+                          key={a.ansId}
+                          className={`rounded-lg border px-3 py-1.5 text-sm ${
+                            a.isCorrect
+                              ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                              : "border-border text-muted-foreground"
+                          }`}
+                        >
+                          {a.ansText}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    q.explanation && (
+                      <p className="rounded-lg bg-muted px-3 py-2 text-sm italic text-muted-foreground">
+                        {q.explanation}
+                      </p>
+                    )
+                  )}
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => openEdit(q)}>
+                      <Pencil className="size-3.5" />
+                      {dict.admin.questionBank.edit}
+                    </Button>
+                    {q.status !== "approved" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                        onClick={() => void handleSetStatus(q, "approved")}
+                      >
+                        <Check className="size-3.5" />
+                        {dict.admin.questionBank.approve}
+                      </Button>
+                    )}
+                    {q.status !== "rejected" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-red-300 text-red-700 hover:bg-red-50"
+                        onClick={() => void handleSetStatus(q, "rejected")}
+                      >
+                        <X className="size-3.5" />
+                        {dict.admin.questionBank.reject}
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
-                      className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
-                      onClick={() => void handleSetStatus(q, "approved")}
+                      onClick={() => {
+                        setDeleteTarget(q);
+                        setDeleteError(null);
+                      }}
                     >
-                      <Check className="size-3.5" />
-                      {dict.admin.questionBank.approve}
+                      <Trash2 className="size-3.5" />
+                      {dict.common.delete}
                     </Button>
-                  )}
-                  {q.status !== "rejected" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-red-300 text-red-700 hover:bg-red-50"
-                      onClick={() => void handleSetStatus(q, "rejected")}
-                    >
-                      <X className="size-3.5" />
-                      {dict.admin.questionBank.reject}
-                    </Button>
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setDeleteTarget(q);
-                      setDeleteError(null);
-                    }}
-                  >
-                    <Trash2 className="size-3.5" />
-                    {dict.common.delete}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          {filtered.length === 0 && (
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          {!loadingType && filtered.length === 0 && (
             <p className="py-10 text-center text-sm text-muted-foreground">
               {dict.admin.questionBank.noneInFilter}
             </p>
@@ -381,7 +430,11 @@ export function AdminQuestionBankClient({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="explanation">{dict.admin.questionBank.explanationLabel}</Label>
+              <Label htmlFor="explanation">
+                {isSentenceWriting
+                  ? dict.admin.questionBank.exampleSentenceLabel
+                  : dict.admin.questionBank.explanationLabel}
+              </Label>
               <Textarea
                 id="explanation"
                 rows={2}
@@ -390,31 +443,33 @@ export function AdminQuestionBankClient({
               />
             </div>
 
-            <div className="flex flex-col gap-2">
-              <Label>{dict.admin.questionBank.answersLabel}</Label>
-              <RadioGroup
-                value={form.correctIndex}
-                onValueChange={(value) => setForm((f) => ({ ...f, correctIndex: value ?? "0" }))}
-                className="flex flex-col gap-2"
-              >
-                {form.answers.map((ansText, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <RadioGroupItem value={String(i)} />
-                    <Input
-                      value={ansText}
-                      onChange={(e) =>
-                        setForm((f) => {
-                          const answers = [...f.answers];
-                          answers[i] = e.target.value;
-                          return { ...f, answers };
-                        })
-                      }
-                      placeholder={formatMessage(dict.admin.questionBank.answerPlaceholder, { n: i + 1 })}
-                    />
-                  </div>
-                ))}
-              </RadioGroup>
-            </div>
+            {needsAnswers && (
+              <div className="flex flex-col gap-2">
+                <Label>{dict.admin.questionBank.answersLabel}</Label>
+                <RadioGroup
+                  value={form.correctIndex}
+                  onValueChange={(value) => setForm((f) => ({ ...f, correctIndex: value ?? "0" }))}
+                  className="flex flex-col gap-2"
+                >
+                  {form.answers.map((ansText, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <RadioGroupItem value={String(i)} />
+                      <Input
+                        value={ansText}
+                        onChange={(e) =>
+                          setForm((f) => {
+                            const answers = [...f.answers];
+                            answers[i] = e.target.value;
+                            return { ...f, answers };
+                          })
+                        }
+                        placeholder={formatMessage(dict.admin.questionBank.answerPlaceholder, { n: i + 1 })}
+                      />
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+            )}
 
             <DialogFooter>
               <Button type="submit">

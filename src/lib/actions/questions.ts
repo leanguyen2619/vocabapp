@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentAccount } from "@/lib/session";
-import type { QuestionStatus, QuestionWithAnswers } from "@/types";
+import type { PracticeTypeCode, QuestionStatus, QuestionWithAnswers } from "@/types";
 
 async function requireAdmin() {
   const account = await getCurrentAccount();
@@ -10,19 +10,19 @@ async function requireAdmin() {
   return account;
 }
 
-async function multipleChoicePracTypeId(): Promise<string> {
-  const pracType = await prisma.practiceType.findUnique({ where: { type: "multiple_choice" } });
-  if (!pracType) throw new Error("multiple_choice PracticeType is not seeded");
+async function practiceTypeId(code: PracticeTypeCode): Promise<string> {
+  const pracType = await prisma.practiceType.findUnique({ where: { type: code } });
+  if (!pracType) throw new Error(`${code} PracticeType is not seeded`);
   return pracType.id;
 }
 
-export async function listQuestionsAction(): Promise<QuestionWithAnswers[]> {
+export async function listQuestionsAction(pracTypeCode: PracticeTypeCode): Promise<QuestionWithAnswers[]> {
   const admin = await requireAdmin();
   if (!admin) return [];
 
-  const pracTypeId = await multipleChoicePracTypeId();
+  const pracTypeIdValue = await practiceTypeId(pracTypeCode);
   const rows = await prisma.question.findMany({
-    where: { pracTypeId },
+    where: { pracTypeId: pracTypeIdValue },
     include: { answers: true, vocab: true },
     orderBy: { id: "asc" },
   });
@@ -45,20 +45,23 @@ export async function listQuestionsAction(): Promise<QuestionWithAnswers[]> {
   }));
 }
 
-export async function createQuestionAction(input: {
-  vocabId: string;
-  questionText: string;
-  explanation?: string;
-  answers: { ansText: string; isCorrect: boolean }[];
-}): Promise<boolean> {
+export async function createQuestionAction(
+  pracTypeCode: PracticeTypeCode,
+  input: {
+    vocabId: string;
+    questionText: string;
+    explanation?: string;
+    answers: { ansText: string; isCorrect: boolean }[];
+  }
+): Promise<boolean> {
   const admin = await requireAdmin();
   if (!admin) return false;
 
-  const pracTypeId = await multipleChoicePracTypeId();
+  const pracTypeIdValue = await practiceTypeId(pracTypeCode);
   await prisma.question.create({
     data: {
       vocabId: input.vocabId,
-      pracTypeId,
+      pracTypeId: pracTypeIdValue,
       questionText: input.questionText,
       explanation: input.explanation,
       status: "pending",

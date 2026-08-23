@@ -1,7 +1,11 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+import { formatMessage } from "@/lib/i18n/format";
+import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount, type SessionAccount } from "@/lib/session";
+import { shuffle } from "@/lib/utils";
 import type {
   AssignmentStatus,
   DailyAssignmentWithVocab,
@@ -129,6 +133,72 @@ export async function getMyDailyAssignmentsAction(): Promise<DailyAssignmentWith
       assignedDate: today,
       status: assignmentStatus,
       vocab,
+    };
+  });
+}
+
+export interface QuizQuestionItem {
+  vocabId: string;
+  topicId: number;
+  questionText: string;
+  options: { id: string; text: string }[];
+  correctOptionId: string;
+  vocabWord: string;
+  definition: string;
+  explanation?: string;
+}
+
+/**
+ * Builds today's quiz from the student's daily words, preferring a real, admin-approved question
+ * from the Question Bank when one exists for that word — previously the quiz always synthesized
+ * its own question client-side, so nothing an admin curated there ever reached students. Falls
+ * back to the old auto-generated "which word means {mean}?" format (options = the rest of today's
+ * words) for any word without an approved question yet.
+ */
+export async function getMyQuizQuestionsAction(): Promise<QuizQuestionItem[]> {
+  const account = await getCurrentAccount();
+  if (!account) return [];
+  const dict = getDictionary(await getLocale());
+
+  const dailyWords = await getMyDailyWordsAction();
+  if (dailyWords.length === 0) return [];
+
+  const pracType = await prisma.practiceType.findUnique({ where: { type: "multiple_choice" } });
+  const vocabIds = dailyWords.map((v) => v.id);
+  const realQuestions = pracType
+    ? await prisma.question.findMany({
+        where: { vocabId: { in: vocabIds }, pracTypeId: pracType.id, status: "approved" },
+        include: { answers: true },
+      })
+    : [];
+
+  const realByVocabId = new Map<string, (typeof realQuestions)[number]>();
+  for (const q of realQuestions) {
+    if (!realByVocabId.has(q.vocabId) && q.answers.length >= 2) realByVocabId.set(q.vocabId, q);
+  }
+
+  return shuffle(dailyWords).map((vocab): QuizQuestionItem => {
+    const real = realByVocabId.get(vocab.id);
+    if (real) {
+      return {
+        vocabId: vocab.id,
+        topicId: vocab.topicId,
+        questionText: real.questionText,
+        options: shuffle(real.answers.map((a) => ({ id: a.id, text: a.ansText }))),
+        correctOptionId: real.answers.find((a) => a.isCorrect)!.id,
+        vocabWord: vocab.vocab,
+        definition: vocab.definition,
+        explanation: real.explanation ?? undefined,
+      };
+    }
+    return {
+      vocabId: vocab.id,
+      topicId: vocab.topicId,
+      questionText: formatMessage(dict.quizSession.questionPrompt, { mean: vocab.meanVI }),
+      options: shuffle(dailyWords.map((v) => ({ id: v.id, text: v.vocab }))),
+      correctOptionId: vocab.id,
+      vocabWord: vocab.vocab,
+      definition: vocab.definition,
     };
   });
 }

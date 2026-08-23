@@ -5,7 +5,7 @@ import { ArrowLeft, BookOpen } from "lucide-react";
 import { QuizSession } from "@/components/quiz-session";
 import { RandomExerciseButton } from "@/components/random-exercise-button";
 import { listExerciseTypesAction } from "@/lib/actions/exercise-types";
-import { getMyDailyWordsAction, listTopicsAction } from "@/lib/actions/vocabulary";
+import { getMyQuizQuestionsAction, listTopicsAction } from "@/lib/actions/vocabulary";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
@@ -15,8 +15,8 @@ export default async function QuizPage() {
   if (!account) redirect("/login");
   const dict = getDictionary(await getLocale());
 
-  const [dailyWords, topics, exerciseTypes] = await Promise.all([
-    getMyDailyWordsAction(),
+  const [questions, topics, exerciseTypes] = await Promise.all([
+    getMyQuizQuestionsAction(),
     listTopicsAction(),
     listExerciseTypesAction(),
   ]);
@@ -45,7 +45,7 @@ export default async function QuizPage() {
       </header>
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-10 sm:py-16">
-        <QuizSession vocabList={dailyWords} topics={topics} dict={dict} />
+        <QuizSession questions={questions} topics={topics} dict={dict} />
       </main>
     </div>
   );

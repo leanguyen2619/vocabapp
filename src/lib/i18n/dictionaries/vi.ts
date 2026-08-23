@@ -66,7 +66,6 @@ const vi = {
     interjection: "thán từ",
   },
   landing: {
-    searchPlaceholder: "Tìm kiếm câu hỏi",
     heroTitle: "Bạn muốn học từ vựng như thế nào?",
     heroSubtitle:
       "Ghi nhớ từ vựng lâu hơn với thẻ ghi nhớ tương tác, bài kiểm tra thử và trò chơi ghép thẻ của VocabApp.",
@@ -271,10 +270,8 @@ const vi = {
     finishedSubtitle: "Bạn trả lời đúng {score}/{total} câu.",
     restart: "Làm lại",
     changeType: "Chọn dạng khác",
-    relationSynonym: "đồng nghĩa",
-    relationAntonym: "trái nghĩa",
+    noQuestions: "Chưa có câu hỏi nào cho dạng bài này.",
     questionCounter: "Câu {current}/{total}",
-    questionPrompt: "Từ nào {relation} với “{word}”?",
     feedbackCorrect: "Chính xác!",
     feedbackWrong: 'Chưa đúng — đáp án là "{answer}".',
     nextQuestion: "Câu tiếp theo",
@@ -289,6 +286,7 @@ const vi = {
     hint: "Gợi ý nghĩa: {mean}",
     nextQuestion: "Câu tiếp theo",
     viewResults: "Xem kết quả",
+    noQuestions: "Chưa có câu hỏi nào cho dạng bài này.",
   },
   wordFormationGame: {
     finishedTitle: "Hoàn thành trò chơi ghép từ!",
@@ -301,6 +299,7 @@ const vi = {
     successMessage: "Chính xác! {answer} nghĩa là “{mean}”.",
     nextWord: "Từ tiếp theo",
     viewResults: "Xem kết quả",
+    noQuestions: "Chưa có từ nào cho dạng bài này.",
   },
   writingExercise: {
     finishedTitle: "Hoàn thành bài viết câu!",
@@ -315,6 +314,7 @@ const vi = {
     showExample: "Xem câu mẫu",
     exampleLabel: "Câu mẫu:",
     confidentButton: "Tôi đã viết đúng",
+    noQuestions: "Chưa có từ nào cho dạng bài này.",
   },
   typingGame: {
     finishedTitle: "Hoàn thành bài gõ từ!",
@@ -465,7 +465,8 @@ const vi = {
     },
     questionBank: {
       title: "Question Bank",
-      subtitle: "Thêm, chỉnh sửa và duyệt câu hỏi trắc nghiệm.",
+      subtitle: "Thêm, chỉnh sửa và duyệt nội dung cho các dạng bài dựa trên câu hỏi.",
+      typeLabel: "Dạng bài",
       addQuestion: "Thêm câu hỏi",
       all: "Tất cả",
       pending: "Chờ duyệt",
@@ -486,12 +487,14 @@ const vi = {
       questionTextLabel: "Nội dung câu hỏi",
       questionTextPlaceholder: 'Từ nào có nghĩa là "..."?',
       explanationLabel: "Giải thích (tùy chọn)",
+      exampleSentenceLabel: "Câu ví dụ",
       answersLabel: "4 đáp án — chọn đáp án đúng",
       answerPlaceholder: "Đáp án {n}",
       saveSubmit: "Lưu thay đổi",
       addSubmit: "Thêm câu hỏi",
       errorQuestionRequired: "Vui lòng nhập nội dung câu hỏi.",
       errorAnswersRequired: "Vui lòng điền đầy đủ 4 đáp án.",
+      errorExampleRequired: "Vui lòng nhập câu ví dụ.",
       updateSuccess: "Đã cập nhật câu hỏi.",
       addSuccess: "Đã thêm câu hỏi mới (chờ duyệt).",
       approveSuccess: "Đã duyệt câu hỏi.",

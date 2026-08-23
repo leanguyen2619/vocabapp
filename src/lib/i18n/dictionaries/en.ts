@@ -68,7 +68,6 @@ const en: Dictionary = {
     interjection: "interjection",
   },
   landing: {
-    searchPlaceholder: "Search questions",
     heroTitle: "How do you want to learn vocabulary?",
     heroSubtitle:
       "Remember vocabulary longer with interactive flashcards, practice quizzes, and VocabApp's matching game.",
@@ -273,10 +272,8 @@ const en: Dictionary = {
     finishedSubtitle: "You answered {score}/{total} questions correctly.",
     restart: "Try again",
     changeType: "Choose another type",
-    relationSynonym: "synonym",
-    relationAntonym: "antonym",
+    noQuestions: "No questions available for this exercise yet.",
     questionCounter: "Question {current}/{total}",
-    questionPrompt: "Which word is a {relation} of “{word}”?",
     feedbackCorrect: "Correct!",
     feedbackWrong: 'Not quite — the answer is "{answer}".',
     nextQuestion: "Next question",
@@ -291,6 +288,7 @@ const en: Dictionary = {
     hint: "Meaning hint: {mean}",
     nextQuestion: "Next question",
     viewResults: "View results",
+    noQuestions: "No questions available for this exercise yet.",
   },
   wordFormationGame: {
     finishedTitle: "Word building game complete!",
@@ -303,6 +301,7 @@ const en: Dictionary = {
     successMessage: "Correct! {answer} means “{mean}”.",
     nextWord: "Next word",
     viewResults: "View results",
+    noQuestions: "No words available for this exercise yet.",
   },
   writingExercise: {
     finishedTitle: "Sentence writing complete!",
@@ -316,6 +315,7 @@ const en: Dictionary = {
     textareaPlaceholder: 'Write an English sentence using "{word}"...',
     showExample: "Show example sentence",
     exampleLabel: "Example:",
+    noQuestions: "No words available for this exercise yet.",
     confidentButton: "I wrote it correctly",
   },
   typingGame: {
@@ -467,7 +467,8 @@ const en: Dictionary = {
     },
     questionBank: {
       title: "Question Bank",
-      subtitle: "Add, edit, and approve multiple-choice questions.",
+      subtitle: "Add, edit, and approve content for question-based exercise types.",
+      typeLabel: "Exercise type",
       addQuestion: "Add question",
       all: "All",
       pending: "Pending",
@@ -488,12 +489,14 @@ const en: Dictionary = {
       questionTextLabel: "Question text",
       questionTextPlaceholder: 'Which word means "..."?',
       explanationLabel: "Explanation (optional)",
+      exampleSentenceLabel: "Example sentence",
       answersLabel: "4 answers — choose the correct one",
       answerPlaceholder: "Answer {n}",
       saveSubmit: "Save changes",
       addSubmit: "Add question",
       errorQuestionRequired: "Please enter the question text.",
       errorAnswersRequired: "Please fill in all 4 answers.",
+      errorExampleRequired: "Please enter an example sentence.",
       updateSuccess: "Question updated.",
       addSuccess: "New question added (pending).",
       approveSuccess: "Question approved.",

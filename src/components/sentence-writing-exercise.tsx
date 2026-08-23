@@ -8,16 +8,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
-import { recordVocabAttemptByWordAction } from "@/lib/actions/progress";
+import { recordVocabAttemptAction } from "@/lib/actions/progress";
+import type { SentencePromptItem } from "@/lib/actions/practice-content";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
-import type { SentencePrompt } from "@/lib/mock-data";
 
 export function SentenceWritingExercise({
   prompts,
   dict,
 }: {
-  prompts: SentencePrompt[];
+  prompts: SentencePromptItem[];
   dict: Dictionary;
 }) {
   const [index, setIndex] = useState(0);
@@ -28,6 +28,18 @@ export function SentenceWritingExercise({
   const [finished, setFinished] = useState(false);
 
   const total = prompts.length;
+
+  if (total === 0) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
+        <p>{dict.writingExercise.noQuestions}</p>
+        <Button nativeButton={false} render={<Link href="/exercises" />}>
+          {dict.writingExercise.changeType}
+        </Button>
+      </div>
+    );
+  }
+
   const prompt = prompts[index];
 
   const goNext = () => {
@@ -43,7 +55,7 @@ export function SentenceWritingExercise({
   const handleSelfMark = (confident: boolean) => {
     if (confident) setConfidentCount((c) => c + 1);
     else setPracticeCount((c) => c + 1);
-    void recordVocabAttemptByWordAction(prompt.vocab, confident);
+    void recordVocabAttemptAction(prompt.vocabId, confident);
     goNext();
   };
 

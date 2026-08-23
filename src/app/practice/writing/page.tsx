@@ -5,17 +5,20 @@ import { ArrowLeft, BookOpen } from "lucide-react";
 import { SentenceWritingExercise } from "@/components/sentence-writing-exercise";
 import { RandomExerciseButton } from "@/components/random-exercise-button";
 import { listExerciseTypesAction } from "@/lib/actions/exercise-types";
+import { getSentenceWritingPromptsAction } from "@/lib/actions/practice-content";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
-import { sentencePrompts } from "@/lib/mock-data";
 
 export default async function SentenceWritingPage() {
   const account = await getCurrentAccount();
   if (!account) redirect("/login");
   const dict = getDictionary(await getLocale());
 
-  const exerciseTypes = await listExerciseTypesAction();
+  const [exerciseTypes, prompts] = await Promise.all([
+    listExerciseTypesAction(),
+    getSentenceWritingPromptsAction(),
+  ]);
 
   return (
     <div className="flex flex-1 flex-col bg-background">
@@ -41,7 +44,7 @@ export default async function SentenceWritingPage() {
       </header>
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-10 sm:py-16">
-        <SentenceWritingExercise prompts={sentencePrompts} dict={dict} />
+        <SentenceWritingExercise prompts={prompts} dict={dict} />
       </main>
     </div>
   );
