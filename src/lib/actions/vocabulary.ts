@@ -52,16 +52,38 @@ export async function getMyVocabularyWithProgressAction(): Promise<VocabularyWit
   }));
 }
 
+const REVIEW_SESSION_SIZE = 20;
+
 /**
- * Words the student's teacher explicitly assigned (not yet mastered) come first, regardless of
- * level — a teacher can deliberately assign ahead of the student's unlocked level. If that
- * doesn't fill the class's daily target, the rest is topped up from the bank same as before, but
- * only from levels the student has actually unlocked, so auto-fill can't silently "complete" a
- * level the student hasn't reached yet.
+ * Words the student has gotten wrong at least as often as right (status stuck at "learning",
+ * never yet "mastered") — the review queue every professional vocab app resurfaces sooner rather
+ * than leaving to the luck of the next daily-word draw. Oldest-touched first, so a word that's
+ * been sitting unmastered the longest comes up first.
  */
-async function computeDailyWords(
-  account: SessionAccount
-): Promise<{ vocab: Vocabulary; status: LearningStatus }[]> {
+export async function getMyReviewWordsAction(): Promise<Vocabulary[]> {
+  const account = await getCurrentAccount();
+  if (!account) return [];
+
+  const history = await prisma.learningHistory.findMany({
+    where: { accountId: account.id_login, status: "learning" },
+    orderBy: { lastDate: "asc" },
+    take: REVIEW_SESSION_SIZE,
+    include: { vocab: true },
+  });
+
+  return history.map((h) => h.vocab);
+}
+
+/**
+ * Chooses today's word set the first time it's requested each day, prioritizing the student's
+ * teacher-assigned words (not yet mastered, regardless of level — a teacher can deliberately
+ * assign ahead of the student's unlocked level), topped up from levels the student has actually
+ * unlocked. This selection runs only once per calendar day (persisted as DailyWordPick rows) —
+ * every later call the same day reads back that exact set instead of recomputing it, so mastering
+ * a word mid-session can't cause it to be silently swapped for a different one and the "today's
+ * words" list stays the same set the student started with.
+ */
+async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<string[]> {
   const [cls, vocabulary, history, assignments, unlockedLevelIds] = await Promise.all([
     account.classId ? prisma.schoolClass.findUnique({ where: { id: account.classId } }) : null,
     prisma.vocabulary.findMany({ orderBy: { id: "asc" } }),
@@ -86,19 +108,65 @@ async function computeDailyWords(
     .filter((w) => assignedIds.has(w.vocab.id) && w.status !== "mastered")
     .sort((a, b) => priority[a.status] - priority[b.status]);
 
+  let picked: { vocab: Vocabulary; status: LearningStatus }[];
   if (assignedWords.length >= target) {
-    return assignedWords.slice(0, Math.max(1, target));
+    picked = assignedWords.slice(0, Math.max(1, target));
+  } else {
+    const remaining = withStatus
+      .filter(
+        (w) =>
+          (!assignedIds.has(w.vocab.id) || w.status === "mastered") &&
+          unlockedLevelIds.has(w.vocab.levelId)
+      )
+      .sort((a, b) => priority[a.status] - priority[b.status]);
+    picked = [...assignedWords, ...remaining].slice(0, Math.max(1, target));
   }
 
-  const remaining = withStatus
-    .filter(
-      (w) =>
-        (!assignedIds.has(w.vocab.id) || w.status === "mastered") &&
-        unlockedLevelIds.has(w.vocab.levelId)
-    )
-    .sort((a, b) => priority[a.status] - priority[b.status]);
+  const pickedVocabIds = picked.map((p) => p.vocab.id);
+  if (pickedVocabIds.length > 0) {
+    await prisma.dailyWordPick.createMany({
+      data: pickedVocabIds.map((vocabId) => ({ accountId: account.id_login, vocabId, pickedDate: today })),
+      skipDuplicates: true,
+    });
+  }
+  return pickedVocabIds;
+}
 
-  return [...assignedWords, ...remaining].slice(0, Math.max(1, target));
+async function computeDailyWords(
+  account: SessionAccount
+): Promise<{ vocab: Vocabulary; status: LearningStatus }[]> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const existingPicks = await prisma.dailyWordPick.findMany({
+    where: { accountId: account.id_login, pickedDate: today },
+    orderBy: { id: "asc" },
+    select: { vocabId: true },
+  });
+
+  const pickedVocabIds =
+    existingPicks.length > 0
+      ? existingPicks.map((p) => p.vocabId)
+      : await pickTodaysWordIds(account, today);
+
+  if (pickedVocabIds.length === 0) return [];
+
+  // The word SET is pinned above, but each word's status is still read live — a word correctly
+  // answered during today's session should still visibly flip to "learning"/"mastered".
+  const [vocabRows, history] = await Promise.all([
+    prisma.vocabulary.findMany({ where: { id: { in: pickedVocabIds } } }),
+    prisma.learningHistory.findMany({
+      where: { accountId: account.id_login, vocabId: { in: pickedVocabIds } },
+    }),
+  ]);
+  const vocabById = new Map(vocabRows.map((v) => [v.id, v]));
+  const statusOf = (vocabId: string): LearningStatus =>
+    history.find((h) => h.vocabId === vocabId)?.status ?? "new";
+
+  return pickedVocabIds
+    .map((id) => vocabById.get(id))
+    .filter((v): v is Vocabulary => Boolean(v))
+    .map((vocab) => ({ vocab, status: statusOf(vocab.id) }));
 }
 
 export async function getMyDailyWordsAction(): Promise<Vocabulary[]> {

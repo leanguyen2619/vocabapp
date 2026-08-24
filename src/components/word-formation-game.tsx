@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Delete, PartyPopper, RotateCcw } from "lucide-react";
+import { Check, Delete, PartyPopper, RotateCcw, Volume2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { recordVocabAttemptAction } from "@/lib/actions/progress";
 import type { WordFormationItem } from "@/lib/actions/practice-content";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
+import { speakWord } from "@/lib/speech";
 import { cn, shuffle } from "@/lib/utils";
 
 interface Tile {
@@ -200,13 +201,24 @@ export function WordFormationGame({
 
       {solved && (
         <div className="flex flex-col items-center gap-4 text-center">
-          <p className="flex items-center gap-1.5 text-sm font-medium text-emerald-700">
-            <Check className="size-4" />
-            {formatMessage(dict.wordFormationGame.successMessage, {
-              answer,
-              mean: prompt.meanVI,
-            })}
-          </p>
+          <div className="flex items-center gap-1.5">
+            <p className="flex items-center gap-1.5 text-sm font-medium text-emerald-700">
+              <Check className="size-4" />
+              {formatMessage(dict.wordFormationGame.successMessage, {
+                answer,
+                mean: prompt.meanVI,
+              })}
+            </p>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label={dict.vocabulary.playPronunciation}
+              onClick={() => speakWord(prompt.word)}
+            >
+              <Volume2 className="size-4" />
+            </Button>
+          </div>
           <Button onClick={handleNext}>
             {index + 1 >= total ? dict.wordFormationGame.viewResults : dict.wordFormationGame.nextWord}
           </Button>

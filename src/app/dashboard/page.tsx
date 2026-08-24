@@ -8,7 +8,12 @@ import { listClassesAction } from "@/lib/actions/classes";
 import { getMyLevelsAction } from "@/lib/actions/levels";
 import { getMyClassStudentsAction, listMyAssignedVocabAction } from "@/lib/actions/teacher";
 import { listMyClassResetRequestsAction } from "@/lib/actions/password-reset-requests";
-import { getMyDailyAssignmentsAction, listTopicsAction, listVocabularyAction } from "@/lib/actions/vocabulary";
+import {
+  getMyDailyAssignmentsAction,
+  getMyReviewWordsAction,
+  listTopicsAction,
+  listVocabularyAction,
+} from "@/lib/actions/vocabulary";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
@@ -66,12 +71,14 @@ export default async function DashboardPage() {
     );
   }
 
-  const [levels, dailyAssignments, topics] = await Promise.all([
+  const [levels, dailyAssignments, topics, reviewWords] = await Promise.all([
     getMyLevelsAction(),
     getMyDailyAssignmentsAction(),
     listTopicsAction(),
+    getMyReviewWordsAction(),
   ]);
-  const streak = levels.find((l) => l.status === "in_progress")?.streak ?? 0;
+  // Matches profile-client.tsx's formula so the two pages never disagree on the number shown.
+  const streak = Math.max(0, ...levels.map((l) => l.streak));
 
   return (
     <DashboardShell account={account} streak={streak}>
@@ -80,6 +87,7 @@ export default async function DashboardPage() {
         dailyAssignments={dailyAssignments}
         levels={levels}
         topics={topics}
+        reviewCount={reviewWords.length}
         dict={dict}
       />
     </DashboardShell>

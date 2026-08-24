@@ -11,6 +11,7 @@ import { recordVocabAttemptAction } from "@/lib/actions/progress";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { getTopicName } from "@/lib/labels";
+import { speakWord } from "@/lib/speech";
 import { cn } from "@/lib/utils";
 import type { Topic, Vocabulary } from "@/types";
 
@@ -30,6 +31,18 @@ export function PracticeSession({
   const [finished, setFinished] = useState(false);
 
   const total = vocabList.length;
+
+  if (total === 0) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
+        <p>{dict.practiceSession.noQuestions}</p>
+        <Button nativeButton={false} render={<Link href="/dashboard" />}>
+          {dict.errors.backToDashboard}
+        </Button>
+      </div>
+    );
+  }
+
   const current = vocabList[index];
 
   const handleMark = (known: boolean) => {
@@ -102,7 +115,7 @@ export function PracticeSession({
         </ProgressLabel>
       </Progress>
 
-      <div className="[perspective:1200px]">
+      <div className="relative [perspective:1200px]">
         <button
           type="button"
           onClick={() => setFlipped((f) => !f)}
@@ -118,10 +131,7 @@ export function PracticeSession({
             <p className="font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
               {current.vocab}
             </p>
-            <span className="flex items-center gap-1 text-sm text-muted-foreground">
-              <Volume2 className="size-4" />
-              {current.partOfSpeech}
-            </span>
+            <span className="text-sm text-muted-foreground">{current.partOfSpeech}</span>
             <p className="mt-4 text-sm text-muted-foreground">{dict.practiceSession.tapToReveal}</p>
           </div>
 
@@ -133,6 +143,18 @@ export function PracticeSession({
             </p>
           </div>
         </button>
+
+        {!flipped && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={dict.vocabulary.playPronunciation}
+            className="absolute right-6 top-6 z-10"
+            onClick={() => speakWord(current.vocab)}
+          >
+            <Volume2 className="size-4" />
+          </Button>
+        )}
       </div>
 
       <div className="flex items-center justify-center gap-4">

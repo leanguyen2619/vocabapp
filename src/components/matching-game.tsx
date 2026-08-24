@@ -41,6 +41,17 @@ export function MatchingGame({ vocabList, dict }: { vocabList: Vocabulary[]; dic
     return () => clearInterval(interval);
   }, [finished]);
 
+  if (total === 0) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
+        <p>{dict.matchingGame.noQuestions}</p>
+        <Button nativeButton={false} render={<Link href="/dashboard" />}>
+          {dict.errors.backToDashboard}
+        </Button>
+      </div>
+    );
+  }
+
   const handleSelect = (side: "left" | "right", id: string) => {
     if (matchedIds.has(id) || wrongIds.length > 0) return;
 
@@ -61,6 +72,8 @@ export function MatchingGame({ vocabList, dict }: { vocabList: Vocabulary[]; dic
     } else {
       const wrongPair = [selected.id, id];
       setWrongIds(wrongPair);
+      void recordVocabAttemptAction(selected.id, false);
+      void recordVocabAttemptAction(id, false);
       setTimeout(() => {
         setWrongIds([]);
         setSelected(null);

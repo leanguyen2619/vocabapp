@@ -126,6 +126,10 @@ const vi = {
     todayWordsDesc: "{count} từ được giao theo mục tiêu mỗi ngày của lớp",
     chooseExerciseType: "Chọn dạng bài tập",
     levelProgress: "Tiến độ theo cấp độ",
+    reviewTitle: "Ôn lại từ khó",
+    reviewDesc: "{count} từ bạn đang học nhưng chưa thuộc hẳn.",
+    reviewButton: "Ôn ngay",
+    reviewEmpty: "Chưa có từ nào cần ôn lại — bạn đang học rất tốt!",
   },
   teacherDashboard: {
     greeting: "Chào {name}",
@@ -256,6 +260,7 @@ const vi = {
     wordCounter: "Từ {current}/{total}",
     flipCardAriaLabel: "Lật thẻ",
     tapToReveal: "Nhấn để xem nghĩa",
+    noQuestions: "Chưa có từ nào cho phiên luyện tập này.",
   },
   matchingGame: {
     finishedTitle: "Hoàn thành trò chơi nối từ!",
@@ -264,6 +269,7 @@ const vi = {
     progressText: "Đã nối {matched}/{total} · {attempts} lần thử",
     title: "Nối từ tiếng Anh với nghĩa tiếng Việt",
     subtitle: "Chọn 1 từ bên trái rồi chọn nghĩa tương ứng bên phải.",
+    noQuestions: "Chưa có từ nào cho trò chơi này.",
   },
   posGame: {
     finishedTitle: "Hoàn thành bài tập!",
@@ -277,6 +283,7 @@ const vi = {
     resultPrefix: "“{word}” là",
     nextQuestion: "Câu tiếp theo",
     viewResults: "Xem kết quả",
+    noQuestions: "Chưa có từ nào cho dạng bài này.",
   },
   synonymAntonymGame: {
     finishedTitle: "Hoàn thành bài tập!",
@@ -342,6 +349,7 @@ const vi = {
     nextWord: "Từ tiếp theo",
     viewResults: "Xem kết quả",
     checkButton: "Kiểm tra",
+    noQuestions: "Chưa có từ nào cho dạng bài này.",
   },
   listeningGame: {
     finishedTitle: "Hoàn thành bài nghe từ!",
@@ -357,6 +365,7 @@ const vi = {
     wrongBadge: "Đáp án: {answer}",
     nextWord: "Từ tiếp theo",
     viewResults: "Xem kết quả",
+    noQuestions: "Chưa có từ nào cho dạng bài này.",
     checkButton: "Kiểm tra",
   },
   errors: {

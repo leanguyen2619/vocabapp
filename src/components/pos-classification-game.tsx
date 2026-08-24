@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
+import { Check, PartyPopper, RotateCcw, Volume2, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { recordVocabAttemptAction } from "@/lib/actions/progress";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { getTopicName, posLabel } from "@/lib/labels";
+import { speakWord } from "@/lib/speech";
 import { cn, shuffle } from "@/lib/utils";
 import type { PartOfSpeech, Topic, Vocabulary } from "@/types";
 
@@ -44,6 +45,18 @@ export function PosClassificationGame({
   const [finished, setFinished] = useState(false);
 
   const total = questions.length;
+
+  if (total === 0) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
+        <p>{dict.posGame.noQuestions}</p>
+        <Button nativeButton={false} render={<Link href="/exercises" />}>
+          {dict.posGame.changeType}
+        </Button>
+      </div>
+    );
+  }
+
   const question = questions[index];
   const isAnswered = selected !== null;
   const isCorrect = selected === question.vocab.partOfSpeech;
@@ -111,9 +124,20 @@ export function PosClassificationGame({
 
       <div className="flex flex-col items-center gap-2 text-center">
         <Badge variant="secondary">{getTopicName(topics, question.vocab.topicId)}</Badge>
-        <h2 className="font-heading text-2xl font-semibold tracking-tight">
-          {question.vocab.vocab}
-        </h2>
+        <div className="flex items-center gap-1">
+          <h2 className="font-heading text-2xl font-semibold tracking-tight">
+            {question.vocab.vocab}
+          </h2>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label={dict.vocabulary.playPronunciation}
+            onClick={() => speakWord(question.vocab.vocab)}
+          >
+            <Volume2 className="size-4" />
+          </Button>
+        </div>
         <p className="text-sm text-muted-foreground">{question.vocab.definition}</p>
         <p className="text-base font-medium">{dict.posGame.questionPrompt}</p>
       </div>

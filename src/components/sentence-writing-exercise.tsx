@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Lightbulb, PartyPopper, RotateCcw, X } from "lucide-react";
+import { Check, Lightbulb, PartyPopper, RotateCcw, Volume2, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { recordVocabAttemptAction } from "@/lib/actions/progress";
 import type { SentencePromptItem } from "@/lib/actions/practice-content";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
+import { speakWord } from "@/lib/speech";
 
 export function SentenceWritingExercise({
   prompts,
@@ -115,7 +116,18 @@ export function SentenceWritingExercise({
 
       <div className="flex flex-col items-center gap-1 text-center">
         <p className="text-sm text-muted-foreground">{dict.writingExercise.promptLabel}</p>
-        <h2 className="font-heading text-2xl font-semibold tracking-tight">{prompt.vocab}</h2>
+        <div className="flex items-center gap-1">
+          <h2 className="font-heading text-2xl font-semibold tracking-tight">{prompt.vocab}</h2>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label={dict.vocabulary.playPronunciation}
+            onClick={() => speakWord(prompt.vocab)}
+          >
+            <Volume2 className="size-4" />
+          </Button>
+        </div>
         <p className="text-sm text-muted-foreground">{prompt.meanVI}</p>
       </div>
 
@@ -152,6 +164,7 @@ export function SentenceWritingExercise({
         </Button>
         <Button
           className="bg-emerald-600 text-white hover:bg-emerald-600/90"
+          disabled={!text.trim()}
           onClick={() => handleSelfMark(true)}
         >
           <Check className="size-4" />

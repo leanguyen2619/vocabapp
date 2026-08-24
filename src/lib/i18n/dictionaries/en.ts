@@ -128,6 +128,10 @@ const en: Dictionary = {
     todayWordsDesc: "{count} words assigned based on your class's daily target",
     chooseExerciseType: "Choose an exercise type",
     levelProgress: "Progress by level",
+    reviewTitle: "Review tricky words",
+    reviewDesc: "{count} words you're still learning, not yet mastered.",
+    reviewButton: "Review now",
+    reviewEmpty: "Nothing to review right now — you're doing great!",
   },
   teacherDashboard: {
     greeting: "Hi {name}",
@@ -258,6 +262,7 @@ const en: Dictionary = {
     wordCounter: "Word {current}/{total}",
     flipCardAriaLabel: "Flip card",
     tapToReveal: "Tap to reveal the meaning",
+    noQuestions: "No words available for this practice session yet.",
   },
   matchingGame: {
     finishedTitle: "Matching game complete!",
@@ -266,6 +271,7 @@ const en: Dictionary = {
     progressText: "Matched {matched}/{total} · {attempts} attempts",
     title: "Match the English word to its Vietnamese meaning",
     subtitle: "Pick a word on the left, then its matching meaning on the right.",
+    noQuestions: "No words available for this game yet.",
   },
   posGame: {
     finishedTitle: "Exercise complete!",
@@ -279,6 +285,7 @@ const en: Dictionary = {
     resultPrefix: "“{word}” is",
     nextQuestion: "Next question",
     viewResults: "View results",
+    noQuestions: "No words available for this exercise yet.",
   },
   synonymAntonymGame: {
     finishedTitle: "Exercise complete!",
@@ -344,6 +351,7 @@ const en: Dictionary = {
     nextWord: "Next word",
     viewResults: "View results",
     checkButton: "Check",
+    noQuestions: "No words available for this exercise yet.",
   },
   listeningGame: {
     finishedTitle: "Listening exercise complete!",
@@ -360,6 +368,7 @@ const en: Dictionary = {
     nextWord: "Next word",
     viewResults: "View results",
     checkButton: "Check",
+    noQuestions: "No words available for this exercise yet.",
   },
   errors: {
     title: "Something went wrong",

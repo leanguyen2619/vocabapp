@@ -108,6 +108,7 @@ model Account {
   learningHistory       LearningHistory[]
   exerciseAttempts      ExerciseAttempt[]
   dailyAssignments      DailyAssignment[]
+  dailyWordPicks        DailyWordPick[]
   passwordResetRequests PasswordResetRequest[]
 }
 
@@ -210,6 +211,7 @@ model Vocabulary {
   learningHistory  LearningHistory[]
   exerciseAttempts ExerciseAttempt[]
   dailyAssignments DailyAssignment[]
+  dailyWordPicks   DailyWordPick[]
 }
 
 // ---------- Word_Relations ----------
@@ -317,8 +319,10 @@ model LearningHistory {
 }
 
 // ---------- Daily_Assignments ----------
-// Table exists for schema fidelity; the app computes "today's words" on the
-// fly instead of persisting rows here for now (see plan).
+// A teacher's own assignment ledger: rows persist across days until the word is mastered or the
+// teacher cancels it (see assignVocabularyToClassAction/cancelAssignmentAction). Not date-scoped
+// in practice — assignedDate records when it was assigned, not an expiry. Distinct from
+// DailyWordPick below, which pins what a student actually sees as "today's words".
 
 model DailyAssignment {
   assignmentId String           @id @default(cuid())
@@ -331,4 +335,23 @@ model DailyAssignment {
   vocab   Vocabulary @relation(fields: [vocabId], references: [id])
 
   @@unique([accountId, vocabId, assignedDate])
+}
+
+// ---------- Daily_Word_Picks (new) ----------
+// Pins the exact set of vocab words shown to a student for one calendar day, so "today's words"
+// (and its completion count) can't drift mid-day as words move between new/learning/mastered —
+// see computeDailyWords in src/lib/actions/vocabulary.ts. Kept separate from DailyAssignment so
+// an auto-filled pick never shows up as something a teacher explicitly assigned (and therefore
+// something they could "cancel").
+
+model DailyWordPick {
+  id         String   @id @default(cuid())
+  accountId  String
+  vocabId    String
+  pickedDate DateTime
+
+  account Account    @relation(fields: [accountId], references: [id_login], onDelete: Cascade)
+  vocab   Vocabulary @relation(fields: [vocabId], references: [id], onDelete: Restrict)
+
+  @@unique([accountId, vocabId, pickedDate])
 }

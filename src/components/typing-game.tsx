@@ -2,7 +2,7 @@
 
 import { useState, type SubmitEvent } from "react";
 import Link from "next/link";
-import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
+import { Check, PartyPopper, RotateCcw, Volume2, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { recordVocabAttemptAction } from "@/lib/actions/progress";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
+import { speakWord } from "@/lib/speech";
 import { cn } from "@/lib/utils";
 import type { Vocabulary } from "@/types";
 
@@ -22,8 +23,20 @@ export function TypingGame({ vocabList, dict }: { vocabList: Vocabulary[]; dict:
   const [finished, setFinished] = useState(false);
 
   const total = vocabList.length;
+
+  if (total === 0) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
+        <p>{dict.typingGame.noQuestions}</p>
+        <Button nativeButton={false} render={<Link href="/exercises" />}>
+          {dict.typingGame.changeType}
+        </Button>
+      </div>
+    );
+  }
+
   const current = vocabList[index];
-  const isCorrect = value.trim().toLowerCase() === current?.vocab.toLowerCase();
+  const isCorrect = value.trim().toLowerCase() === current.vocab.toLowerCase();
 
   const handleNext = () => {
     if (index + 1 >= total) {
@@ -124,6 +137,15 @@ export function TypingGame({ vocabList, dict }: { vocabList: Vocabulary[]; dict:
                 {formatMessage(dict.typingGame.wrongBadge, { answer: current.vocab })}
               </Badge>
             )}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label={dict.vocabulary.playPronunciation}
+              onClick={() => speakWord(current.vocab)}
+            >
+              <Volume2 className="size-3.5" />
+            </Button>
           </div>
         )}
 

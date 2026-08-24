@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Circle, Library } from "lucide-react";
+import { ArrowRight, CheckCircle2, Circle, Library, Repeat } from "lucide-react";
 
 import { LevelCard } from "@/components/level-card";
 import { Badge } from "@/components/ui/badge";
@@ -28,12 +28,14 @@ export function StudentDashboardContent({
   dailyAssignments,
   levels,
   topics,
+  reviewCount,
   dict,
 }: {
   account: Account;
   dailyAssignments: DailyAssignmentWithVocab[];
   levels: LevelWithProgress[];
   topics: Topic[];
+  reviewCount: number;
   dict: Dictionary;
 }) {
   const completedCount = dailyAssignments.filter((a) => a.status === "done").length;
@@ -64,6 +66,28 @@ export function StudentDashboardContent({
           <LevelCard key={level.id} level={level} dict={dict} />
         ))}
       </div>
+
+      {reviewCount > 0 && (
+        <Card className="border-amber-300 bg-amber-50/50">
+          <CardContent className="flex items-center justify-between gap-4 py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                <Repeat className="size-4" />
+              </div>
+              <div>
+                <p className="font-medium">{dict.studentDashboard.reviewTitle}</p>
+                <p className="text-sm text-muted-foreground">
+                  {formatMessage(dict.studentDashboard.reviewDesc, { count: reviewCount })}
+                </p>
+              </div>
+            </div>
+            <Button size="sm" nativeButton={false} render={<Link href="/practice/review" />}>
+              {dict.studentDashboard.reviewButton}
+              <ArrowRight className="size-4" />
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

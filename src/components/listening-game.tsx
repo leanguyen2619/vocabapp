@@ -24,7 +24,7 @@ export function ListeningGame({ vocabList, dict }: { vocabList: Vocabulary[]; di
   const [supported, setSupported] = useState(true);
 
   const total = vocabList.length;
-  const current = vocabList[index];
+  const current = vocabList[index] as Vocabulary | undefined;
   const isCorrect = value.trim().toLowerCase() === current?.vocab.toLowerCase();
 
   useEffect(() => {
@@ -39,6 +39,17 @@ export function ListeningGame({ vocabList, dict }: { vocabList: Vocabulary[]; di
     if (!finished && current) speakWord(current.vocab);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, finished]);
+
+  if (total === 0 || !current) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
+        <p>{dict.listeningGame.noQuestions}</p>
+        <Button nativeButton={false} render={<Link href="/exercises" />}>
+          {dict.listeningGame.changeType}
+        </Button>
+      </div>
+    );
+  }
 
   const handleNext = () => {
     if (index + 1 >= total) {
