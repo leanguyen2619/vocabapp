@@ -3,7 +3,7 @@
 import { useMemo, useState, type SubmitEvent } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { AlertCircle, ArrowLeft, BookOpen, Check, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { AlertCircle, ArrowLeft, BookOpen, Eye, EyeOff, Pencil, Plus, Search, Trash2 } from "lucide-react";
 
 import { PaginationControls } from "@/components/pagination-controls";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -44,7 +44,7 @@ import type { PracticeTypeCode, QuestionStatus, QuestionWithAnswers, Vocabulary 
 const statusVariant: Record<QuestionStatus, "default" | "outline" | "destructive"> = {
   approved: "default",
   pending: "outline",
-  rejected: "destructive",
+  rejected: "outline",
 };
 
 const ANSWER_TYPES: PracticeTypeCode[] = ["multiple_choice", "synonym_antonym", "fill_blank"];
@@ -73,7 +73,7 @@ export function AdminQuestionBankClient({
   );
   const [questions, setQuestions] = useState<QuestionWithAnswers[]>(initialQuestions);
   const [loadingType, setLoadingType] = useState(false);
-  const [filter, setFilter] = useState<"all" | QuestionStatus>("all");
+  const [filter, setFilter] = useState<"all" | "hidden">("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -92,7 +92,8 @@ export function AdminQuestionBankClient({
   const PAGE_SIZE = 10;
   const query = search.trim().toLowerCase();
   const filtered = useMemo(() => {
-    const byStatus = filter === "all" ? questions : questions.filter((q) => q.status === filter);
+    const byStatus =
+      filter === "all" ? questions : questions.filter((q) => q.status !== "approved");
     if (!query) return byStatus;
     return byStatus.filter(
       (q) =>
@@ -201,11 +202,7 @@ export function AdminQuestionBankClient({
     await setQuestionStatusAction(q.id, next);
     setQuestions(await listQuestionsAction(activeType));
     toast.success(
-      next === "approved"
-        ? dict.admin.questionBank.approveSuccess
-        : next === "rejected"
-          ? dict.admin.questionBank.rejectSuccess
-          : dict.admin.questionBank.pendingSuccess
+      next === "approved" ? dict.admin.questionBank.showSuccess : dict.admin.questionBank.hideSuccess
     );
   };
 
@@ -265,9 +262,7 @@ export function AdminQuestionBankClient({
         >
           <TabsList>
             <TabsTrigger value="all">{dict.admin.questionBank.all}</TabsTrigger>
-            <TabsTrigger value="pending">{dict.admin.questionBank.pending}</TabsTrigger>
-            <TabsTrigger value="approved">{dict.admin.questionBank.approved}</TabsTrigger>
-            <TabsTrigger value="rejected">{dict.admin.questionBank.rejected}</TabsTrigger>
+            <TabsTrigger value="hidden">{dict.admin.questionBank.hiddenFilter}</TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -329,26 +324,24 @@ export function AdminQuestionBankClient({
                       <Pencil className="size-3.5" />
                       {dict.admin.questionBank.edit}
                     </Button>
-                    {q.status !== "approved" && (
+                    {q.status === "approved" ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void handleSetStatus(q, "rejected")}
+                      >
+                        <EyeOff className="size-3.5" />
+                        {dict.admin.questionBank.hide}
+                      </Button>
+                    ) : (
                       <Button
                         variant="outline"
                         size="sm"
                         className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
                         onClick={() => void handleSetStatus(q, "approved")}
                       >
-                        <Check className="size-3.5" />
-                        {dict.admin.questionBank.approve}
-                      </Button>
-                    )}
-                    {q.status !== "rejected" && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-red-300 text-red-700 hover:bg-red-50"
-                        onClick={() => void handleSetStatus(q, "rejected")}
-                      >
-                        <X className="size-3.5" />
-                        {dict.admin.questionBank.reject}
+                        <Eye className="size-3.5" />
+                        {dict.admin.questionBank.show}
                       </Button>
                     )}
                     <Button

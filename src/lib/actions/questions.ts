@@ -64,7 +64,10 @@ export async function createQuestionAction(
       pracTypeId: pracTypeIdValue,
       questionText: input.questionText,
       explanation: input.explanation,
-      status: "pending",
+      // Admin is the sole author here — no separate reviewer exists, so content goes live
+      // immediately rather than sitting in an approval queue. "rejected" is repurposed by the UI
+      // as a simple hide toggle admin can flip anytime.
+      status: "approved",
       answers: {
         create: input.answers.map((a, i) => ({
           ansId: `a${i}`,
