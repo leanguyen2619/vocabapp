@@ -6,7 +6,7 @@ import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
-import { recordVocabAttemptAction } from "@/lib/actions/progress";
+import { submitFillBlankAnswerAction } from "@/lib/actions/practice-content";
 import type { FillBlankItem } from "@/lib/actions/practice-content";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
@@ -18,6 +18,7 @@ export function FillBlankGame({ questions, dict }: { questions: FillBlankItem[];
   );
   const [index, setIndex] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [result, setResult] = useState<{ isCorrect: boolean; correctOptionId: string } | null>(null);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
 
@@ -36,18 +37,22 @@ export function FillBlankGame({ questions, dict }: { questions: FillBlankItem[];
 
   const question = prepared[index];
   const isAnswered = selectedId !== null;
-  const isCorrect = selectedId === question.correctOptionId;
+  const isCorrect = result?.isCorrect ?? false;
   const [before, after] = question.sentence.split("___");
   const selectedText = question.options.find((o) => o.id === selectedId)?.text;
 
-  const handleSelect = (optionId: string) => {
+  const handleSelect = async (optionId: string) => {
     if (isAnswered) return;
     setSelectedId(optionId);
-    const correct = optionId === question.correctOptionId;
-    if (correct) {
+    const outcome = await submitFillBlankAnswerAction(question.id, optionId);
+    if ("error" in outcome) {
+      setSelectedId(null);
+      return;
+    }
+    setResult(outcome);
+    if (outcome.isCorrect) {
       setScore((s) => s + 1);
     }
-    void recordVocabAttemptAction(question.vocabId, correct);
   };
 
   const handleNext = () => {
@@ -57,11 +62,13 @@ export function FillBlankGame({ questions, dict }: { questions: FillBlankItem[];
     }
     setIndex((i) => i + 1);
     setSelectedId(null);
+    setResult(null);
   };
 
   const handleRestart = () => {
     setIndex(0);
     setSelectedId(null);
+    setResult(null);
     setScore(0);
     setFinished(false);
   };
@@ -107,8 +114,8 @@ export function FillBlankGame({ questions, dict }: { questions: FillBlankItem[];
           <span
             className={cn(
               "mx-1 inline-block min-w-16 rounded-md border-b-2 border-dashed border-primary/60 px-1 text-center font-semibold",
-              isAnswered && isCorrect && "border-emerald-500 text-emerald-700",
-              isAnswered && !isCorrect && "border-red-400 text-red-700"
+              result !== null && isCorrect && "border-emerald-500 text-emerald-700",
+              result !== null && !isCorrect && "border-red-400 text-red-700"
             )}
           >
             {selectedText ?? "___"}
@@ -122,28 +129,28 @@ export function FillBlankGame({ questions, dict }: { questions: FillBlankItem[];
 
       <div className="grid grid-cols-2 gap-3">
         {question.options.map((option) => {
-          const isThisCorrect = option.id === question.correctOptionId;
+          const isThisCorrect = option.id === result?.correctOptionId;
           const isSelected = option.id === selectedId;
 
           return (
             <button
               key={option.id}
               type="button"
-              onClick={() => handleSelect(option.id)}
+              onClick={() => void handleSelect(option.id)}
               disabled={isAnswered}
               className={cn(
                 "flex items-center justify-between rounded-2xl border-2 border-border bg-card px-4 py-3 text-left text-base font-medium transition-colors disabled:cursor-default",
                 !isAnswered && "hover:border-primary/50",
-                isAnswered && isThisCorrect && "border-emerald-500 bg-emerald-50 text-emerald-700",
-                isAnswered &&
+                result !== null && isThisCorrect && "border-emerald-500 bg-emerald-50 text-emerald-700",
+                result !== null &&
                   isSelected &&
                   !isThisCorrect &&
                   "border-red-400 bg-red-50 text-red-700"
               )}
             >
               {option.text}
-              {isAnswered && isThisCorrect && <Check className="size-5 shrink-0 text-emerald-600" />}
-              {isAnswered && isSelected && !isThisCorrect && (
+              {result !== null && isThisCorrect && <Check className="size-5 shrink-0 text-emerald-600" />}
+              {result !== null && isSelected && !isThisCorrect && (
                 <X className="size-5 shrink-0 text-red-500" />
               )}
             </button>
@@ -151,7 +158,7 @@ export function FillBlankGame({ questions, dict }: { questions: FillBlankItem[];
         })}
       </div>
 
-      {isAnswered && (
+      {result !== null && (
         <div className="flex justify-center">
           <Button onClick={handleNext}>
             {index + 1 >= total ? dict.fillBlankGame.viewResults : dict.fillBlankGame.nextQuestion}

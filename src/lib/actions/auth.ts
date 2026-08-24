@@ -49,15 +49,28 @@ export async function registerAction(input: {
   const existing = await prisma.account.findUnique({ where: { email } });
   if (existing) return { error: "Email này đã được sử dụng." };
 
-  const id_login = await generateLoginId("student");
   const passwordHash = await bcrypt.hash(input.password, 10);
 
-  const account = await prisma.account.create({
-    data: { id_login, fullName, email, role: "student", passwordHash },
-  });
+  // generateLoginId picks the next sequential ID from a COUNT query, so two concurrent
+  // registrations (double-submit, two tabs) can compute the same id_login. Retry with a fresh ID
+  // on collision rather than surfacing a raw unique-constraint 500.
+  const MAX_ATTEMPTS = 5;
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const id_login = await generateLoginId("student");
+    const account = await prisma.account
+      .create({ data: { id_login, fullName, email, role: "student", passwordHash } })
+      .catch((e: unknown) => {
+        const code = (e as { code?: string } | null)?.code;
+        if (code === "P2002") return null;
+        throw e;
+      });
+    if (account) {
+      await createSession(account.id_login);
+      return { id_login: account.id_login };
+    }
+  }
 
-  await createSession(account.id_login);
-  return { id_login: account.id_login };
+  return { error: "Không thể tạo tài khoản, vui lòng thử lại." };
 }
 
 export async function logoutAction(): Promise<void> {

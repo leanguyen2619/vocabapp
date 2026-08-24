@@ -7,7 +7,7 @@ import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
-import { recordVocabAttemptAction } from "@/lib/actions/progress";
+import { submitQuizAnswerAction } from "@/lib/actions/vocabulary";
 import type { QuizQuestionItem } from "@/lib/actions/vocabulary";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
@@ -26,22 +26,27 @@ export function QuizSession({
 }) {
   const [index, setIndex] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [result, setResult] = useState<{ isCorrect: boolean; correctOptionId: string } | null>(null);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
 
   const total = questions.length;
   const question = questions[index];
   const isAnswered = selectedId !== null;
-  const isCorrect = selectedId === question.correctOptionId;
+  const isCorrect = result?.isCorrect ?? false;
 
-  const handleSelect = (optionId: string) => {
+  const handleSelect = async (optionId: string) => {
     if (isAnswered) return;
     setSelectedId(optionId);
-    const correct = optionId === question.correctOptionId;
-    if (correct) {
+    const outcome = await submitQuizAnswerAction(question.vocabId, optionId);
+    if ("error" in outcome) {
+      setSelectedId(null);
+      return;
+    }
+    setResult(outcome);
+    if (outcome.isCorrect) {
       setScore((s) => s + 1);
     }
-    void recordVocabAttemptAction(question.vocabId, correct);
   };
 
   const handleNext = () => {
@@ -51,11 +56,13 @@ export function QuizSession({
     }
     setIndex((i) => i + 1);
     setSelectedId(null);
+    setResult(null);
   };
 
   const handleRestart = () => {
     setIndex(0);
     setSelectedId(null);
+    setResult(null);
     setScore(0);
     setFinished(false);
   };
@@ -104,28 +111,28 @@ export function QuizSession({
 
       <div className="grid gap-3 sm:grid-cols-2">
         {question.options.map((option) => {
-          const isThisCorrect = option.id === question.correctOptionId;
+          const isThisCorrect = option.id === result?.correctOptionId;
           const isSelected = option.id === selectedId;
 
           return (
             <button
               key={option.id}
               type="button"
-              onClick={() => handleSelect(option.id)}
+              onClick={() => void handleSelect(option.id)}
               disabled={isAnswered}
               className={cn(
                 "flex items-center justify-between rounded-2xl border-2 border-border bg-card px-4 py-3 text-left text-base font-medium transition-colors disabled:cursor-default",
                 !isAnswered && "hover:border-primary/50",
-                isAnswered && isThisCorrect && "border-emerald-500 bg-emerald-50 text-emerald-700",
-                isAnswered &&
+                result !== null && isThisCorrect && "border-emerald-500 bg-emerald-50 text-emerald-700",
+                result !== null &&
                   isSelected &&
                   !isThisCorrect &&
                   "border-red-400 bg-red-50 text-red-700"
               )}
             >
               {option.text}
-              {isAnswered && isThisCorrect && <Check className="size-5 shrink-0 text-emerald-600" />}
-              {isAnswered && isSelected && !isThisCorrect && (
+              {result !== null && isThisCorrect && <Check className="size-5 shrink-0 text-emerald-600" />}
+              {result !== null && isSelected && !isThisCorrect && (
                 <X className="size-5 shrink-0 text-red-500" />
               )}
             </button>
@@ -133,7 +140,7 @@ export function QuizSession({
         })}
       </div>
 
-      {isAnswered && (
+      {result !== null && (
         <div className="flex flex-col items-center gap-4 text-center">
           <p className="text-sm text-muted-foreground">
             {isCorrect ? dict.quizSession.feedbackCorrect : dict.quizSession.feedbackWrong}

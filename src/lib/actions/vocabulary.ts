@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { getLocale } from "@/lib/i18n/locale";
+import { computeUnlockedLevelIds } from "@/lib/level-unlock";
+import { recordForVocab } from "@/lib/progress-core";
 import { getCurrentAccount, type SessionAccount } from "@/lib/session";
 import { shuffle } from "@/lib/utils";
 import type {
@@ -60,7 +62,7 @@ export async function getMyVocabularyWithProgressAction(): Promise<VocabularyWit
 async function computeDailyWords(
   account: SessionAccount
 ): Promise<{ vocab: Vocabulary; status: LearningStatus }[]> {
-  const [cls, vocabulary, history, assignments, levels, accountLevels] = await Promise.all([
+  const [cls, vocabulary, history, assignments, unlockedLevelIds] = await Promise.all([
     account.classId ? prisma.schoolClass.findUnique({ where: { id: account.classId } }) : null,
     prisma.vocabulary.findMany({ orderBy: { id: "asc" } }),
     prisma.learningHistory.findMany({ where: { accountId: account.id_login } }),
@@ -69,18 +71,8 @@ async function computeDailyWords(
       select: { vocabId: true },
       distinct: ["vocabId"],
     }),
-    prisma.level.findMany({ orderBy: { id: "asc" } }),
-    prisma.accountLevel.findMany({ where: { accountId: account.id_login } }),
+    computeUnlockedLevelIds(account.id_login),
   ]);
-
-  // Same sequential-unlock rule as getMyStudentLevelIndexAction: level 1 is open by default,
-  // each further level opens once the previous one is in_progress/completed.
-  let unlockedIndex = 1;
-  levels.forEach((level, index) => {
-    const status = accountLevels.find((al) => al.levelId === level.id)?.status ?? "locked";
-    if (status === "completed" || status === "in_progress") unlockedIndex = index + 1;
-  });
-  const unlockedLevelIds = new Set(levels.slice(0, unlockedIndex).map((l) => l.id));
 
   const target = cls?.dailyWordTarget ?? 5;
   const priority: Record<LearningStatus, number> = { new: 0, learning: 1, mastered: 2 };
@@ -142,7 +134,6 @@ export interface QuizQuestionItem {
   topicId: number;
   questionText: string;
   options: { id: string; text: string }[];
-  correctOptionId: string;
   vocabWord: string;
   definition: string;
   explanation?: string;
@@ -154,6 +145,9 @@ export interface QuizQuestionItem {
  * its own question client-side, so nothing an admin curated there ever reached students. Falls
  * back to the old auto-generated "which word means {mean}?" format (options = the rest of today's
  * words) for any word without an approved question yet.
+ *
+ * The correct option id is intentionally NOT included here — see submitQuizAnswerAction, which
+ * grades server-side instead of trusting the client to self-report whether it picked right.
  */
 export async function getMyQuizQuestionsAction(): Promise<QuizQuestionItem[]> {
   const account = await getCurrentAccount();
@@ -185,7 +179,6 @@ export async function getMyQuizQuestionsAction(): Promise<QuizQuestionItem[]> {
         topicId: vocab.topicId,
         questionText: real.questionText,
         options: shuffle(real.answers.map((a) => ({ id: a.id, text: a.ansText }))),
-        correctOptionId: real.answers.find((a) => a.isCorrect)!.id,
         vocabWord: vocab.vocab,
         definition: vocab.definition,
         explanation: real.explanation ?? undefined,
@@ -196,11 +189,53 @@ export async function getMyQuizQuestionsAction(): Promise<QuizQuestionItem[]> {
       topicId: vocab.topicId,
       questionText: formatMessage(dict.quizSession.questionPrompt, { mean: vocab.meanVI }),
       options: shuffle(dailyWords.map((v) => ({ id: v.id, text: v.vocab }))),
-      correctOptionId: vocab.id,
       vocabWord: vocab.vocab,
       definition: vocab.definition,
     };
   });
+}
+
+/**
+ * Grades a quiz answer server-side and records the result. Re-derives the correct answer the same
+ * way getMyQuizQuestionsAction built it (a real approved Question's Answer, or — for a word
+ * without one — the vocab's own id) instead of trusting a client-supplied "isCorrect".
+ *
+ * Also re-checks that vocabId is something the student may currently practice (an unlocked level,
+ * or explicitly teacher-assigned) so a direct call with a locked-level vocabId — bypassing the
+ * daily-word list entirely — can't be used to fast-track that level's completion.
+ */
+export async function submitQuizAnswerAction(
+  vocabId: string,
+  selectedOptionId: string
+): Promise<{ isCorrect: boolean; correctOptionId: string; status: LearningStatus } | { error: string }> {
+  const account = await getCurrentAccount();
+  if (!account) return { error: "Bạn cần đăng nhập." };
+
+  const vocab = await prisma.vocabulary.findUnique({ where: { id: vocabId } });
+  if (!vocab) return { error: "Không tìm thấy từ vựng này." };
+
+  const [unlockedLevelIds, assignment] = await Promise.all([
+    computeUnlockedLevelIds(account.id_login),
+    prisma.dailyAssignment.findFirst({ where: { accountId: account.id_login, vocabId } }),
+  ]);
+  if (!unlockedLevelIds.has(vocab.levelId) && !assignment) {
+    return { error: "Từ vựng này chưa được mở khóa." };
+  }
+
+  const pracType = await prisma.practiceType.findUnique({ where: { type: "multiple_choice" } });
+  const real = pracType
+    ? await prisma.question.findFirst({
+        where: { vocabId, pracTypeId: pracType.id, status: "approved" },
+        include: { answers: true },
+      })
+    : null;
+
+  const correctOptionId =
+    real && real.answers.length >= 2 ? real.answers.find((a) => a.isCorrect)!.id : vocab.id;
+  const isCorrect = selectedOptionId === correctOptionId;
+
+  const status = await recordForVocab(account.id_login, vocabId, vocab.levelId, isCorrect);
+  return { isCorrect, correctOptionId, status };
 }
 
 type VocabInput = {

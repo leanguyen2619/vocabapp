@@ -7,7 +7,7 @@ import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
-import { recordVocabAttemptAction } from "@/lib/actions/progress";
+import { submitSynonymAntonymAnswerAction } from "@/lib/actions/practice-content";
 import type { SynonymAntonymItem } from "@/lib/actions/practice-content";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
@@ -25,6 +25,7 @@ export function SynonymAntonymGame({
   );
   const [index, setIndex] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [result, setResult] = useState<{ isCorrect: boolean; correctOptionId: string } | null>(null);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
 
@@ -43,17 +44,21 @@ export function SynonymAntonymGame({
 
   const question = prepared[index];
   const isAnswered = selectedId !== null;
-  const isCorrect = selectedId === question.correctOptionId;
-  const correctOption = question.options.find((o) => o.id === question.correctOptionId)!;
+  const isCorrect = result?.isCorrect ?? false;
+  const correctOption = result ? question.options.find((o) => o.id === result.correctOptionId) : undefined;
 
-  const handleSelect = (optionId: string) => {
+  const handleSelect = async (optionId: string) => {
     if (isAnswered) return;
     setSelectedId(optionId);
-    const correct = optionId === question.correctOptionId;
-    if (correct) {
+    const outcome = await submitSynonymAntonymAnswerAction(question.id, optionId);
+    if ("error" in outcome) {
+      setSelectedId(null);
+      return;
+    }
+    setResult(outcome);
+    if (outcome.isCorrect) {
       setScore((s) => s + 1);
     }
-    void recordVocabAttemptAction(question.vocabId, correct);
   };
 
   const handleNext = () => {
@@ -63,11 +68,13 @@ export function SynonymAntonymGame({
     }
     setIndex((i) => i + 1);
     setSelectedId(null);
+    setResult(null);
   };
 
   const handleRestart = () => {
     setIndex(0);
     setSelectedId(null);
+    setResult(null);
     setScore(0);
     setFinished(false);
   };
@@ -118,28 +125,28 @@ export function SynonymAntonymGame({
 
       <div className="grid gap-3 sm:grid-cols-2">
         {question.options.map((option) => {
-          const isThisCorrect = option.id === question.correctOptionId;
+          const isThisCorrect = option.id === result?.correctOptionId;
           const isSelected = option.id === selectedId;
 
           return (
             <button
               key={option.id}
               type="button"
-              onClick={() => handleSelect(option.id)}
+              onClick={() => void handleSelect(option.id)}
               disabled={isAnswered}
               className={cn(
                 "flex items-center justify-between rounded-2xl border-2 border-border bg-card px-4 py-3 text-left text-base font-medium transition-colors disabled:cursor-default",
                 !isAnswered && "hover:border-primary/50",
-                isAnswered && isThisCorrect && "border-emerald-500 bg-emerald-50 text-emerald-700",
-                isAnswered &&
+                result !== null && isThisCorrect && "border-emerald-500 bg-emerald-50 text-emerald-700",
+                result !== null &&
                   isSelected &&
                   !isThisCorrect &&
                   "border-red-400 bg-red-50 text-red-700"
               )}
             >
               {option.text}
-              {isAnswered && isThisCorrect && <Check className="size-5 shrink-0 text-emerald-600" />}
-              {isAnswered && isSelected && !isThisCorrect && (
+              {result !== null && isThisCorrect && <Check className="size-5 shrink-0 text-emerald-600" />}
+              {result !== null && isSelected && !isThisCorrect && (
                 <X className="size-5 shrink-0 text-red-500" />
               )}
             </button>
@@ -147,7 +154,7 @@ export function SynonymAntonymGame({
         })}
       </div>
 
-      {isAnswered && (
+      {result !== null && correctOption && (
         <div className="flex flex-col items-center gap-4 text-center">
           <p className="text-sm text-muted-foreground">
             {isCorrect
