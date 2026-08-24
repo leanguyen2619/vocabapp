@@ -218,8 +218,11 @@ export function AdminVocabularyClient({
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json<ImportRow>(sheet);
 
+      const existingWords = new Set(words.map((w) => w.vocab.toLowerCase()));
+      const seenInFile = new Set<string>();
       const validRows: Omit<Vocabulary, "id">[] = [];
       let skipped = 0;
+      let duplicates = 0;
 
       for (const row of rows) {
         const vocab = row.vocab?.toString().trim();
@@ -238,6 +241,13 @@ export function AdminVocabularyClient({
           continue;
         }
 
+        const key = vocab.toLowerCase();
+        if (existingWords.has(key) || seenInFile.has(key)) {
+          duplicates += 1;
+          continue;
+        }
+        seenInFile.add(key);
+
         validRows.push({
           vocab,
           definition,
@@ -253,9 +263,11 @@ export function AdminVocabularyClient({
 
       if (imported > 0)
         toast.success(formatMessage(dict.admin.vocabulary.importSuccess, { count: imported }));
+      if (duplicates > 0)
+        toast.error(formatMessage(dict.admin.vocabulary.importDuplicates, { count: duplicates }));
       if (skipped > 0)
         toast.error(formatMessage(dict.admin.vocabulary.importSkipped, { count: skipped }));
-      if (imported === 0 && skipped === 0) toast.error(dict.admin.vocabulary.importEmpty);
+      if (imported === 0 && skipped === 0 && duplicates === 0) toast.error(dict.admin.vocabulary.importEmpty);
     } catch {
       toast.error(dict.admin.vocabulary.importError);
     }

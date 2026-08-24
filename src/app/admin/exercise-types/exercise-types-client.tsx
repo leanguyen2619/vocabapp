@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,6 +28,10 @@ export function AdminExerciseTypesClient({
   dict: Dictionary;
 }) {
   const [types, setTypes] = useState(initialTypes);
+  // Text inputs re-render on every keystroke, so `type.name`/`type.description` in a blur
+  // handler's closure is already the just-typed value by the time blur fires — not what was
+  // there before this edit. Snapshotting on focus captures the true pre-edit value to revert to.
+  const beforeEditRef = useRef<Record<string, string>>({});
 
   const patchLocal = (code: PracticeTypeCode, patch: Partial<ExerciseTypeSummary>) => {
     setTypes((current) => current.map((t) => (t.code === code ? { ...t, ...patch } : t)));
@@ -54,8 +58,15 @@ export function AdminExerciseTypesClient({
             <div className="flex items-center justify-between gap-3">
               <Input
                 value={type.name}
+                onFocus={() => {
+                  beforeEditRef.current[`${type.code}:name`] ??= type.name;
+                }}
                 onChange={(e) => patchLocal(type.code, { name: e.target.value })}
-                onBlur={(e) => void commit(type.code, { name: e.target.value }, { name: type.name })}
+                onBlur={(e) => {
+                  const previous = beforeEditRef.current[`${type.code}:name`] ?? type.name;
+                  delete beforeEditRef.current[`${type.code}:name`];
+                  void commit(type.code, { name: e.target.value }, { name: previous });
+                }}
                 className="max-w-64 font-medium"
               />
               <Switch
@@ -78,10 +89,15 @@ export function AdminExerciseTypesClient({
 
             <Textarea
               value={type.description}
+              onFocus={() => {
+                beforeEditRef.current[`${type.code}:description`] ??= type.description;
+              }}
               onChange={(e) => patchLocal(type.code, { description: e.target.value })}
-              onBlur={(e) =>
-                void commit(type.code, { description: e.target.value }, { description: type.description })
-              }
+              onBlur={(e) => {
+                const previous = beforeEditRef.current[`${type.code}:description`] ?? type.description;
+                delete beforeEditRef.current[`${type.code}:description`];
+                void commit(type.code, { description: e.target.value }, { description: previous });
+              }}
               rows={2}
             />
 

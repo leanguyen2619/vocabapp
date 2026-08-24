@@ -482,6 +482,7 @@ const vi = {
       deleteSuccess: 'Đã xóa từ "{word}".',
       importSuccess: "Đã import {count} từ vựng.",
       importSkipped: "Bỏ qua {count} dòng do thiếu hoặc sai dữ liệu.",
+      importDuplicates: "Bỏ qua {count} từ vì đã có sẵn trong kho hoặc trùng trong file.",
       importEmpty: "File không có dữ liệu.",
       importError: "Không đọc được file. Vui lòng kiểm tra định dạng .xlsx.",
       searchPlaceholder: "Tìm từ vựng hoặc nghĩa...",

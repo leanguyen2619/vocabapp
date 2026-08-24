@@ -358,6 +358,9 @@ export async function bulkCreateVocabularyAction(rows: VocabInput[]): Promise<nu
   if (!admin) return 0;
   if (rows.length === 0) return 0;
 
-  const result = await prisma.vocabulary.createMany({ data: rows }).catch(() => ({ count: 0 }));
+  // Deliberately not caught: a genuine DB error here must propagate as a rejected promise so
+  // the client's try/catch shows "import failed" instead of the misleading "file is empty"
+  // message it would otherwise show for a 0-count result.
+  const result = await prisma.vocabulary.createMany({ data: rows });
   return result.count;
 }

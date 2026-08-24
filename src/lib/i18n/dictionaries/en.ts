@@ -484,6 +484,7 @@ const en: Dictionary = {
       deleteSuccess: 'Deleted "{word}".',
       importSuccess: "Imported {count} words.",
       importSkipped: "Skipped {count} rows due to missing or invalid data.",
+      importDuplicates: "Skipped {count} words already in the bank or repeated in the file.",
       importEmpty: "The file has no data.",
       importError: "Could not read the file. Please check the .xlsx format.",
       searchPlaceholder: "Search word or meaning...",

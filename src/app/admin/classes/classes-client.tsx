@@ -38,6 +38,10 @@ export function AdminClassesClient({
   dict: Dictionary;
 }) {
   const [classes, setClasses] = useState(initialClasses);
+  // Local, uncommitted text per class's target input — lets an admin freely clear/retype the
+  // field (a fully-controlled value bound straight to dailyWordTarget snaps back on every
+  // invalid intermediate keystroke, e.g. while backspacing). Only sent to the server on blur.
+  const [targetInputs, setTargetInputs] = useState<Record<string, string>>({});
   const [dialogOpen, setDialogOpen] = useState(false);
   const [className, setClassName] = useState("");
   const [dailyWordTarget, setDailyWordTarget] = useState("5");
@@ -71,20 +75,32 @@ export function AdminClassesClient({
     toast.success(formatMessage(dict.admin.classes.createSuccess, { name: createdName }));
   };
 
-  const handleTargetChange = async (id: string, value: string) => {
-    const target = Number(value);
-    if (!Number.isInteger(target) || target <= 0) return;
+  const handleTargetInputChange = (id: string, value: string) => {
+    setTargetInputs((prev) => ({ ...prev, [id]: value }));
+  };
 
-    const previous = classes.find((c) => c.id === id)?.dailyWordTarget;
-    setClasses((prev) => prev.map((c) => (c.id === id ? { ...c, dailyWordTarget: target } : c)));
+  const handleTargetBlur = async (cls: ClassWithStudentCount) => {
+    const raw = targetInputs[cls.id];
+    if (raw === undefined) return;
+    setTargetInputs((prev) => {
+      const next = { ...prev };
+      delete next[cls.id];
+      return next;
+    });
 
-    const ok = await updateClassTargetAction(id, target);
-    if (!ok) {
-      setClasses((prev) =>
-        prev.map((c) => (c.id === id && previous !== undefined ? { ...c, dailyWordTarget: previous } : c))
-      );
-      toast.error(dict.admin.classes.targetSaveError);
+    const target = Number(raw);
+    if (!Number.isInteger(target) || target <= 0) {
+      toast.error(dict.admin.classes.errorTargetInvalid);
+      return;
     }
+    if (target === cls.dailyWordTarget) return;
+
+    const ok = await updateClassTargetAction(cls.id, target);
+    if (!ok) {
+      toast.error(dict.admin.classes.targetSaveError);
+      return;
+    }
+    setClasses((prev) => prev.map((c) => (c.id === cls.id ? { ...c, dailyWordTarget: target } : c)));
   };
 
   const handleDelete = async () => {
@@ -208,8 +224,9 @@ export function AdminClassesClient({
                       id={`target-${cls.id}`}
                       type="number"
                       min={1}
-                      value={cls.dailyWordTarget}
-                      onChange={(e) => void handleTargetChange(cls.id, e.target.value)}
+                      value={targetInputs[cls.id] ?? cls.dailyWordTarget}
+                      onChange={(e) => handleTargetInputChange(cls.id, e.target.value)}
+                      onBlur={() => void handleTargetBlur(cls)}
                       className="w-20"
                     />
                     <Button
