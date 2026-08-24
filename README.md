@@ -1,36 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VocabApp
 
-## Getting Started
+A Vietnamese vocabulary-learning app for schools — students practice via quizzes and games,
+teachers assign vocabulary and track class progress, admins manage accounts, classes, and the
+question bank. Built with Next.js (App Router), Prisma, and Postgres.
 
-First, run the development server:
+## Setup
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. Install dependencies:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+   ```bash
+   npm install
+   ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+2. Create a Postgres database (e.g. a free [Neon](https://neon.tech) project) and copy
+   `.env.example` to `.env`, filling in `DATABASE_URL` with its connection string.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. Apply the database schema and seed sample data:
 
-## Learn More
+   ```bash
+   npx prisma migrate deploy
+   npx prisma db seed
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+4. Start the dev server:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   ```bash
+   npm run dev
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   Open [http://localhost:3000](http://localhost:3000).
 
-## Deploy on Vercel
+## Development notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `npx prisma migrate dev --name <name>` to create a new migration after editing
+  `prisma/schema.prisma`, followed by `npx prisma generate`. Restart the dev server afterward —
+  it holds a Prisma Client instance in memory that won't pick up schema changes on its own.
+- `npm run lint` / `npx tsc --noEmit` / `npm run build` before committing.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deploying
+
+Set `DATABASE_URL` as an environment variable on the hosting platform, run
+`npx prisma migrate deploy` against the production database, then build and start the app
+(`npm run build && npm run start`, or the platform's equivalent).
