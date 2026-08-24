@@ -12,6 +12,28 @@ async function requireTeacher() {
   return account;
 }
 
+/**
+ * Picks the student's current level: the most advanced (highest-ordinal) level still
+ * "in_progress", falling back to the most advanced "completed" one. `accountLevels` comes from a
+ * query with no `orderBy`, so row order is not guaranteed — sorting explicitly by `levels`'
+ * ordinal (rather than relying on whichever row Postgres returns first) keeps this deterministic
+ * even if a student ever has more than one level marked in_progress (e.g. after a manual admin
+ * override).
+ */
+function pickActiveLevel<T extends { levelId: string; status: string }>(
+  levels: { id: string }[],
+  accountLevels: T[]
+): T | undefined {
+  const ordinal = new Map(levels.map((l, i) => [l.id, i]));
+  const sorted = [...accountLevels].sort(
+    (a, b) => (ordinal.get(a.levelId) ?? 0) - (ordinal.get(b.levelId) ?? 0)
+  );
+  return (
+    [...sorted].reverse().find((al) => al.status === "in_progress") ??
+    [...sorted].reverse().find((al) => al.status === "completed")
+  );
+}
+
 export interface ClassStudentSummary {
   id_login: string;
   fullName: string;
@@ -45,9 +67,7 @@ export async function getMyClassStudentsAction(): Promise<ClassStudentSummary[]>
 
   return students.map((s) => {
     const myLevels = accountLevels.filter((al) => al.accountId === s.id_login);
-    const activeLevel =
-      myLevels.find((al) => al.status === "in_progress") ??
-      [...myLevels].reverse().find((al) => al.status === "completed");
+    const activeLevel = pickActiveLevel(levels, myLevels);
     const levelName = levels.find((l) => l.id === activeLevel?.levelId)?.level ?? levels[0]?.level ?? "-";
 
     const myHistory = learningHistory.filter((h) => h.accountId === s.id_login);
@@ -99,7 +119,8 @@ export async function assignVocabularyToClassAction(
     }))
   );
 
-  await prisma.dailyAssignment.createMany({ data, skipDuplicates: true });
+  const result = await prisma.dailyAssignment.createMany({ data, skipDuplicates: true }).catch(() => null);
+  if (!result) return { error: "Một hoặc nhiều từ vựng đã chọn không còn hợp lệ. Vui lòng thử lại." };
 
   return { studentCount: students.length };
 }
@@ -129,18 +150,23 @@ export async function listMyAssignedVocabAction(): Promise<AssignedVocabSummary[
     include: { vocab: true },
   });
 
-  const byVocab = new Map<string, { vocab: string; meanVI: string; assignedDate: Date; count: number }>();
+  // studentCount must count distinct students, not assignment rows — the same word can have
+  // multiple rows per student (one per assignedDate) if a teacher re-assigns it on a later day.
+  const byVocab = new Map<
+    string,
+    { vocab: string; meanVI: string; assignedDate: Date; students: Set<string> }
+  >();
   for (const a of assignments) {
     const existing = byVocab.get(a.vocabId);
     if (existing) {
-      existing.count += 1;
+      existing.students.add(a.accountId);
       if (a.assignedDate > existing.assignedDate) existing.assignedDate = a.assignedDate;
     } else {
       byVocab.set(a.vocabId, {
         vocab: a.vocab.vocab,
         meanVI: a.vocab.meanVI,
         assignedDate: a.assignedDate,
-        count: 1,
+        students: new Set([a.accountId]),
       });
     }
   }
@@ -151,7 +177,7 @@ export async function listMyAssignedVocabAction(): Promise<AssignedVocabSummary[
       vocab: v.vocab,
       meanVI: v.meanVI,
       assignedDate: v.assignedDate.toISOString(),
-      studentCount: v.count,
+      studentCount: v.students.size,
     }))
     .sort((a, b) => b.assignedDate.localeCompare(a.assignedDate));
 }
@@ -202,7 +228,10 @@ export async function resetStudentPasswordAction(
   if (!student) return { error: "Không tìm thấy học sinh này trong lớp bạn phụ trách." };
 
   const passwordHash = await bcrypt.hash(newPassword, 10);
-  await prisma.account.update({ where: { id_login: studentId }, data: { passwordHash } });
+  const updated = await prisma.account
+    .update({ where: { id_login: studentId }, data: { passwordHash } })
+    .catch(() => null);
+  if (!updated) return { error: "Không tìm thấy học sinh này." };
 
   await prisma.passwordResetRequest.updateMany({
     where: { accountId: studentId, status: "pending" },
@@ -242,9 +271,7 @@ export async function getStudentDetailAction(studentId: string): Promise<Student
     prisma.vocabulary.count(),
   ]);
 
-  const activeLevel =
-    accountLevels.find((al) => al.status === "in_progress") ??
-    [...accountLevels].reverse().find((al) => al.status === "completed");
+  const activeLevel = pickActiveLevel(levels, accountLevels);
   const levelName = levels.find((l) => l.id === activeLevel?.levelId)?.level ?? levels[0]?.level ?? "-";
   const streak = Math.max(0, ...accountLevels.map((al) => al.streak), 0);
 

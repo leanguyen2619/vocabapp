@@ -140,18 +140,28 @@ export function TeacherDashboardContent({
 
   const handleCancel = async (entry: AssignedVocabSummary) => {
     setCancelingId(entry.vocabId);
-    await cancelAssignmentAction(entry.vocabId);
+    const ok = await cancelAssignmentAction(entry.vocabId);
     setCancelingId(null);
+    if (!ok) {
+      toast.error(dict.teacherDashboard.cancelError);
+      return;
+    }
     setAssignedVocab((prev) => prev.filter((v) => v.vocabId !== entry.vocabId));
     toast.success(formatMessage(dict.teacherDashboard.cancelSuccess, { word: entry.vocab }));
   };
 
   const handleTargetChange = async (value: string) => {
+    const previous = targetValue;
     setTargetValue(value);
     const target = Number(value);
     if (!Number.isInteger(target) || target < 1) return;
     const ok = await updateMyClassTargetAction(target);
-    if (ok && className) {
+    if (!ok) {
+      setTargetValue(previous);
+      toast.error(dict.teacherDashboard.targetUpdateError);
+      return;
+    }
+    if (className) {
       toast.success(formatMessage(dict.teacherDashboard.targetUpdateSuccess, { className }));
     }
   };
