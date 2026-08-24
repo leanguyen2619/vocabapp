@@ -37,7 +37,6 @@ const vi = {
   accountStatus: {
     active: "Hoạt động",
     inactive: "Đã khóa",
-    banned: "Đã cấm",
   },
   levelStatus: {
     locked: "Khóa",
@@ -410,6 +409,7 @@ const vi = {
       lockSuccess: "Đã {action} tài khoản {name}.",
       lockAction: "khóa",
       unlockAction: "mở khóa",
+      lockError: "Không thể khóa tài khoản này (đây có thể là quản trị viên đang hoạt động cuối cùng).",
       editSection: "Sửa thông tin",
       classInChargeLabel: "Lớp phụ trách",
       saveSuccess: "Đã cập nhật tài khoản {name}.",
@@ -442,6 +442,7 @@ const vi = {
       deleteConfirmTitle: "Xóa lớp?",
       deleteConfirmDesc: "Xóa lớp {name}? Hành động này không thể hoàn tác.",
       deleteSuccess: "Đã xóa lớp {name}.",
+      targetSaveError: "Không thể lưu số từ mỗi ngày, vui lòng thử lại.",
     },
     vocabulary: {
       title: "Từ vựng",
@@ -527,6 +528,7 @@ const vi = {
       toggleSuccess: 'Đã {action} "{name}".',
       enable: "bật",
       disable: "tắt",
+      saveError: "Không thể lưu thay đổi, vui lòng thử lại.",
     },
     levels: {
       title: "Level học viên",
@@ -537,6 +539,7 @@ const vi = {
       noteLabel: "Ghi chú (tuỳ chọn)",
       save: "Lưu",
       saveSuccess: "Đã cập nhật cấp độ {level} cho {name}.",
+      saveError: "Không thể lưu, vui lòng thử lại.",
     },
   },
 };

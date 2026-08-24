@@ -164,7 +164,11 @@ export function AdminVocabularyClient({
     };
 
     if (editingId) {
-      await updateVocabularyAction(editingId, payload);
+      const ok = await updateVocabularyAction(editingId, payload);
+      if (!ok) {
+        setError("Không thể cập nhật từ này. Chủ đề hoặc cấp độ đã chọn không hợp lệ.");
+        return;
+      }
       toast.success(formatMessage(dict.admin.vocabulary.updateSuccess, { word: payload.vocab }));
     } else {
       const result = await createVocabularyAction(payload);
@@ -181,7 +185,11 @@ export function AdminVocabularyClient({
 
   const handleDelete = async (word: Vocabulary) => {
     if (!window.confirm(formatMessage(dict.admin.vocabulary.deleteConfirm, { word: word.vocab }))) return;
-    await deleteVocabularyAction(word.id);
+    const result = await deleteVocabularyAction(word.id);
+    if (result.error !== undefined) {
+      toast.error(result.error);
+      return;
+    }
     setWords(await listVocabularyAction());
     toast.success(formatMessage(dict.admin.vocabulary.deleteSuccess, { word: word.vocab }));
   };

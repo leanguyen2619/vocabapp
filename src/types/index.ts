@@ -5,7 +5,7 @@
  */
 
 export type Role = "student" | "teacher" | "admin";
-export type AccountStatus = "active" | "inactive" | "banned";
+export type AccountStatus = "active" | "inactive";
 
 // ---------- Accounts ----------
 export interface Account {

@@ -112,10 +112,12 @@ export async function setAccountLevelStatusAction(
   const admin = await requireAdmin();
   if (!admin) return false;
 
-  await prisma.accountLevel.upsert({
-    where: { accountId_levelId: { accountId, levelId } },
-    update: { status, ...(manualNote ? { manualNote } : {}) },
-    create: { accountId, levelId, status, manualNote, score: 0, streak: 0 },
-  });
-  return true;
+  const updated = await prisma.accountLevel
+    .upsert({
+      where: { accountId_levelId: { accountId, levelId } },
+      update: { status, ...(manualNote ? { manualNote } : {}) },
+      create: { accountId, levelId, status, manualNote, score: 0, streak: 0 },
+    })
+    .catch(() => null);
+  return updated !== null;
 }

@@ -73,9 +73,18 @@ export function AdminClassesClient({
 
   const handleTargetChange = async (id: string, value: string) => {
     const target = Number(value);
-    if (!Number.isInteger(target) || target < 0) return;
+    if (!Number.isInteger(target) || target <= 0) return;
+
+    const previous = classes.find((c) => c.id === id)?.dailyWordTarget;
     setClasses((prev) => prev.map((c) => (c.id === id ? { ...c, dailyWordTarget: target } : c)));
-    await updateClassTargetAction(id, target);
+
+    const ok = await updateClassTargetAction(id, target);
+    if (!ok) {
+      setClasses((prev) =>
+        prev.map((c) => (c.id === id && previous !== undefined ? { ...c, dailyWordTarget: previous } : c))
+      );
+      toast.error(dict.admin.classes.targetSaveError);
+    }
   };
 
   const handleDelete = async () => {
@@ -198,7 +207,7 @@ export function AdminClassesClient({
                     <Input
                       id={`target-${cls.id}`}
                       type="number"
-                      min={0}
+                      min={1}
                       value={cls.dailyWordTarget}
                       onChange={(e) => void handleTargetChange(cls.id, e.target.value)}
                       className="w-20"

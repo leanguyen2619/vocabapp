@@ -25,7 +25,7 @@ export async function createSession(accountId: string) {
 }
 
 /**
- * Reads the session cookie and joins back to Account.status on every call, so a locked/banned
+ * Reads the session cookie and joins back to Account.status on every call, so a locked
  * account is invalidated on its very next request without any separate revalidation step.
  *
  * Wrapped in React's `cache()` so the many independent callers on a single page (the page itself

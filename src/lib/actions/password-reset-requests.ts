@@ -78,8 +78,16 @@ export async function dismissResetRequestAction(id: string): Promise<boolean> {
   const account = await getCurrentAccount();
   if (!account || (account.role !== "admin" && account.role !== "teacher")) return false;
 
-  await prisma.passwordResetRequest
+  if (account.role === "teacher") {
+    const request = await prisma.passwordResetRequest.findUnique({
+      where: { id },
+      include: { account: true },
+    });
+    if (!request || request.account.classId !== account.classId) return false;
+  }
+
+  const updated = await prisma.passwordResetRequest
     .update({ where: { id }, data: { status: "resolved", resolvedAt: new Date() } })
     .catch(() => null);
-  return true;
+  return updated !== null;
 }

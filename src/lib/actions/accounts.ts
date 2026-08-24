@@ -12,6 +12,8 @@ export interface AccountSummary {
   email: string;
 }
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 async function requireAdmin() {
   const account = await getCurrentAccount();
   if (!account || account.role !== "admin") return null;
@@ -50,19 +52,38 @@ export async function createAccountByAdminAction(input: {
   const email = input.email.trim().toLowerCase();
 
   if (!fullName || !email || !input.password) return { error: "Vui lòng điền đầy đủ thông tin." };
+  if (!EMAIL_PATTERN.test(email)) return { error: "Email không hợp lệ." };
   if (input.password.length < 6) return { error: "Mật khẩu cần ít nhất 6 ký tự." };
 
   const existing = await prisma.account.findUnique({ where: { email } });
   if (existing) return { error: "Email này đã được sử dụng." };
 
-  const id_login = await generateLoginId(input.role);
+  if (input.classId) {
+    const classExists = await prisma.schoolClass.findUnique({ where: { id: input.classId } });
+    if (!classExists) return { error: "Lớp học không hợp lệ." };
+  }
+
   const passwordHash = await bcrypt.hash(input.password, 10);
 
-  const account = await prisma.account.create({
-    data: { id_login, fullName, email, role: input.role, passwordHash, classId: input.classId },
-  });
+  // generateLoginId picks the next sequential ID from a COUNT query, so two concurrent creates
+  // (double-click, two admin tabs) can compute the same id_login. Retry with a fresh ID on
+  // collision rather than surfacing a raw unique-constraint 500.
+  const MAX_ATTEMPTS = 5;
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const id_login = await generateLoginId(input.role);
+    const account = await prisma.account
+      .create({
+        data: { id_login, fullName, email, role: input.role, passwordHash, classId: input.classId },
+      })
+      .catch((e: unknown) => {
+        const code = (e as { code?: string } | null)?.code;
+        if (code === "P2002") return null;
+        throw e;
+      });
+    if (account) return { id_login: account.id_login };
+  }
 
-  return { id_login: account.id_login };
+  return { error: "Không thể tạo mã tài khoản, vui lòng thử lại." };
 }
 
 export async function resetPasswordByAdminAction(
@@ -92,6 +113,20 @@ export async function setAccountStatusAction(id_login: string, status: AccountSt
   const admin = await requireAdmin();
   if (!admin) return false;
 
+  // Deactivating never applies to the caller's own account — an admin could otherwise lock
+  // themselves out immediately (the session is rejected on the very next request).
+  if (status !== "active" && id_login === admin.id_login) return false;
+
+  // Never allow the last active admin to be locked — that would leave the panel with no way
+  // for anyone to unlock accounts again.
+  if (status !== "active") {
+    const target = await prisma.account.findUnique({ where: { id_login } });
+    if (target?.role === "admin") {
+      const activeAdminCount = await prisma.account.count({ where: { role: "admin", status: "active" } });
+      if (activeAdminCount <= 1) return false;
+    }
+  }
+
   const updated = await prisma.account.update({ where: { id_login }, data: { status } }).catch(() => null);
   return updated !== null;
 }
@@ -106,6 +141,11 @@ export async function updateAccountByAdminAction(
 
   const fullName = patch.fullName.trim();
   if (!fullName) return { error: "Vui lòng nhập họ và tên." };
+
+  if (patch.classId) {
+    const classExists = await prisma.schoolClass.findUnique({ where: { id: patch.classId } });
+    if (!classExists) return { error: "Lớp học không hợp lệ." };
+  }
 
   const updated = await prisma.account
     .update({ where: { id_login }, data: { fullName, classId: patch.classId } })

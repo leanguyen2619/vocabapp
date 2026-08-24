@@ -57,7 +57,7 @@ export async function createClassAction(
 export async function updateClassTargetAction(id: string, dailyWordTarget: number): Promise<boolean> {
   const admin = await requireAdmin();
   if (!admin) return false;
-  if (!Number.isInteger(dailyWordTarget) || dailyWordTarget < 0) return false;
+  if (!Number.isInteger(dailyWordTarget) || dailyWordTarget <= 0) return false;
 
   const updated = await prisma.schoolClass
     .update({ where: { id }, data: { dailyWordTarget } })

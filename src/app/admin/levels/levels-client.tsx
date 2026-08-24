@@ -55,7 +55,11 @@ export function AdminLevelsClient({
   };
 
   const handleSave = async (levelId: string, levelName: string) => {
-    await setAccountLevelStatusAction(selectedId, levelId, statusMap[levelId], notes[levelId]);
+    const ok = await setAccountLevelStatusAction(selectedId, levelId, statusMap[levelId], notes[levelId]);
+    if (!ok) {
+      toast.error(dict.admin.levels.saveError);
+      return;
+    }
     toast.success(
       formatMessage(dict.admin.levels.saveSuccess, {
         level: levelName,

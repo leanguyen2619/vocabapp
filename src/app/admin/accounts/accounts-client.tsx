@@ -283,7 +283,11 @@ export function AdminAccountsClient({
   };
 
   const handleToggleStatus = async (id_login: string, name: string, active: boolean) => {
-    await setAccountStatusAction(id_login, active ? "inactive" : "active");
+    const ok = await setAccountStatusAction(id_login, active ? "inactive" : "active");
+    if (!ok) {
+      toast.error(dict.admin.accounts.lockError);
+      return;
+    }
     setAccounts(await listAccountsAction());
     toast.success(
       formatMessage(dict.admin.accounts.lockSuccess, {

@@ -64,13 +64,15 @@ export async function updateExerciseTypeAction(
   if (patch.level !== undefined) {
     const levels = await prisma.level.findMany({ orderBy: { id: "asc" } });
     levelId = levels[patch.level - 1]?.id;
+    // Out-of-range level: fail loudly instead of silently dropping the level change.
+    if (!levelId) return false;
   }
 
-  await prisma.practiceType
+  const updated = await prisma.practiceType
     .update({
       where: { type: code },
       data: { name: patch.name, description: patch.description, enabled: patch.enabled, levelId },
     })
     .catch(() => null);
-  return true;
+  return updated !== null;
 }

@@ -218,7 +218,12 @@ export async function createVocabularyAction(
   const admin = await requireAdmin();
   if (!admin) return { error: "Bạn không có quyền thực hiện thao tác này." };
 
-  const created = await prisma.vocabulary.create({ data: input });
+  if (!input.vocab.trim() || !input.definition.trim() || !input.meanVI.trim()) {
+    return { error: "Vui lòng điền đầy đủ thông tin." };
+  }
+
+  const created = await prisma.vocabulary.create({ data: input }).catch(() => null);
+  if (!created) return { error: "Chủ đề hoặc cấp độ đã chọn không hợp lệ." };
   return { id: created.id };
 }
 
@@ -230,12 +235,19 @@ export async function updateVocabularyAction(id: string, input: VocabInput): Pro
   return updated !== null;
 }
 
-export async function deleteVocabularyAction(id: string): Promise<boolean> {
+export async function deleteVocabularyAction(
+  id: string
+): Promise<{ error: string } | { error?: undefined }> {
   const admin = await requireAdmin();
-  if (!admin) return false;
+  if (!admin) return { error: "Bạn không có quyền thực hiện thao tác này." };
 
-  await prisma.vocabulary.delete({ where: { id } }).catch(() => null);
-  return true;
+  const deleted = await prisma.vocabulary.delete({ where: { id } }).catch(() => null);
+  if (!deleted) {
+    return {
+      error: "Không thể xóa từ này vì đang được dùng trong câu hỏi, bài tập hoặc bài giao.",
+    };
+  }
+  return {};
 }
 
 export async function bulkCreateVocabularyAction(rows: VocabInput[]): Promise<number> {
@@ -243,6 +255,6 @@ export async function bulkCreateVocabularyAction(rows: VocabInput[]): Promise<nu
   if (!admin) return 0;
   if (rows.length === 0) return 0;
 
-  const result = await prisma.vocabulary.createMany({ data: rows });
+  const result = await prisma.vocabulary.createMany({ data: rows }).catch(() => ({ count: 0 }));
   return result.count;
 }

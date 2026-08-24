@@ -21,7 +21,6 @@ enum Role {
 enum AccountStatus {
   active
   inactive
-  banned
 }
 
 enum AccountLevelStatus {

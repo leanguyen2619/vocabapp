@@ -39,7 +39,6 @@ const en: Dictionary = {
   accountStatus: {
     active: "Active",
     inactive: "Locked",
-    banned: "Banned",
   },
   levelStatus: {
     locked: "Locked",
@@ -412,6 +411,7 @@ const en: Dictionary = {
       lockSuccess: "{action} account {name}.",
       lockAction: "Locked",
       unlockAction: "Unlocked",
+      lockError: "Could not lock this account (it may be the last active admin).",
       editSection: "Edit details",
       classInChargeLabel: "Class in charge",
       saveSuccess: "Updated account {name}.",
@@ -444,6 +444,7 @@ const en: Dictionary = {
       deleteConfirmTitle: "Delete class?",
       deleteConfirmDesc: "Delete class {name}? This action cannot be undone.",
       deleteSuccess: "Deleted class {name}.",
+      targetSaveError: "Could not save the daily word target, please try again.",
     },
     vocabulary: {
       title: "Vocabulary",
@@ -529,6 +530,7 @@ const en: Dictionary = {
       toggleSuccess: '{action} "{name}".',
       enable: "Enabled",
       disable: "Disabled",
+      saveError: "Could not save the change, please try again.",
     },
     levels: {
       title: "Student levels",
@@ -539,6 +541,7 @@ const en: Dictionary = {
       noteLabel: "Note (optional)",
       save: "Save",
       saveSuccess: "Updated {level} for {name}.",
+      saveError: "Could not save, please try again.",
     },
   },
 };
