@@ -90,10 +90,15 @@ export function TeacherDashboardContent({
   const [assigning, setAssigning] = useState(false);
   const [assignedVocab, setAssignedVocab] = useState(initialAssignedVocab);
   const [cancelingId, setCancelingId] = useState<string | null>(null);
+  // targetValue is the raw text while typing; committedTarget is the last server-confirmed
+  // value. Kept separate (rather than comparing against the dailyWordTarget prop) because this
+  // component never re-fetches its props after a successful save.
   const [targetValue, setTargetValue] = useState(String(dailyWordTarget));
+  const [committedTarget, setCommittedTarget] = useState(dailyWordTarget);
 
   const [detailStudentId, setDetailStudentId] = useState<string | null>(null);
   const [detailData, setDetailData] = useState<StudentDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [resetError, setResetError] = useState<string | null>(null);
   const [resetting, setResetting] = useState(false);
@@ -150,17 +155,27 @@ export function TeacherDashboardContent({
     toast.success(formatMessage(dict.teacherDashboard.cancelSuccess, { word: entry.vocab }));
   };
 
-  const handleTargetChange = async (value: string) => {
-    const previous = targetValue;
-    setTargetValue(value);
-    const target = Number(value);
-    if (!Number.isInteger(target) || target < 1) return;
+  const handleTargetBlur = async () => {
+    const target = Number(targetValue);
+    if (!Number.isInteger(target) || target < 1) {
+      setTargetValue(String(committedTarget));
+      toast.error(dict.admin.classes.errorTargetInvalid);
+      return;
+    }
+    if (target === committedTarget) {
+      setTargetValue(String(committedTarget));
+      return;
+    }
+
     const ok = await updateMyClassTargetAction(target);
     if (!ok) {
-      setTargetValue(previous);
+      setTargetValue(String(committedTarget));
       toast.error(dict.teacherDashboard.targetUpdateError);
       return;
     }
+
+    setCommittedTarget(target);
+    setTargetValue(String(target));
     if (className) {
       toast.success(formatMessage(dict.teacherDashboard.targetUpdateSuccess, { className }));
     }
@@ -171,7 +186,10 @@ export function TeacherDashboardContent({
     setDetailData(null);
     setNewPassword("");
     setResetError(null);
-    setDetailData(await getStudentDetailAction(studentId));
+    setDetailLoading(true);
+    const data = await getStudentDetailAction(studentId);
+    setDetailLoading(false);
+    setDetailData(data);
   };
 
   const buildCredentialsText = (entry: KnownCredentials) =>
@@ -359,7 +377,8 @@ export function TeacherDashboardContent({
               type="number"
               min={1}
               value={targetValue}
-              onChange={(e) => void handleTargetChange(e.target.value)}
+              onChange={(e) => setTargetValue(e.target.value)}
+              onBlur={() => void handleTargetBlur()}
               className="w-20"
             />
           </div>
@@ -503,6 +522,7 @@ export function TeacherDashboardContent({
           if (!open) {
             setDetailStudentId(null);
             setDetailData(null);
+            setDetailLoading(false);
             setResetError(null);
           }
         }}
@@ -512,6 +532,16 @@ export function TeacherDashboardContent({
             <DialogTitle>{dict.teacherDashboard.detailTitle}</DialogTitle>
             <DialogDescription>{dict.teacherDashboard.detailDesc}</DialogDescription>
           </DialogHeader>
+
+          {detailLoading && (
+            <p className="py-10 text-center text-sm text-muted-foreground">{dict.common.loading}</p>
+          )}
+
+          {!detailLoading && detailStudentId !== null && !detailData && (
+            <p className="py-10 text-center text-sm text-muted-foreground">
+              {dict.teacherDashboard.studentNotFound}
+            </p>
+          )}
 
           {detailData && (
             <div className="flex flex-col gap-4">

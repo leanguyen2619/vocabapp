@@ -168,6 +168,7 @@ const vi = {
     detailDesc: "Tiến độ học tập và tùy chọn đặt lại mật khẩu.",
     learningWordsTitle: "Đang học",
     noLearningWords: "Không có từ nào đang học.",
+    studentNotFound: "Không tìm thấy học sinh này.",
     resetPasswordTitle: "Đặt lại mật khẩu",
     resetPasswordDesc: "Đặt mật khẩu mới cho {name}.",
     resetSubmit: "Đặt lại mật khẩu",

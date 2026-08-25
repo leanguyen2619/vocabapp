@@ -170,6 +170,7 @@ const en: Dictionary = {
     detailDesc: "Learning progress and password reset.",
     learningWordsTitle: "Learning",
     noLearningWords: "No words currently in progress.",
+    studentNotFound: "This student could not be found.",
     resetPasswordTitle: "Reset password",
     resetPasswordDesc: "Set a new password for {name}.",
     resetSubmit: "Reset password",
