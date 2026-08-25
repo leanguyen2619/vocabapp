@@ -8,6 +8,7 @@ import { computeUnlockedLevelIds } from "@/lib/level-unlock";
 import { recordForVocab } from "@/lib/progress-core";
 import { getCurrentAccount, type SessionAccount } from "@/lib/session";
 import { shuffle } from "@/lib/utils";
+import type { WordScope } from "@/lib/word-scope";
 import type {
   AssignmentStatus,
   DailyAssignmentWithVocab,
@@ -52,26 +53,32 @@ export async function getMyVocabularyWithProgressAction(): Promise<VocabularyWit
   }));
 }
 
-const REVIEW_SESSION_SIZE = 20;
+const OLD_WORDS_SESSION_SIZE = 20;
 
-/**
- * Words the student has gotten wrong at least as often as right (status stuck at "learning",
- * never yet "mastered") — the review queue every professional vocab app resurfaces sooner rather
- * than leaving to the luck of the next daily-word draw. Oldest-touched first, so a word that's
- * been sitting unmastered the longest comes up first.
- */
-export async function getMyReviewWordsAction(): Promise<Vocabulary[]> {
+/** "new" = today's pinned words not yet attempted; "mixed" = today's full pinned set (the
+ * existing daily-word behavior); "old" = previously-studied words (learning or already mastered)
+ * drawn from the student's whole history, not just today, oldest-touched first — a lightweight
+ * review pool. Used by the 5 word-driven games (Quiz, Flashcard, Matching, Typing, Listening) via
+ * the category picker on /exercises. */
+async function oldWordsForAccount(account: SessionAccount): Promise<Vocabulary[]> {
+  const history = await prisma.learningHistory.findMany({
+    where: { accountId: account.id_login, status: { in: ["learning", "mastered"] } },
+    orderBy: { lastDate: "asc" },
+    take: OLD_WORDS_SESSION_SIZE,
+    include: { vocab: true },
+  });
+  return history.map((h) => h.vocab);
+}
+
+export async function getMyWordsForScopeAction(scope: WordScope): Promise<Vocabulary[]> {
   const account = await getCurrentAccount();
   if (!account) return [];
 
-  const history = await prisma.learningHistory.findMany({
-    where: { accountId: account.id_login, status: "learning" },
-    orderBy: { lastDate: "asc" },
-    take: REVIEW_SESSION_SIZE,
-    include: { vocab: true },
-  });
+  if (scope === "old") return oldWordsForAccount(account);
 
-  return history.map((h) => h.vocab);
+  const words = await computeDailyWords(account);
+  if (scope === "new") return words.filter((w) => w.status === "new").map((w) => w.vocab);
+  return words.map((w) => w.vocab);
 }
 
 /**
@@ -216,13 +223,16 @@ export interface QuizQuestionItem {
  *
  * The correct option id is intentionally NOT included here — see submitQuizAnswerAction, which
  * grades server-side instead of trusting the client to self-report whether it picked right.
+ *
+ * `scope` picks which word pool the quiz draws from (see getMyWordsForScopeAction) — defaults to
+ * today's usual new+old mix so existing callers are unaffected.
  */
-export async function getMyQuizQuestionsAction(): Promise<QuizQuestionItem[]> {
+export async function getMyQuizQuestionsAction(scope: WordScope = "mixed"): Promise<QuizQuestionItem[]> {
   const account = await getCurrentAccount();
   if (!account) return [];
   const dict = getDictionary(await getLocale());
 
-  const dailyWords = await getMyDailyWordsAction();
+  const dailyWords = await getMyWordsForScopeAction(scope);
   if (dailyWords.length === 0) return [];
 
   const pracType = await prisma.practiceType.findUnique({ where: { type: "multiple_choice" } });

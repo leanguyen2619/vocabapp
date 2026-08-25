@@ -10,7 +10,7 @@ import { getMyClassStudentsAction, listMyAssignedVocabAction } from "@/lib/actio
 import { listMyClassResetRequestsAction } from "@/lib/actions/password-reset-requests";
 import {
   getMyDailyAssignmentsAction,
-  getMyReviewWordsAction,
+  getMyWordsForScopeAction,
   listTopicsAction,
   listVocabularyAction,
 } from "@/lib/actions/vocabulary";
@@ -71,11 +71,11 @@ export default async function DashboardPage() {
     );
   }
 
-  const [levels, dailyAssignments, topics, reviewWords] = await Promise.all([
+  const [levels, dailyAssignments, topics, newWords] = await Promise.all([
     getMyLevelsAction(),
     getMyDailyAssignmentsAction(),
     listTopicsAction(),
-    getMyReviewWordsAction(),
+    getMyWordsForScopeAction("new"),
   ]);
   // Matches profile-client.tsx's formula so the two pages never disagree on the number shown.
   const streak = Math.max(0, ...levels.map((l) => l.streak));
@@ -87,7 +87,7 @@ export default async function DashboardPage() {
         dailyAssignments={dailyAssignments}
         levels={levels}
         topics={topics}
-        reviewCount={reviewWords.length}
+        newWordsCount={newWords.length}
         dict={dict}
       />
     </DashboardShell>

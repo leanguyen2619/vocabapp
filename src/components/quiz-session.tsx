@@ -31,6 +31,18 @@ export function QuizSession({
   const [finished, setFinished] = useState(false);
 
   const total = questions.length;
+
+  if (total === 0) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
+        <p>{dict.quizSession.noQuestions}</p>
+        <Button nativeButton={false} render={<Link href="/exercises" />}>
+          {dict.quizSession.changeType}
+        </Button>
+      </div>
+    );
+  }
+
   const question = questions[index];
   const isAnswered = selectedId !== null;
   const isCorrect = result?.isCorrect ?? false;

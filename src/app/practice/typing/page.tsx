@@ -5,18 +5,24 @@ import { ArrowLeft, BookOpen } from "lucide-react";
 import { RandomExerciseButton } from "@/components/random-exercise-button";
 import { TypingGame } from "@/components/typing-game";
 import { listExerciseTypesAction } from "@/lib/actions/exercise-types";
-import { getMyDailyWordsAction } from "@/lib/actions/vocabulary";
+import { getMyWordsForScopeAction } from "@/lib/actions/vocabulary";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
+import { parseWordScope } from "@/lib/word-scope";
 
-export default async function TypingPage() {
+export default async function TypingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ scope?: string }>;
+}) {
   const account = await getCurrentAccount();
   if (!account) redirect("/login");
   const dict = getDictionary(await getLocale());
+  const scope = parseWordScope((await searchParams).scope);
 
   const [dailyWords, exerciseTypes] = await Promise.all([
-    getMyDailyWordsAction(),
+    getMyWordsForScopeAction(scope),
     listExerciseTypesAction(),
   ]);
 

@@ -9,14 +9,20 @@ import { getMyQuizQuestionsAction, listTopicsAction } from "@/lib/actions/vocabu
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
+import { parseWordScope } from "@/lib/word-scope";
 
-export default async function QuizPage() {
+export default async function QuizPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ scope?: string }>;
+}) {
   const account = await getCurrentAccount();
   if (!account) redirect("/login");
   const dict = getDictionary(await getLocale());
+  const scope = parseWordScope((await searchParams).scope);
 
   const [questions, topics, exerciseTypes] = await Promise.all([
-    getMyQuizQuestionsAction(),
+    getMyQuizQuestionsAction(scope),
     listTopicsAction(),
     listExerciseTypesAction(),
   ]);

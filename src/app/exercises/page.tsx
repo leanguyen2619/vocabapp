@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { listExerciseTypesAction } from "@/lib/actions/exercise-types";
 import { getMyStudentLevelIndexAction, listLevelsAction } from "@/lib/actions/levels";
@@ -23,6 +24,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
 import type { PracticeTypeCode } from "@/types";
+import { parseWordScope, WORD_SCOPED_CODES, WORD_SCOPES, type WordScope } from "@/lib/word-scope";
 
 const iconByCode: Record<PracticeTypeCode, LucideIcon> = {
   multiple_choice: ListChecks,
@@ -37,12 +39,18 @@ const iconByCode: Record<PracticeTypeCode, LucideIcon> = {
   listening: TextCursorInput,
 };
 
-export default async function ExercisesPage() {
+export default async function ExercisesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ scope?: string }>;
+}) {
   const account = await getCurrentAccount();
   if (!account) redirect("/login");
   const dict = getDictionary(await getLocale());
 
   const isStudent = account.role === "student";
+  const scope: WordScope = isStudent ? parseWordScope((await searchParams).scope) : "mixed";
+
   const [levels, types] = await Promise.all([listLevelsAction(), listExerciseTypesAction()]);
   const studentLevelIndex = isStudent ? await getMyStudentLevelIndexAction() : levels.length;
   const studentLevelName = levels[studentLevelIndex - 1]?.level;
@@ -50,6 +58,12 @@ export default async function ExercisesPage() {
   const visibleTypes = types
     .filter((t) => t.enabled && t.level <= studentLevelIndex)
     .sort((a, b) => a.level - b.level);
+
+  const scopeLabel: Record<WordScope, string> = {
+    new: dict.exercises.scopeNew,
+    mixed: dict.exercises.scopeMixed,
+    old: dict.exercises.scopeOld,
+  };
 
   return (
     <div className="flex flex-1 flex-col bg-background">
@@ -87,10 +101,33 @@ export default async function ExercisesPage() {
           </p>
         </div>
 
+        {isStudent && (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-medium text-muted-foreground">{dict.exercises.scopeLabel}</p>
+            <div className="flex flex-wrap gap-2">
+              {WORD_SCOPES.map((s) => (
+                <Button
+                  key={s}
+                  size="sm"
+                  variant={s === scope ? "default" : "outline"}
+                  nativeButton={false}
+                  render={<Link href={`/exercises?scope=${s}`} />}
+                >
+                  {scopeLabel[s]}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {visibleTypes.map((type) => {
             const Icon = iconByCode[type.code];
             const isReady = Boolean(type.href);
+            const href =
+              isReady && isStudent && WORD_SCOPED_CODES.includes(type.code)
+                ? `${type.href}?scope=${scope}`
+                : type.href;
 
             const cardBody = (
               <CardContent className="flex flex-col gap-3 py-4">
@@ -122,7 +159,7 @@ export default async function ExercisesPage() {
             }
 
             return (
-              <Link key={type.code} href={type.href!}>
+              <Link key={type.code} href={href!}>
                 <Card className="h-full transition-colors hover:border-primary/50">{cardBody}</Card>
               </Link>
             );
