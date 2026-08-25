@@ -51,8 +51,14 @@ export default async function ExercisesPage({
   const isStudent = account.role === "student";
   const scope: WordScope = isStudent ? parseWordScope((await searchParams).scope) : "mixed";
 
-  const [levels, types] = await Promise.all([listLevelsAction(), listExerciseTypesAction()]);
-  const studentLevelIndex = isStudent ? await getMyStudentLevelIndexAction() : levels.length;
+  // getMyStudentLevelIndexAction doesn't depend on levels/types (it derives its own level list
+  // internally), so it belongs in the same round trip instead of a second sequential one.
+  const [levels, types, fetchedStudentLevelIndex] = await Promise.all([
+    listLevelsAction(),
+    listExerciseTypesAction(),
+    isStudent ? getMyStudentLevelIndexAction() : Promise.resolve(null),
+  ]);
+  const studentLevelIndex = fetchedStudentLevelIndex ?? levels.length;
   const studentLevelName = levels[studentLevelIndex - 1]?.level;
 
   const visibleTypes = types
