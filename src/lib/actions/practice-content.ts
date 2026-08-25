@@ -58,13 +58,11 @@ export async function submitSynonymAntonymAnswerAction(
   const account = await getCurrentAccount();
   if (!account) return { error: "Bạn cần đăng nhập." };
 
-  const question = await prisma.question.findUnique({
-    where: { id: questionId },
-    include: { vocab: true, answers: true },
-  });
+  const [question, unlockedLevelIds] = await Promise.all([
+    prisma.question.findUnique({ where: { id: questionId }, include: { vocab: true, answers: true } }),
+    computeUnlockedLevelIds(account.id_login),
+  ]);
   if (!question || question.status !== "approved") return { error: "Không tìm thấy câu hỏi này." };
-
-  const unlockedLevelIds = await computeUnlockedLevelIds(account.id_login);
   if (!unlockedLevelIds.has(question.vocab.levelId)) {
     return { error: "Từ vựng này chưa được mở khóa." };
   }
@@ -119,13 +117,11 @@ export async function submitFillBlankAnswerAction(
   const account = await getCurrentAccount();
   if (!account) return { error: "Bạn cần đăng nhập." };
 
-  const question = await prisma.question.findUnique({
-    where: { id: questionId },
-    include: { vocab: true, answers: true },
-  });
+  const [question, unlockedLevelIds] = await Promise.all([
+    prisma.question.findUnique({ where: { id: questionId }, include: { vocab: true, answers: true } }),
+    computeUnlockedLevelIds(account.id_login),
+  ]);
   if (!question || question.status !== "approved") return { error: "Không tìm thấy câu hỏi này." };
-
-  const unlockedLevelIds = await computeUnlockedLevelIds(account.id_login);
   if (!unlockedLevelIds.has(question.vocab.levelId)) {
     return { error: "Từ vựng này chưa được mở khóa." };
   }

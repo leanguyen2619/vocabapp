@@ -279,18 +279,19 @@ export async function submitQuizAnswerAction(
   const account = await getCurrentAccount();
   if (!account) return { error: "Bạn cần đăng nhập." };
 
-  const vocab = await prisma.vocabulary.findUnique({ where: { id: vocabId } });
-  if (!vocab) return { error: "Không tìm thấy từ vựng này." };
-
-  const [unlockedLevelIds, assignment] = await Promise.all([
+  // None of these four depend on each other's result, so they go in one round trip instead of
+  // three sequential ones — this action is on the hot path (fires on every answer).
+  const [vocab, unlockedLevelIds, assignment, pracType] = await Promise.all([
+    prisma.vocabulary.findUnique({ where: { id: vocabId } }),
     computeUnlockedLevelIds(account.id_login),
     prisma.dailyAssignment.findFirst({ where: { accountId: account.id_login, vocabId } }),
+    prisma.practiceType.findUnique({ where: { type: "multiple_choice" } }),
   ]);
+  if (!vocab) return { error: "Không tìm thấy từ vựng này." };
   if (!unlockedLevelIds.has(vocab.levelId) && !assignment) {
     return { error: "Từ vựng này chưa được mở khóa." };
   }
 
-  const pracType = await prisma.practiceType.findUnique({ where: { type: "multiple_choice" } });
   const real = pracType
     ? await prisma.question.findFirst({
         where: { vocabId, pracTypeId: pracType.id, status: "approved" },

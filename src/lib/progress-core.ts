@@ -43,51 +43,59 @@ export async function recordForVocab(
   levelId: string,
   isCorrect: boolean
 ): Promise<LearningStatus> {
-  const existing = await prisma.learningHistory.findUnique({
-    where: { accountId_vocabId: { accountId, vocabId } },
-  });
-  const status = nextStatus(existing?.status ?? "new", isCorrect);
-
-  await prisma.learningHistory.upsert({
-    where: { accountId_vocabId: { accountId, vocabId } },
-    update: { status, lastDate: new Date() },
-    create: { accountId, vocabId, status },
-  });
-
-  const [level, levelVocab, levelHistory, existingAccountLevel] = await Promise.all([
+  // Every read this needs is independent of the writes below, so they all go in one round trip
+  // — masteredCountBefore and totalVocabInLevel are aggregate counts (not full row fetches)
+  // specifically so the post-write mastered count can be derived arithmetically instead of
+  // re-querying after the write, which is what let the two writes below also run in parallel
+  // instead of one waiting on the other.
+  const [existing, level, totalVocabInLevel, masteredCountBefore, existingAccountLevel] = await Promise.all([
+    prisma.learningHistory.findUnique({ where: { accountId_vocabId: { accountId, vocabId } } }),
     prisma.level.findUnique({ where: { id: levelId } }),
-    prisma.vocabulary.findMany({ where: { levelId }, select: { id: true } }),
-    prisma.learningHistory.findMany({
-      where: { accountId, vocab: { levelId } },
-      select: { status: true },
-    }),
+    prisma.vocabulary.count({ where: { levelId } }),
+    prisma.learningHistory.count({ where: { accountId, status: "mastered", vocab: { levelId } } }),
     prisma.accountLevel.findUnique({ where: { accountId_levelId: { accountId, levelId } } }),
   ]);
-  if (!level) return status;
 
-  const masteredCount = levelHistory.filter((h) => h.status === "mastered").length;
-  const score = levelVocab.length > 0 ? Math.round((masteredCount / levelVocab.length) * 100) : 0;
-  const naturalStatus: AccountLevelStatus = score >= level.maxScore ? "completed" : "in_progress";
+  const previousStatus = existing?.status ?? "new";
+  const status = nextStatus(previousStatus, isCorrect);
 
-  // Never let this auto-recompute demote a level's status — only ever match or improve on
-  // whatever it already was. This keeps an admin's manual "completed" override durable instead
-  // of it silently reverting the next time the student answers something in that level.
-  const currentStatus = existingAccountLevel?.status ?? "locked";
-  const levelStatus =
-    LEVEL_STATUS_RANK[naturalStatus] > LEVEL_STATUS_RANK[currentStatus] ? naturalStatus : currentStatus;
+  const writes: Promise<unknown>[] = [
+    prisma.learningHistory.upsert({
+      where: { accountId_vocabId: { accountId, vocabId } },
+      update: { status, lastDate: new Date() },
+      create: { accountId, vocabId, status },
+    }),
+  ];
 
-  const now = new Date();
-  const streak = computeStreak(
-    existingAccountLevel?.streak ?? 0,
-    existingAccountLevel?.lastActivityDate ?? null,
-    now
-  );
+  if (level) {
+    const masteredCount =
+      masteredCountBefore + (status === "mastered" ? 1 : 0) - (previousStatus === "mastered" ? 1 : 0);
+    const score = totalVocabInLevel > 0 ? Math.round((masteredCount / totalVocabInLevel) * 100) : 0;
+    const naturalStatus: AccountLevelStatus = score >= level.maxScore ? "completed" : "in_progress";
 
-  await prisma.accountLevel.upsert({
-    where: { accountId_levelId: { accountId, levelId } },
-    update: { score, status: levelStatus, streak, lastActivityDate: now },
-    create: { accountId, levelId, score, status: levelStatus, streak, lastActivityDate: now },
-  });
+    // Never let this auto-recompute demote a level's status — only ever match or improve on
+    // whatever it already was. This keeps an admin's manual "completed" override durable instead
+    // of it silently reverting the next time the student answers something in that level.
+    const currentStatus = existingAccountLevel?.status ?? "locked";
+    const levelStatus =
+      LEVEL_STATUS_RANK[naturalStatus] > LEVEL_STATUS_RANK[currentStatus] ? naturalStatus : currentStatus;
 
+    const now = new Date();
+    const streak = computeStreak(
+      existingAccountLevel?.streak ?? 0,
+      existingAccountLevel?.lastActivityDate ?? null,
+      now
+    );
+
+    writes.push(
+      prisma.accountLevel.upsert({
+        where: { accountId_levelId: { accountId, levelId } },
+        update: { score, status: levelStatus, streak, lastActivityDate: now },
+        create: { accountId, levelId, score, status: levelStatus, streak, lastActivityDate: now },
+      })
+    );
+  }
+
+  await Promise.all(writes);
   return status;
 }
