@@ -4,7 +4,7 @@ import { ArrowLeft, BookOpen } from "lucide-react";
 
 import { ListeningGame } from "@/components/listening-game";
 import { RandomExerciseButton } from "@/components/random-exercise-button";
-import { listExerciseTypesAction } from "@/lib/actions/exercise-types";
+import { listVisibleExerciseTypesAction } from "@/lib/actions/exercise-types";
 import { getMyWordsForScopeAction } from "@/lib/actions/vocabulary";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
@@ -23,7 +23,7 @@ export default async function ListeningPage({
 
   const [dailyWords, exerciseTypes] = await Promise.all([
     getMyWordsForScopeAction(scope),
-    listExerciseTypesAction(),
+    listVisibleExerciseTypesAction(),
   ]);
 
   return (

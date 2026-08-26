@@ -4,7 +4,7 @@ import { ArrowLeft, BookOpen } from "lucide-react";
 
 import { FillBlankGame } from "@/components/fill-blank-game";
 import { RandomExerciseButton } from "@/components/random-exercise-button";
-import { listExerciseTypesAction } from "@/lib/actions/exercise-types";
+import { listVisibleExerciseTypesAction } from "@/lib/actions/exercise-types";
 import { getFillBlankQuestionsAction } from "@/lib/actions/practice-content";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
@@ -16,7 +16,7 @@ export default async function FillBlankPage() {
   const dict = getDictionary(await getLocale());
 
   const [exerciseTypes, questions] = await Promise.all([
-    listExerciseTypesAction(),
+    listVisibleExerciseTypesAction(),
     getFillBlankQuestionsAction(),
   ]);
 

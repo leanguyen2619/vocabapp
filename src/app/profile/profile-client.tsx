@@ -37,6 +37,7 @@ import { Label } from "@/components/ui/label";
 import { changePasswordAction, logoutAction, updateFullNameAction } from "@/lib/actions/auth";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { SessionAccount } from "@/lib/session";
+import { getInitials } from "@/lib/utils";
 import type { LevelWithProgress } from "@/types";
 
 export function ProfileClient({
@@ -61,12 +62,7 @@ export function ProfileClient({
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
-  const initials = displayName
-    .split(" ")
-    .map((part) => part[0])
-    .slice(-2)
-    .join("")
-    .toUpperCase();
+  const initials = getInitials(displayName);
 
   const unlockedLevels = levels.filter((level) => level.status !== "locked");
   const totalMastered = unlockedLevels.reduce((sum, l) => sum + l.masteredVocab, 0);

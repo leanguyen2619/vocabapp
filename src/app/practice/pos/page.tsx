@@ -4,7 +4,7 @@ import { ArrowLeft, BookOpen } from "lucide-react";
 
 import { PosClassificationGame } from "@/components/pos-classification-game";
 import { RandomExerciseButton } from "@/components/random-exercise-button";
-import { listExerciseTypesAction } from "@/lib/actions/exercise-types";
+import { listVisibleExerciseTypesAction } from "@/lib/actions/exercise-types";
 import { listTopicsAction, listVocabularyAction } from "@/lib/actions/vocabulary";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
@@ -18,7 +18,7 @@ export default async function PosClassificationPage() {
   const [vocabularyBank, topics, exerciseTypes] = await Promise.all([
     listVocabularyAction(),
     listTopicsAction(),
-    listExerciseTypesAction(),
+    listVisibleExerciseTypesAction(),
   ]);
 
   return (

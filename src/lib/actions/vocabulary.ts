@@ -249,6 +249,22 @@ export async function getMyQuizQuestionsAction(scope: WordScope = "mixed"): Prom
     if (!realByVocabId.has(q.vocabId) && q.answers.length >= 2) realByVocabId.set(q.vocabId, q);
   }
 
+  // The synthetic ("which word means X?") fallback uses the scoped word pool itself as decoy
+  // options — fine most of the time, but a scope like "new" can leave only 1-2 words some days,
+  // which would produce a multiple-choice question with just 1 option (impossible to answer
+  // wrong). Pad the decoy pool from the wider vocabulary bank in that case; a decoy never needs
+  // an eligibility check since picking one just grades the attempt wrong.
+  const MIN_OPTIONS = 4;
+  const needsSynthetic = dailyWords.some((v) => !realByVocabId.has(v.id));
+  let decoyPool = dailyWords;
+  if (needsSynthetic && dailyWords.length < MIN_OPTIONS) {
+    const extra = await prisma.vocabulary.findMany({
+      where: { id: { notIn: dailyWords.map((v) => v.id) } },
+      take: MIN_OPTIONS * 2,
+    });
+    decoyPool = [...dailyWords, ...extra];
+  }
+
   return shuffle(dailyWords).map((vocab): QuizQuestionItem => {
     const real = realByVocabId.get(vocab.id);
     if (real) {
@@ -262,11 +278,12 @@ export async function getMyQuizQuestionsAction(scope: WordScope = "mixed"): Prom
         explanation: real.explanation ?? undefined,
       };
     }
+    const decoys = shuffle(decoyPool.filter((v) => v.id !== vocab.id)).slice(0, MIN_OPTIONS - 1);
     return {
       vocabId: vocab.id,
       topicId: vocab.topicId,
       questionText: formatMessage(dict.quizSession.questionPrompt, { mean: vocab.meanVI }),
-      options: shuffle(dailyWords.map((v) => ({ id: v.id, text: v.vocab }))),
+      options: shuffle([{ id: vocab.id, text: vocab.vocab }, ...decoys.map((v) => ({ id: v.id, text: v.vocab }))]),
       vocabWord: vocab.vocab,
       definition: vocab.definition,
     };

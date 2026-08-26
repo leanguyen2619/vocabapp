@@ -4,7 +4,7 @@ import { ArrowLeft, BookOpen } from "lucide-react";
 
 import { QuizSession } from "@/components/quiz-session";
 import { RandomExerciseButton } from "@/components/random-exercise-button";
-import { listExerciseTypesAction } from "@/lib/actions/exercise-types";
+import { listVisibleExerciseTypesAction } from "@/lib/actions/exercise-types";
 import { getMyQuizQuestionsAction, listTopicsAction } from "@/lib/actions/vocabulary";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
@@ -24,7 +24,7 @@ export default async function QuizPage({
   const [questions, topics, exerciseTypes] = await Promise.all([
     getMyQuizQuestionsAction(scope),
     listTopicsAction(),
-    listExerciseTypesAction(),
+    listVisibleExerciseTypesAction(),
   ]);
 
   return (

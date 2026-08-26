@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { getMyStudentLevelIndexAction, listLevelsAction } from "@/lib/actions/levels";
 import { getCurrentAccount } from "@/lib/session";
 import type { PracticeTypeCode } from "@/types";
 
@@ -51,6 +52,24 @@ export async function listExerciseTypesAction(): Promise<ExerciseTypeSummary[]> 
     enabled: pt.enabled,
     href: HREF_BY_CODE[pt.type],
   }));
+}
+
+/**
+ * Same visibility rule the /exercises page applies (enabled + level unlocked for students, all
+ * enabled types for teacher/admin) — used by RandomExerciseButton on every game page so "shuffle
+ * to another exercise" can't jump a student ahead into a type above their current level.
+ */
+export async function listVisibleExerciseTypesAction(): Promise<ExerciseTypeSummary[]> {
+  const account = await getCurrentAccount();
+  if (!account) return [];
+
+  const [types, levels, studentLevelIndex] = await Promise.all([
+    listExerciseTypesAction(),
+    listLevelsAction(),
+    account.role === "student" ? getMyStudentLevelIndexAction() : Promise.resolve(null),
+  ]);
+  const maxLevel = studentLevelIndex ?? levels.length;
+  return types.filter((t) => t.enabled && t.level <= maxLevel);
 }
 
 export async function updateExerciseTypeAction(

@@ -55,6 +55,7 @@ import {
 } from "@/lib/actions/accounts";
 import type { PendingResetRequest } from "@/lib/actions/password-reset-requests";
 import { formatMessage } from "@/lib/i18n/format";
+import { getInitials } from "@/lib/utils";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Account, Role, SchoolClass } from "@/types";
 
@@ -514,12 +515,7 @@ export function AdminAccountsClient({
               const accEmail = summary.email;
               const isSelf = acc.id_login === adminAccount.id_login;
               const isActive = acc.status === "active";
-              const initials = acc.fullName
-                .split(" ")
-                .map((p) => p[0])
-                .slice(-2)
-                .join("")
-                .toUpperCase();
+              const initials = getInitials(acc.fullName);
 
               return (
                 <div key={acc.id_login}>
@@ -611,14 +607,7 @@ export function AdminAccountsClient({
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-3">
                 <Avatar className="size-12">
-                  <AvatarFallback>
-                    {detailTarget.account.fullName
-                      .split(" ")
-                      .map((p) => p[0])
-                      .slice(-2)
-                      .join("")
-                      .toUpperCase()}
-                  </AvatarFallback>
+                  <AvatarFallback>{getInitials(detailTarget.account.fullName)}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col gap-1">
                   <p className="font-medium">{detailTarget.account.fullName}</p>

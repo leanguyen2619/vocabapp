@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { SessionAccount } from "@/lib/session";
+import { getInitials } from "@/lib/utils";
 
 export function HeaderAuthActions({
   account,
@@ -13,12 +14,7 @@ export function HeaderAuthActions({
   dict: Dictionary;
 }) {
   if (account) {
-    const initials = account.fullName
-      .split(" ")
-      .map((part) => part[0])
-      .slice(-2)
-      .join("")
-      .toUpperCase();
+    const initials = getInitials(account.fullName);
 
     return (
       <div className="flex shrink-0 items-center gap-2">

@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { logoutAction } from "@/lib/actions/auth";
+import { getInitials } from "@/lib/utils";
 import type { Account } from "@/types";
 
 export function DashboardShell({
@@ -25,12 +26,7 @@ export function DashboardShell({
   const router = useRouter();
   const { dict } = useLocale();
 
-  const initials = account.fullName
-    .split(" ")
-    .map((part) => part[0])
-    .slice(-2)
-    .join("")
-    .toUpperCase();
+  const initials = getInitials(account.fullName);
 
   const handleLogout = async () => {
     await logoutAction();

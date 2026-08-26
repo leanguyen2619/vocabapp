@@ -13,3 +13,17 @@ export function shuffle<T>(items: T[]): T[] {
   }
   return result
 }
+
+/** Up to 2 avatar-initial letters from a full name. Collapses repeated whitespace first — a
+ * naive `.split(" ")` turns a double space into an empty segment whose first character is
+ * `undefined`, which then renders as the literal text "undefined" in the avatar. */
+export function getInitials(fullName: string): string {
+  return fullName
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part[0])
+    .slice(-2)
+    .join("")
+    .toUpperCase()
+}
