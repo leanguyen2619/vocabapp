@@ -75,6 +75,15 @@ const en: Dictionary = {
     ctaLogin: "Log in",
     goToDashboard: "Go to Dashboard",
     featuresTitle: "Choose the way you learn best",
+    featureCarousel: {
+      prevAriaLabel: "Previous cards",
+      nextAriaLabel: "Next cards",
+      learnTitle: "Learn",
+      flashcardTitle: "Flashcards",
+      quizTitle: "Quiz",
+      quizDuration: "Time: 6 minutes",
+      matchTitle: "Matching",
+    },
   },
   login: {
     title: "Log in",

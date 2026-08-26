@@ -3,10 +3,13 @@
 import { useRef } from "react";
 import { Check, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+
 const SCROLL_AMOUNT = 300;
 
-export function FeatureCarousel() {
+export function FeatureCarousel({ dict }: { dict: Dictionary }) {
   const trackRef = useRef<HTMLDivElement>(null);
+  const t = dict.landing.featureCarousel;
 
   const scroll = (direction: 1 | -1) => {
     trackRef.current?.scrollBy({ left: direction * SCROLL_AMOUNT, behavior: "smooth" });
@@ -17,7 +20,7 @@ export function FeatureCarousel() {
       <button
         type="button"
         onClick={() => scroll(-1)}
-        aria-label="Xem thẻ trước"
+        aria-label={t.prevAriaLabel}
         className="absolute top-1/2 left-0 z-10 hidden size-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background shadow-md hover:bg-muted sm:flex"
       >
         <ChevronLeft className="size-5" />
@@ -29,7 +32,7 @@ export function FeatureCarousel() {
       >
         {/* Học */}
         <div className="flex h-72 w-64 shrink-0 snap-start flex-col overflow-hidden rounded-3xl bg-linear-to-br from-sky-400 to-sky-500 p-5">
-          <h3 className="text-lg font-semibold text-white">Học</h3>
+          <h3 className="text-lg font-semibold text-white">{t.learnTitle}</h3>
           <div className="mt-5 flex flex-1 flex-col rounded-2xl bg-white p-4 shadow-lg">
             <div className="mb-4 flex h-20 items-center justify-center rounded-xl bg-linear-to-br from-sky-100 to-sky-300">
               <Sparkles className="size-8 text-sky-600" />
@@ -41,7 +44,7 @@ export function FeatureCarousel() {
 
         {/* Thẻ ghi nhớ */}
         <div className="flex h-72 w-64 shrink-0 snap-start flex-col overflow-hidden rounded-3xl bg-linear-to-br from-indigo-500 to-indigo-600 p-5">
-          <h3 className="text-lg font-semibold text-white">Thẻ ghi nhớ</h3>
+          <h3 className="text-lg font-semibold text-white">{t.flashcardTitle}</h3>
           <div className="relative mt-5 flex-1">
             <div className="absolute inset-x-3 top-4 h-full rounded-2xl bg-white/40" />
             <div className="absolute inset-x-0 top-0 flex h-[calc(100%-1rem)] flex-col items-center justify-center gap-1 rounded-2xl bg-white p-4 text-center shadow-lg">
@@ -54,9 +57,9 @@ export function FeatureCarousel() {
 
         {/* Kiểm tra */}
         <div className="flex h-72 w-64 shrink-0 snap-start flex-col overflow-hidden rounded-3xl bg-linear-to-br from-amber-300 to-amber-400 p-5">
-          <h3 className="text-lg font-semibold text-neutral-900">Kiểm tra</h3>
+          <h3 className="text-lg font-semibold text-neutral-900">{t.quizTitle}</h3>
           <div className="mt-5 flex flex-1 flex-col rounded-2xl bg-white p-4 shadow-lg">
-            <p className="mb-4 text-sm text-muted-foreground">Thời gian: 6 phút</p>
+            <p className="mb-4 text-sm text-muted-foreground">{t.quizDuration}</p>
             <div className="flex items-center gap-4">
               <div
                 className="relative flex size-20 shrink-0 items-center justify-center rounded-full"
@@ -81,7 +84,7 @@ export function FeatureCarousel() {
 
         {/* Ghép thẻ */}
         <div className="flex h-72 w-64 shrink-0 snap-start flex-col overflow-hidden rounded-3xl bg-linear-to-br from-rose-300 to-rose-400 p-5">
-          <h3 className="text-lg font-semibold text-neutral-900">Ghép thẻ</h3>
+          <h3 className="text-lg font-semibold text-neutral-900">{t.matchTitle}</h3>
           <div className="mt-5 grid flex-1 grid-cols-2 gap-2 rounded-2xl bg-white p-4 shadow-lg">
             <div className="flex items-center justify-center rounded-lg bg-muted px-2 text-center text-sm font-medium">
               ambitious
@@ -104,7 +107,7 @@ export function FeatureCarousel() {
       <button
         type="button"
         onClick={() => scroll(1)}
-        aria-label="Xem thẻ tiếp theo"
+        aria-label={t.nextAriaLabel}
         className="absolute top-1/2 right-0 z-10 hidden size-10 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background shadow-md hover:bg-muted sm:flex"
       >
         <ChevronRight className="size-5" />

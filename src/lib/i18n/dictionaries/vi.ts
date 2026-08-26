@@ -73,6 +73,15 @@ const vi = {
     ctaLogin: "Đăng nhập",
     goToDashboard: "Vào Dashboard",
     featuresTitle: "Chọn cách học phù hợp với bạn",
+    featureCarousel: {
+      prevAriaLabel: "Xem thẻ trước",
+      nextAriaLabel: "Xem thẻ tiếp theo",
+      learnTitle: "Học",
+      flashcardTitle: "Thẻ ghi nhớ",
+      quizTitle: "Kiểm tra",
+      quizDuration: "Thời gian: 6 phút",
+      matchTitle: "Ghép thẻ",
+    },
   },
   login: {
     title: "Đăng nhập",

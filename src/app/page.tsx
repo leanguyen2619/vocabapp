@@ -67,7 +67,7 @@ export default async function Home() {
           <h2 className="mb-6 text-center font-heading text-2xl font-semibold tracking-tight sm:text-left">
             {dict.landing.featuresTitle}
           </h2>
-          <FeatureCarousel />
+          <FeatureCarousel dict={dict} />
         </section>
       </main>
     </div>
