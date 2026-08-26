@@ -71,6 +71,23 @@ interface ImportRow {
   level?: string;
 }
 
+const IMPORT_COLUMNS: (keyof ImportRow)[] = ["vocab", "definition", "meanVI", "partOfSpeech", "topic", "level"];
+
+/** Matches each expected column against the file's actual header text case-insensitively (and
+ * ignoring stray leading/trailing spaces), so a header like "Vocab" or "PARTOFSPEECH" still maps
+ * to the right field instead of silently dropping every row. */
+function normalizeImportRow(raw: Record<string, unknown>): ImportRow {
+  const byLowerHeader = new Map(Object.keys(raw).map((key) => [key.trim().toLowerCase(), key]));
+  const row: ImportRow = {};
+  for (const column of IMPORT_COLUMNS) {
+    const actualHeader = byLowerHeader.get(column.toLowerCase());
+    if (actualHeader !== undefined) {
+      row[column] = raw[actualHeader] as string | undefined;
+    }
+  }
+  return row;
+}
+
 export function AdminVocabularyClient({
   initialWords,
   levels,
@@ -216,7 +233,8 @@ export function AdminVocabularyClient({
       const buffer = await file.arrayBuffer();
       const workbook = XLSX.read(buffer, { type: "array" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json<ImportRow>(sheet);
+      const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet);
+      const rows = rawRows.map(normalizeImportRow);
 
       const existingWords = new Set(words.map((w) => w.vocab.toLowerCase()));
       const seenInFile = new Set<string>();
