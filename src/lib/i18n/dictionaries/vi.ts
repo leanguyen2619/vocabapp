@@ -559,6 +559,8 @@ const vi = {
       subtitle: "Chỉnh tay trạng thái mở khóa A1/A2/B1/B2 cho từng học viên.",
       studentLabel: "Học viên",
       chooseStudent: "Chọn học viên",
+      studentSearchPlaceholder: "Tìm học viên theo tên hoặc email...",
+      noStudentsFound: "Không tìm thấy học viên phù hợp.",
       noStudents: "Chưa có học viên nào trong hệ thống.",
       noteLabel: "Ghi chú (tuỳ chọn)",
       save: "Lưu",

@@ -64,8 +64,17 @@ export function AdminLevelsClient({
     statusesFromEntries(initialEntries)
   );
   const [notes, setNotes] = useState<Record<string, string>>(notesFromEntries(initialEntries));
+  const [studentSearch, setStudentSearch] = useState("");
 
   const selectedStudent = students.find((s) => s.id_login === selectedId);
+
+  const studentQuery = studentSearch.trim().toLowerCase();
+  const filteredStudents = studentQuery
+    ? students.filter(
+        (s) =>
+          s.fullName.toLowerCase().includes(studentQuery) || s.email.toLowerCase().includes(studentQuery)
+      )
+    : students;
 
   const handleSelectStudent = async (id: string) => {
     setSelectedId(id);
@@ -122,6 +131,12 @@ export function AdminLevelsClient({
           <>
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium">{dict.admin.levels.studentLabel}</label>
+              <Input
+                value={studentSearch}
+                onChange={(e) => setStudentSearch(e.target.value)}
+                placeholder={dict.admin.levels.studentSearchPlaceholder}
+                className="w-full sm:w-72"
+              />
               <Select value={selectedId} onValueChange={(v) => v && void handleSelectStudent(v)}>
                 <SelectTrigger className="w-full sm:w-72">
                   <SelectValue>
@@ -132,11 +147,17 @@ export function AdminLevelsClient({
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {students.map((s) => (
-                    <SelectItem key={s.id_login} value={s.id_login}>
-                      {s.fullName} ({s.email})
-                    </SelectItem>
-                  ))}
+                  {filteredStudents.length === 0 ? (
+                    <p className="px-2 py-4 text-center text-sm text-muted-foreground">
+                      {dict.admin.levels.noStudentsFound}
+                    </p>
+                  ) : (
+                    filteredStudents.map((s) => (
+                      <SelectItem key={s.id_login} value={s.id_login}>
+                        {s.fullName} ({s.email})
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>

@@ -561,6 +561,8 @@ const en: Dictionary = {
       subtitle: "Manually set A1/A2/B1/B2 unlock status for each student.",
       studentLabel: "Student",
       chooseStudent: "Choose a student",
+      studentSearchPlaceholder: "Search students by name or email...",
+      noStudentsFound: "No matching students found.",
       noStudents: "No students in the system yet.",
       noteLabel: "Note (optional)",
       save: "Save",

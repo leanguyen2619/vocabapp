@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PaginationControls } from "@/components/pagination-controls";
 import {
   createClassAction,
   deleteClassAction,
@@ -50,6 +51,12 @@ export function AdminClassesClient({
   const [deleteTarget, setDeleteTarget] = useState<ClassWithStudentCount | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [page, setPage] = useState(1);
+
+  const PAGE_SIZE = 10;
+  const totalPages = Math.max(1, Math.ceil(classes.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pagedClasses = classes.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const resetForm = () => {
     setClassName("");
@@ -68,7 +75,9 @@ export function AdminClassesClient({
       return;
     }
 
-    setClasses(await listClassesWithCountsAction());
+    const refreshed = await listClassesWithCountsAction();
+    setClasses(refreshed);
+    setPage(Math.max(1, Math.ceil(refreshed.length / PAGE_SIZE)));
     setDialogOpen(false);
     const createdName = className.trim();
     resetForm();
@@ -204,7 +213,7 @@ export function AdminClassesClient({
 
         <Card>
           <CardContent className="flex flex-col gap-1 py-4">
-            {classes.map((cls, index) => (
+            {pagedClasses.map((cls, index) => (
               <div key={cls.id}>
                 {index > 0 && <div className="my-3 h-px bg-border" />}
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -246,6 +255,8 @@ export function AdminClassesClient({
             ))}
           </CardContent>
         </Card>
+
+        <PaginationControls page={currentPage} totalPages={totalPages} onPageChange={setPage} />
       </main>
 
       <Dialog

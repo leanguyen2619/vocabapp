@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, BookOpen, Search, Volume2 } from "lucide-react";
 
+import { PaginationControls } from "@/components/pagination-controls";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -43,6 +44,9 @@ export function VocabularyClient({
   const [topicFilter, setTopicFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState<"all" | LearningStatus>("all");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+
+  const PAGE_SIZE = 12;
 
   const masteredCount = myVocabulary.filter((v) => v.learningStatus === "mastered").length;
   const learningCount = myVocabulary.filter((v) => v.learningStatus === "learning").length;
@@ -58,6 +62,10 @@ export function VocabularyClient({
     }
     return true;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
     <div className="flex flex-1 flex-col bg-background">
@@ -103,7 +111,13 @@ export function VocabularyClient({
         </div>
 
         <div className="flex flex-col gap-3">
-          <Tabs value={levelFilter} onValueChange={(value) => setLevelFilter(value as string)}>
+          <Tabs
+            value={levelFilter}
+            onValueChange={(value) => {
+              setLevelFilter(value as string);
+              setPage(1);
+            }}
+          >
             <TabsList>
               <TabsTrigger value="all">{dict.vocabulary.allLevels}</TabsTrigger>
               {levels.map((level) => (
@@ -116,7 +130,10 @@ export function VocabularyClient({
 
           <Tabs
             value={statusFilter}
-            onValueChange={(value) => setStatusFilter(value as "all" | LearningStatus)}
+            onValueChange={(value) => {
+              setStatusFilter(value as "all" | LearningStatus);
+              setPage(1);
+            }}
           >
             <TabsList>
               <TabsTrigger value="all">{dict.vocabulary.allStatus}</TabsTrigger>
@@ -127,7 +144,13 @@ export function VocabularyClient({
           </Tabs>
 
           <div className="flex items-center gap-2">
-            <Select value={topicFilter} onValueChange={(value) => setTopicFilter(value as string)}>
+            <Select
+              value={topicFilter}
+              onValueChange={(value) => {
+                setTopicFilter(value as string);
+                setPage(1);
+              }}
+            >
               <SelectTrigger className="w-40">
                 <SelectValue placeholder={dict.vocabulary.topicPlaceholder}>
                   {(value: string) =>
@@ -151,7 +174,10 @@ export function VocabularyClient({
               <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
                 placeholder={dict.vocabulary.searchPlaceholder}
                 className="w-44 pl-8"
               />
@@ -166,7 +192,7 @@ export function VocabularyClient({
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((word) => (
+            {paged.map((word) => (
               <Card key={word.id}>
                 <CardContent className="flex flex-col gap-2 py-4">
                   <div className="flex items-start justify-between gap-2">
@@ -201,6 +227,8 @@ export function VocabularyClient({
             ))}
           </div>
         )}
+
+        <PaginationControls page={currentPage} totalPages={totalPages} onPageChange={setPage} />
       </main>
     </div>
   );
