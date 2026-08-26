@@ -8,7 +8,7 @@ import { dictionaries, type Dictionary, type Locale } from "@/lib/i18n/dictionar
 interface LocaleContextValue {
   locale: Locale;
   dict: Dictionary;
-  setLocale: (locale: Locale) => void;
+  setLocale: (locale: Locale) => Promise<void>;
 }
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
@@ -23,9 +23,12 @@ export function LocaleProvider({
 }) {
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
 
-  const setLocale = useCallback((next: Locale) => {
+  const setLocale = useCallback(async (next: Locale) => {
     setLocaleState(next);
-    void setLocaleAction(next);
+    // Awaited by the caller before it triggers a router.refresh() — without this, the refresh's
+    // server request could race the cookie write and re-render with the OLD locale, making the
+    // toggle look broken/unresponsive until a second click.
+    await setLocaleAction(next);
   }, []);
 
   const value = useMemo(
