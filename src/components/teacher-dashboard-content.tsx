@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
@@ -104,6 +104,10 @@ export function TeacherDashboardContent({
   const [resetting, setResetting] = useState(false);
   const [knownCredentials, setKnownCredentials] = useState<Record<string, KnownCredentials>>({});
   const [resetRequests, setResetRequests] = useState(initialResetRequests);
+  // Tracks the most recently requested student so an in-flight fetch that resolves late (out of
+  // order, e.g. after a second "Chi tiết" click) can't overwrite the currently-open dialog with
+  // the wrong student's data.
+  const detailRequestId = useRef<string | null>(null);
 
   const className = assignedClassName ?? null;
   const studentCount = students.length;
@@ -182,12 +186,14 @@ export function TeacherDashboardContent({
   };
 
   const openDetail = async (studentId: string) => {
+    detailRequestId.current = studentId;
     setDetailStudentId(studentId);
     setDetailData(null);
     setNewPassword("");
     setResetError(null);
     setDetailLoading(true);
     const data = await getStudentDetailAction(studentId);
+    if (detailRequestId.current !== studentId) return;
     setDetailLoading(false);
     setDetailData(data);
   };
@@ -540,6 +546,7 @@ export function TeacherDashboardContent({
         open={detailStudentId !== null}
         onOpenChange={(open) => {
           if (!open) {
+            detailRequestId.current = null;
             setDetailStudentId(null);
             setDetailData(null);
             setDetailLoading(false);
