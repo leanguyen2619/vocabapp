@@ -7,7 +7,7 @@ import { BookOpen, Flame, LogOut } from "lucide-react";
 
 import { useLocale } from "@/components/locale-provider";
 import { LanguageToggle } from "@/components/language-toggle";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { logoutAction } from "@/lib/actions/auth";
@@ -54,6 +54,7 @@ export function DashboardShell({
             <LanguageToggle />
             <Link href="/profile" aria-label={dict.common.profile}>
               <Avatar>
+                {account.avatarUrl && <AvatarImage src={account.avatarUrl} alt={account.fullName} />}
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
             </Link>

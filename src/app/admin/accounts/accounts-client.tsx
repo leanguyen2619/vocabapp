@@ -22,7 +22,7 @@ import {
 
 import { PaginationControls } from "@/components/pagination-controls";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -547,6 +547,7 @@ export function AdminAccountsClient({
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-3">
                       <Avatar>
+                        {acc.avatarUrl && <AvatarImage src={acc.avatarUrl} alt={acc.fullName} />}
                         <AvatarFallback>{initials}</AvatarFallback>
                       </Avatar>
                       <div>
@@ -631,6 +632,9 @@ export function AdminAccountsClient({
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-3">
                 <Avatar className="size-12">
+                  {detailTarget.account.avatarUrl && (
+                    <AvatarImage src={detailTarget.account.avatarUrl} alt={detailTarget.account.fullName} />
+                  )}
                   <AvatarFallback>{getInitials(detailTarget.account.fullName)}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col gap-1">

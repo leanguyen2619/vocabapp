@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type SubmitEvent } from "react";
+import { useRef, useState, type SubmitEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ import {
   AlertCircle,
   ArrowLeft,
   BookOpen,
+  Camera,
   Flame,
   GraduationCap,
   KeyRound,
@@ -19,7 +20,7 @@ import {
 
 import { LevelCard } from "@/components/level-card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,7 +35,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { changePasswordAction, logoutAction, updateFullNameAction } from "@/lib/actions/auth";
+import {
+  changePasswordAction,
+  logoutAction,
+  removeAvatarAction,
+  updateAvatarAction,
+  updateFullNameAction,
+} from "@/lib/actions/auth";
+import { fileToAvatarDataUrl } from "@/lib/avatar-image";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { SessionAccount } from "@/lib/session";
 import { getInitials } from "@/lib/utils";
@@ -55,6 +63,9 @@ export function ProfileClient({
   const [displayName, setDisplayName] = useState(account.fullName);
   const [editing, setEditing] = useState(false);
   const [fullName, setFullName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState(account.avatarUrl);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -79,6 +90,38 @@ export function ProfileClient({
   const startEditing = () => {
     setFullName(displayName);
     setEditing(true);
+  };
+
+  const handleAvatarChange = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error(dict.profile.avatarErrorType);
+      return;
+    }
+    setAvatarUploading(true);
+    try {
+      const dataUrl = await fileToAvatarDataUrl(file);
+      const result = await updateAvatarAction(dataUrl);
+      if (result.error !== undefined) {
+        toast.error(result.error);
+        return;
+      }
+      setAvatarUrl(result.avatarUrl);
+      toast.success(dict.profile.avatarUpdateSuccess);
+    } catch {
+      toast.error(dict.profile.avatarErrorGeneric);
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    const result = await removeAvatarAction();
+    if (result.error !== undefined) {
+      toast.error(result.error);
+      return;
+    }
+    setAvatarUrl(null);
+    toast.success(dict.profile.avatarRemoveSuccess);
   };
 
   const handleSave = async () => {
@@ -154,9 +197,32 @@ export function ProfileClient({
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-10">
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-4 text-center sm:flex-row sm:items-start sm:text-left">
-            <Avatar className="size-16">
-              <AvatarFallback className="text-lg">{initials}</AvatarFallback>
-            </Avatar>
+            <div className="relative shrink-0">
+              <Avatar className="size-16">
+                {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
+                <AvatarFallback className="text-lg">{initials}</AvatarFallback>
+              </Avatar>
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={avatarUploading}
+                aria-label={dict.profile.changeAvatar}
+                className="absolute -right-1 -bottom-1 flex size-6 items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 disabled:opacity-50"
+              >
+                <Camera className="size-3" />
+              </button>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/jpeg,image/png"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void handleAvatarChange(file);
+                  e.target.value = "";
+                }}
+              />
+            </div>
 
             <div className="flex flex-1 flex-col gap-2">
               {editing ? (
@@ -207,6 +273,16 @@ export function ProfileClient({
                   </span>
                 )}
               </div>
+
+              {avatarUrl && (
+                <button
+                  type="button"
+                  onClick={() => void handleRemoveAvatar()}
+                  className="self-center text-xs text-muted-foreground underline hover:text-foreground sm:self-start"
+                >
+                  {dict.profile.removeAvatar}
+                </button>
+              )}
             </div>
 
             <div className="flex shrink-0 items-center gap-2">

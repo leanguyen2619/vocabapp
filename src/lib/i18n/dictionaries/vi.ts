@@ -229,6 +229,12 @@ const vi = {
     wordsMastered: "Từ đã thuộc",
     levelsCompleted: "Cấp độ hoàn thành",
     levelProgress: "Tiến độ theo cấp độ",
+    changeAvatar: "Đổi ảnh đại diện",
+    removeAvatar: "Xóa ảnh",
+    avatarErrorType: "Vui lòng chọn file ảnh JPEG hoặc PNG.",
+    avatarErrorGeneric: "Không đọc được ảnh này. Vui lòng thử ảnh khác.",
+    avatarUpdateSuccess: "Đã cập nhật ảnh đại diện.",
+    avatarRemoveSuccess: "Đã xóa ảnh đại diện.",
   },
   vocabulary: {
     title: "My Vocabulary",

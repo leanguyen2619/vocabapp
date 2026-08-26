@@ -231,6 +231,12 @@ const en: Dictionary = {
     wordsMastered: "Words mastered",
     levelsCompleted: "Levels completed",
     levelProgress: "Progress by level",
+    changeAvatar: "Change avatar",
+    removeAvatar: "Remove photo",
+    avatarErrorType: "Please choose a JPEG or PNG image file.",
+    avatarErrorGeneric: "Couldn't read this image. Please try another one.",
+    avatarUpdateSuccess: "Avatar updated.",
+    avatarRemoveSuccess: "Avatar removed.",
   },
   vocabulary: {
     title: "My Vocabulary",

@@ -111,3 +111,35 @@ export async function changePasswordAction(
   await prisma.account.update({ where: { id_login: session.id_login }, data: { passwordHash } });
   return {};
 }
+
+const AVATAR_DATA_URL_PATTERN = /^data:image\/(jpeg|png);base64,/;
+// The client resizes to a small square before encoding, so a real upload is only a few KB — this
+// generously bounds the request in case someone calls the action directly, bypassing that resize.
+const MAX_AVATAR_DATA_URL_LENGTH = 300_000;
+
+/** Re-derives identity from the session cookie, not from any client-supplied id. */
+export async function updateAvatarAction(
+  dataUrl: string
+): Promise<{ error: string } | { error?: undefined; avatarUrl: string }> {
+  const session = await getCurrentAccount();
+  if (!session) return { error: "Bạn chưa đăng nhập." };
+
+  if (!AVATAR_DATA_URL_PATTERN.test(dataUrl)) {
+    return { error: "Ảnh không hợp lệ. Vui lòng chọn file JPEG hoặc PNG." };
+  }
+  if (dataUrl.length > MAX_AVATAR_DATA_URL_LENGTH) {
+    return { error: "Ảnh quá lớn. Vui lòng chọn ảnh khác." };
+  }
+
+  await prisma.account.update({ where: { id_login: session.id_login }, data: { avatarUrl: dataUrl } });
+  return { avatarUrl: dataUrl };
+}
+
+/** Re-derives identity from the session cookie, not from any client-supplied id. */
+export async function removeAvatarAction(): Promise<{ error: string } | { error?: undefined }> {
+  const session = await getCurrentAccount();
+  if (!session) return { error: "Bạn chưa đăng nhập." };
+
+  await prisma.account.update({ where: { id_login: session.id_login }, data: { avatarUrl: null } });
+  return {};
+}
