@@ -568,6 +568,9 @@ const en: Dictionary = {
       save: "Save",
       saveSuccess: "Updated {level} for {name}.",
       saveError: "Could not save, please try again.",
+      unlockCandidatesTitle: "Students who finished a level and are awaiting the next unlock",
+      unlockCandidateDesc: "finished {completed}, awaiting {next}",
+      unlockCandidateView: "View",
     },
   },
 };

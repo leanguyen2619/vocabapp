@@ -1,7 +1,12 @@
 import { redirect } from "next/navigation";
 
 import { AdminOnlyDenied } from "@/components/admin-only-denied";
-import { getAccountLevelStatusesAction, listLevelsAction, listStudentsAction } from "@/lib/actions/levels";
+import {
+  getAccountLevelStatusesAction,
+  listLevelsAction,
+  listLevelUnlockCandidatesAction,
+  listStudentsAction,
+} from "@/lib/actions/levels";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
@@ -13,7 +18,11 @@ export default async function AdminLevelsPage() {
   const dict = getDictionary(await getLocale());
   if (account.role !== "admin") return <AdminOnlyDenied dict={dict} />;
 
-  const [students, levels] = await Promise.all([listStudentsAction(), listLevelsAction()]);
+  const [students, levels, unlockCandidates] = await Promise.all([
+    listStudentsAction(),
+    listLevelsAction(),
+    listLevelUnlockCandidatesAction(),
+  ]);
   const initialEntries = students[0] ? await getAccountLevelStatusesAction(students[0].id_login) : {};
 
   return (
@@ -21,6 +30,7 @@ export default async function AdminLevelsPage() {
       students={students}
       levels={levels}
       initialEntries={initialEntries}
+      unlockCandidates={unlockCandidates}
       dict={dict}
     />
   );

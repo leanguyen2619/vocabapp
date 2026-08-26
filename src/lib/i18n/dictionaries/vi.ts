@@ -566,6 +566,9 @@ const vi = {
       save: "Lưu",
       saveSuccess: "Đã cập nhật cấp độ {level} cho {name}.",
       saveError: "Không thể lưu, vui lòng thử lại.",
+      unlockCandidatesTitle: "Học sinh đã hoàn thành cấp, đang chờ mở cấp tiếp theo",
+      unlockCandidateDesc: "đã hoàn thành {completed}, đang chờ mở {next}",
+      unlockCandidateView: "Xem",
     },
   },
 };

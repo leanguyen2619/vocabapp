@@ -20,6 +20,7 @@ import {
   getAccountLevelStatusesAction,
   setAccountLevelStatusAction,
   type AccountLevelEntry,
+  type LevelUnlockCandidate,
   type StudentSummary,
 } from "@/lib/actions/levels";
 import { formatMessage } from "@/lib/i18n/format";
@@ -52,11 +53,13 @@ export function AdminLevelsClient({
   students,
   levels,
   initialEntries,
+  unlockCandidates,
   dict,
 }: {
   students: StudentSummary[];
   levels: Level[];
   initialEntries: Record<string, AccountLevelEntry>;
+  unlockCandidates: LevelUnlockCandidate[];
   dict: Dictionary;
 }) {
   const [selectedId, setSelectedId] = useState<string>(students[0]?.id_login ?? "");
@@ -65,6 +68,7 @@ export function AdminLevelsClient({
   );
   const [notes, setNotes] = useState<Record<string, string>>(notesFromEntries(initialEntries));
   const [studentSearch, setStudentSearch] = useState("");
+  const [candidates, setCandidates] = useState<LevelUnlockCandidate[]>(unlockCandidates);
 
   const selectedStudent = students.find((s) => s.id_login === selectedId);
 
@@ -84,10 +88,16 @@ export function AdminLevelsClient({
   };
 
   const handleSave = async (levelId: string, levelName: string) => {
-    const ok = await setAccountLevelStatusAction(selectedId, levelId, statusMap[levelId], notes[levelId]);
+    const newStatus = statusMap[levelId];
+    const ok = await setAccountLevelStatusAction(selectedId, levelId, newStatus, notes[levelId]);
     if (!ok) {
       toast.error(dict.admin.levels.saveError);
       return;
+    }
+    if (newStatus !== "locked") {
+      setCandidates((prev) =>
+        prev.filter((c) => !(c.accountId === selectedId && c.nextLevelId === levelId))
+      );
     }
     toast.success(
       formatMessage(dict.admin.levels.saveSuccess, {
@@ -95,6 +105,10 @@ export function AdminLevelsClient({
         name: selectedStudent?.fullName ?? "",
       })
     );
+  };
+
+  const handleViewCandidate = (accountId: string) => {
+    void handleSelectStudent(accountId);
   };
 
   return (
@@ -124,6 +138,38 @@ export function AdminLevelsClient({
           </h1>
           <p className="text-muted-foreground">{dict.admin.levels.subtitle}</p>
         </div>
+
+        {candidates.length > 0 && (
+          <Card>
+            <CardContent className="flex flex-col gap-1 py-4">
+              <p className="mb-2 text-sm font-medium">{dict.admin.levels.unlockCandidatesTitle}</p>
+              {candidates.map((c, index) => (
+                <div key={`${c.accountId}-${c.nextLevelId}`}>
+                  {index > 0 && <div className="my-2 h-px bg-border" />}
+                  <div className="flex items-center justify-between gap-3 py-1">
+                    <div>
+                      <span className="font-medium">{c.fullName}</span>{" "}
+                      <span className="text-sm text-muted-foreground">
+                        —{" "}
+                        {formatMessage(dict.admin.levels.unlockCandidateDesc, {
+                          completed: c.completedLevelName,
+                          next: c.nextLevelName,
+                        })}
+                      </span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleViewCandidate(c.accountId)}
+                    >
+                      {dict.admin.levels.unlockCandidateView}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         {students.length === 0 ? (
           <p className="text-sm text-muted-foreground">{dict.admin.levels.noStudents}</p>

@@ -109,6 +109,56 @@ export async function getAccountLevelStatusesAction(
   return map;
 }
 
+export interface LevelUnlockCandidate {
+  accountId: string;
+  fullName: string;
+  email: string;
+  completedLevelName: string;
+  nextLevelId: string;
+  nextLevelName: string;
+}
+
+/**
+ * Students who fully completed a level but the next one is still locked — level progression is
+ * intentionally manual (an admin must review and unlock each next level), so this is purely a
+ * discoverability aid: without it an admin has no way to know who's waiting without opening every
+ * student one by one. Reports only the earliest pending gap per student, since a level can only
+ * naturally become "completed" through practice, which is impossible while it's still locked.
+ */
+export async function listLevelUnlockCandidatesAction(): Promise<LevelUnlockCandidate[]> {
+  const admin = await requireAdmin();
+  if (!admin) return [];
+
+  const [levels, students, accountLevels] = await Promise.all([
+    prisma.level.findMany({ orderBy: { id: "asc" } }),
+    prisma.account.findMany({ where: { role: "student" }, orderBy: { fullName: "asc" } }),
+    prisma.accountLevel.findMany(),
+  ]);
+
+  const candidates: LevelUnlockCandidate[] = [];
+  for (const student of students) {
+    const myLevels = accountLevels.filter((al) => al.accountId === student.id_login);
+    for (let i = 0; i < levels.length - 1; i++) {
+      const current = levels[i];
+      const next = levels[i + 1];
+      const currentStatus = myLevels.find((al) => al.levelId === current.id)?.status ?? "locked";
+      const nextStatus = myLevels.find((al) => al.levelId === next.id)?.status ?? "locked";
+      if (currentStatus === "completed" && nextStatus === "locked") {
+        candidates.push({
+          accountId: student.id_login,
+          fullName: student.fullName,
+          email: student.email,
+          completedLevelName: current.level,
+          nextLevelId: next.id,
+          nextLevelName: next.level,
+        });
+        break;
+      }
+    }
+  }
+  return candidates;
+}
+
 export async function setAccountLevelStatusAction(
   accountId: string,
   levelId: string,
