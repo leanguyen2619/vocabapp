@@ -54,7 +54,7 @@ import {
   type ClassStudentSummary,
   type StudentDetail,
 } from "@/lib/actions/teacher";
-import type { PendingResetRequest } from "@/lib/actions/password-reset-requests";
+import { dismissResetRequestAction, type PendingResetRequest } from "@/lib/actions/password-reset-requests";
 import { formatMessage } from "@/lib/i18n/format";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Account, Vocabulary } from "@/types";
@@ -225,6 +225,16 @@ export function TeacherDashboardContent({
     setResetRequests((prev) => prev.filter((r) => r.accountId !== detailData.id_login));
     toast.success(formatMessage(dict.teacherDashboard.resetSuccess, { name: detailData.fullName }));
     setNewPassword("");
+  };
+
+  const handleDismissRequest = async (requestId: string) => {
+    const ok = await dismissResetRequestAction(requestId);
+    if (!ok) {
+      toast.error(dict.teacherDashboard.resetDismissError);
+      return;
+    }
+    setResetRequests((prev) => prev.filter((r) => r.id !== requestId));
+    toast.success(dict.teacherDashboard.resetDismissSuccess);
   };
 
   return (
@@ -398,14 +408,24 @@ export function TeacherDashboardContent({
                         <span className="font-medium">{req.fullName}</span>{" "}
                         <span className="text-sm text-muted-foreground">— {req.email}</span>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => void openDetail(req.accountId)}
-                      >
-                        <KeyRound className="size-3.5" />
-                        {dict.teacherDashboard.resetRequestButton}
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => void handleDismissRequest(req.id)}
+                        >
+                          <X className="size-3.5" />
+                          {dict.teacherDashboard.resetDismissButton}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => void openDetail(req.accountId)}
+                        >
+                          <KeyRound className="size-3.5" />
+                          {dict.teacherDashboard.resetRequestButton}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}

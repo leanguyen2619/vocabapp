@@ -178,6 +178,9 @@ const en: Dictionary = {
     resetRequestsDesc: "Students in your class who have requested a password reset.",
     resetRequestsEmpty: "No requests yet.",
     resetRequestButton: "Handle",
+    resetDismissButton: "Dismiss",
+    resetDismissSuccess: "Request dismissed.",
+    resetDismissError: "Couldn't dismiss the request. Please try again.",
   },
   adminDashboard: {
     greeting: "Hi {name}",
@@ -442,6 +445,9 @@ const en: Dictionary = {
       resetRequestsTitle: "Forgot-password requests",
       resetRequestsDesc: "Accounts that have requested a password reset.",
       resetRequestButton: "Handle",
+      resetDismissButton: "Dismiss",
+      resetDismissSuccess: "Request dismissed.",
+      resetDismissError: "Couldn't dismiss the request. Please try again.",
     },
     classes: {
       title: "Classes",

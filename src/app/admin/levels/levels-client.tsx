@@ -19,6 +19,7 @@ import {
 import {
   getAccountLevelStatusesAction,
   setAccountLevelStatusAction,
+  type AccountLevelEntry,
   type StudentSummary,
 } from "@/lib/actions/levels";
 import { formatMessage } from "@/lib/i18n/format";
@@ -31,27 +32,46 @@ const statusVariant: Record<AccountLevelStatus, "outline" | "default" | "seconda
   completed: "default",
 };
 
+function statusesFromEntries(entries: Record<string, AccountLevelEntry>): Record<string, AccountLevelStatus> {
+  const result: Record<string, AccountLevelStatus> = {};
+  Object.entries(entries).forEach(([levelId, entry]) => {
+    result[levelId] = entry.status;
+  });
+  return result;
+}
+
+function notesFromEntries(entries: Record<string, AccountLevelEntry>): Record<string, string> {
+  const result: Record<string, string> = {};
+  Object.entries(entries).forEach(([levelId, entry]) => {
+    if (entry.manualNote) result[levelId] = entry.manualNote;
+  });
+  return result;
+}
+
 export function AdminLevelsClient({
   students,
   levels,
-  initialStatusMap,
+  initialEntries,
   dict,
 }: {
   students: StudentSummary[];
   levels: Level[];
-  initialStatusMap: Record<string, AccountLevelStatus>;
+  initialEntries: Record<string, AccountLevelEntry>;
   dict: Dictionary;
 }) {
   const [selectedId, setSelectedId] = useState<string>(students[0]?.id_login ?? "");
-  const [statusMap, setStatusMap] = useState<Record<string, AccountLevelStatus>>(initialStatusMap);
-  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [statusMap, setStatusMap] = useState<Record<string, AccountLevelStatus>>(
+    statusesFromEntries(initialEntries)
+  );
+  const [notes, setNotes] = useState<Record<string, string>>(notesFromEntries(initialEntries));
 
   const selectedStudent = students.find((s) => s.id_login === selectedId);
 
   const handleSelectStudent = async (id: string) => {
     setSelectedId(id);
-    setStatusMap(await getAccountLevelStatusesAction(id));
-    setNotes({});
+    const entries = await getAccountLevelStatusesAction(id);
+    setStatusMap(statusesFromEntries(entries));
+    setNotes(notesFromEntries(entries));
   };
 
   const handleSave = async (levelId: string, levelName: string) => {

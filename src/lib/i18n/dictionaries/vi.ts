@@ -176,6 +176,9 @@ const vi = {
     resetRequestsDesc: "Học sinh trong lớp bạn đã gửi yêu cầu đặt lại mật khẩu.",
     resetRequestsEmpty: "Chưa có yêu cầu nào.",
     resetRequestButton: "Xử lý",
+    resetDismissButton: "Bỏ qua",
+    resetDismissSuccess: "Đã bỏ qua yêu cầu.",
+    resetDismissError: "Không bỏ qua được yêu cầu. Vui lòng thử lại.",
   },
   adminDashboard: {
     greeting: "Chào {name}",
@@ -440,6 +443,9 @@ const vi = {
       resetRequestsTitle: "Yêu cầu quên mật khẩu",
       resetRequestsDesc: "Các tài khoản đã gửi yêu cầu đặt lại mật khẩu.",
       resetRequestButton: "Xử lý",
+      resetDismissButton: "Bỏ qua",
+      resetDismissSuccess: "Đã bỏ qua yêu cầu.",
+      resetDismissError: "Không bỏ qua được yêu cầu. Vui lòng thử lại.",
     },
     classes: {
       title: "Lớp học",

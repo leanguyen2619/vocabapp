@@ -17,6 +17,7 @@ import {
   Pencil,
   Plus,
   Search,
+  X,
 } from "lucide-react";
 
 import { PaginationControls } from "@/components/pagination-controls";
@@ -53,7 +54,10 @@ import {
   updateAccountByAdminAction,
   type AccountSummary,
 } from "@/lib/actions/accounts";
-import type { PendingResetRequest } from "@/lib/actions/password-reset-requests";
+import {
+  dismissResetRequestAction,
+  type PendingResetRequest,
+} from "@/lib/actions/password-reset-requests";
 import { formatMessage } from "@/lib/i18n/format";
 import { getInitials } from "@/lib/utils";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
@@ -252,6 +256,16 @@ export function AdminAccountsClient({
     if (summary) openDetail(summary);
   };
 
+  const handleDismissRequest = async (requestId: string) => {
+    const ok = await dismissResetRequestAction(requestId);
+    if (!ok) {
+      toast.error(dict.admin.accounts.resetDismissError);
+      return;
+    }
+    setResetRequests((prev) => prev.filter((r) => r.id !== requestId));
+    toast.success(dict.admin.accounts.resetDismissSuccess);
+  };
+
   const openDetail = (summary: AccountSummary) => {
     setDetailTarget(summary);
     setEditFullName(summary.account.fullName);
@@ -443,14 +457,24 @@ export function AdminAccountsClient({
                       <span className="font-medium">{req.fullName}</span>{" "}
                       <span className="text-sm text-muted-foreground">— {req.email}</span>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openDetailByAccountId(req.accountId)}
-                    >
-                      <KeyRound className="size-3.5" />
-                      {dict.admin.accounts.resetRequestButton}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => void handleDismissRequest(req.id)}
+                      >
+                        <X className="size-3.5" />
+                        {dict.admin.accounts.resetDismissButton}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openDetailByAccountId(req.accountId)}
+                      >
+                        <KeyRound className="size-3.5" />
+                        {dict.admin.accounts.resetRequestButton}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}

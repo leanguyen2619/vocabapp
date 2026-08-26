@@ -14,13 +14,13 @@ export default async function AdminLevelsPage() {
   if (account.role !== "admin") return <AdminOnlyDenied dict={dict} />;
 
   const [students, levels] = await Promise.all([listStudentsAction(), listLevelsAction()]);
-  const initialStatusMap = students[0] ? await getAccountLevelStatusesAction(students[0].id_login) : {};
+  const initialEntries = students[0] ? await getAccountLevelStatusesAction(students[0].id_login) : {};
 
   return (
     <AdminLevelsClient
       students={students}
       levels={levels}
-      initialStatusMap={initialStatusMap}
+      initialEntries={initialEntries}
       dict={dict}
     />
   );

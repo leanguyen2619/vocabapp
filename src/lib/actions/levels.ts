@@ -85,9 +85,14 @@ export async function listStudentsAction(): Promise<StudentSummary[]> {
   return rows.map((r) => ({ id_login: r.id_login, fullName: r.fullName, email: r.email }));
 }
 
+export interface AccountLevelEntry {
+  status: AccountLevelStatus;
+  manualNote: string | null;
+}
+
 export async function getAccountLevelStatusesAction(
   accountId: string
-): Promise<Record<string, AccountLevelStatus>> {
+): Promise<Record<string, AccountLevelEntry>> {
   const admin = await requireAdmin();
   if (!admin) return {};
 
@@ -96,9 +101,10 @@ export async function getAccountLevelStatusesAction(
     prisma.accountLevel.findMany({ where: { accountId } }),
   ]);
 
-  const map: Record<string, AccountLevelStatus> = {};
+  const map: Record<string, AccountLevelEntry> = {};
   levels.forEach((l) => {
-    map[l.id] = entries.find((e) => e.levelId === l.id)?.status ?? "locked";
+    const entry = entries.find((e) => e.levelId === l.id);
+    map[l.id] = { status: entry?.status ?? "locked", manualNote: entry?.manualNote ?? null };
   });
   return map;
 }
