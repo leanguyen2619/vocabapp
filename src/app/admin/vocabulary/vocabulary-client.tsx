@@ -3,7 +3,6 @@
 import { useMemo, useRef, useState, type SubmitEvent } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import * as XLSX from "xlsx";
 import {
   AlertCircle,
   ArrowLeft,
@@ -211,7 +210,8 @@ export function AdminVocabularyClient({
     toast.success(formatMessage(dict.admin.vocabulary.deleteSuccess, { word: word.vocab }));
   };
 
-  const handleDownloadTemplate = () => {
+  const handleDownloadTemplate = async () => {
+    const XLSX = await import("xlsx");
     const sample = [
       {
         vocab: "example",
@@ -230,6 +230,7 @@ export function AdminVocabularyClient({
 
   const handleImportFile = async (file: File) => {
     try {
+      const XLSX = await import("xlsx");
       const buffer = await file.arrayBuffer();
       const workbook = XLSX.read(buffer, { type: "array" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -323,7 +324,7 @@ export function AdminVocabularyClient({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleDownloadTemplate}>
+            <Button variant="outline" size="sm" onClick={() => void handleDownloadTemplate()}>
               <Download className="size-4" />
               {dict.admin.vocabulary.downloadTemplate}
             </Button>

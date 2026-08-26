@@ -110,6 +110,9 @@ model Account {
   dailyAssignments      DailyAssignment[]
   dailyWordPicks        DailyWordPick[]
   passwordResetRequests PasswordResetRequest[]
+
+  @@index([classId])
+  @@index([role])
 }
 
 // ---------- Password reset requests (new — self-service "forgot password" without email) ----------
@@ -212,6 +215,8 @@ model Vocabulary {
   exerciseAttempts ExerciseAttempt[]
   dailyAssignments DailyAssignment[]
   dailyWordPicks   DailyWordPick[]
+
+  @@index([levelId])
 }
 
 // ---------- Word_Relations ----------
@@ -261,6 +266,9 @@ model Question {
 
   answers          Answer[]
   exerciseAttempts ExerciseAttempt[]
+
+  @@index([pracTypeId, status])
+  @@index([vocabId])
 }
 
 // ---------- AnswersBank ----------
