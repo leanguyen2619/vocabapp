@@ -103,12 +103,6 @@ export function StudentDashboardContent({
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        {levels.map((level) => (
-          <LevelCard key={level.id} level={level} dict={dict} />
-        ))}
-      </div>
-
       {newWordsCount > 0 && (
         <Card className="border-sky-300 bg-sky-50/50">
           <CardContent className="flex items-center justify-between gap-4 py-4">
@@ -130,6 +124,12 @@ export function StudentDashboardContent({
           </CardContent>
         </Card>
       )}
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        {levels.map((level) => (
+          <LevelCard key={level.id} level={level} dict={dict} />
+        ))}
+      </div>
     </div>
   );
 }
