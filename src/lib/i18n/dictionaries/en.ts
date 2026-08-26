@@ -25,6 +25,8 @@ const en: Dictionary = {
     notUnlocked: "Not unlocked",
     score: "Score",
     wordsMastered: "words mastered",
+    switchToLightMode: "Switch to light mode",
+    switchToDarkMode: "Switch to dark mode",
   },
   language: {
     label: "Language",

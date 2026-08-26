@@ -5,6 +5,7 @@ import { BookOpen } from "lucide-react";
 import { FeatureCarousel } from "@/components/feature-carousel";
 import { HeaderAuthActions } from "@/components/header-auth-actions";
 import { LanguageToggle } from "@/components/language-toggle";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
@@ -27,6 +28,7 @@ export default async function Home() {
           </Link>
 
           <div className="ml-auto flex items-center gap-2">
+            <ThemeToggle />
             <LanguageToggle />
             <HeaderAuthActions account={account} dict={dict} />
           </div>

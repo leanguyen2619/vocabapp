@@ -23,6 +23,8 @@ const vi = {
     notUnlocked: "Chưa mở khóa",
     score: "Điểm",
     wordsMastered: "từ đã thuộc",
+    switchToLightMode: "Chuyển sang giao diện sáng",
+    switchToDarkMode: "Chuyển sang giao diện tối",
   },
   language: {
     label: "Ngôn ngữ",

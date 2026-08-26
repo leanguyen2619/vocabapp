@@ -7,6 +7,7 @@ import { BookOpen, Flame, LogOut } from "lucide-react";
 
 import { useLocale } from "@/components/locale-provider";
 import { LanguageToggle } from "@/components/language-toggle";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,7 @@ export function DashboardShell({
                 {streak} {dict.dashboard.streakDays}
               </Badge>
             )}
+            <ThemeToggle />
             <LanguageToggle />
             <Link href="/profile" aria-label={dict.common.profile}>
               <Avatar>

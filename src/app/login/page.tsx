@@ -3,6 +3,7 @@ import { BookOpen } from "lucide-react";
 
 import { LanguageToggle } from "@/components/language-toggle";
 import { LoginForm } from "@/components/login-form";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
@@ -19,7 +20,10 @@ export default async function LoginPage() {
           </div>
           <span className="font-heading text-lg font-semibold">{dict.common.brand}</span>
         </Link>
-        <LanguageToggle />
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          <LanguageToggle />
+        </div>
       </div>
 
       <Card className="w-full max-w-sm">
