@@ -7,40 +7,38 @@ import { Check, PartyPopper, RotateCcw, Volume2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
-import { recordVocabAttemptAction } from "@/lib/actions/progress";
+import { submitPosAnswerAction, type PosClassificationItem } from "@/lib/actions/vocabulary";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { getTopicName, posLabel } from "@/lib/labels";
 import { speakWord } from "@/lib/speech";
 import { cn, shuffle } from "@/lib/utils";
-import type { PartOfSpeech, Topic, Vocabulary } from "@/types";
+import type { PartOfSpeech, Topic } from "@/types";
 
 const POS_OPTIONS: PartOfSpeech[] = ["noun", "verb", "adjective", "adverb"];
-const QUESTION_COUNT = 8;
 
 interface PosQuestion {
-  vocab: Vocabulary;
+  item: PosClassificationItem;
   options: PartOfSpeech[];
 }
 
-function buildQuestions(bank: Vocabulary[]): PosQuestion[] {
-  return shuffle(bank)
-    .slice(0, QUESTION_COUNT)
-    .map((vocab) => ({ vocab, options: shuffle(POS_OPTIONS) }));
+function buildQuestions(items: PosClassificationItem[]): PosQuestion[] {
+  return items.map((item) => ({ item, options: shuffle(POS_OPTIONS) }));
 }
 
 export function PosClassificationGame({
-  bank,
+  items,
   topics,
   dict,
 }: {
-  bank: Vocabulary[];
+  items: PosClassificationItem[];
   topics: Topic[];
   dict: Dictionary;
 }) {
-  const [questions] = useState<PosQuestion[]>(() => buildQuestions(bank));
+  const [questions] = useState<PosQuestion[]>(() => buildQuestions(items));
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<PartOfSpeech | null>(null);
+  const [result, setResult] = useState<{ isCorrect: boolean; correctPos: PartOfSpeech } | null>(null);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
 
@@ -59,16 +57,20 @@ export function PosClassificationGame({
 
   const question = questions[index];
   const isAnswered = selected !== null;
-  const isCorrect = selected === question.vocab.partOfSpeech;
+  const isCorrect = result?.isCorrect ?? false;
 
-  const handleSelect = (option: PartOfSpeech) => {
+  const handleSelect = async (option: PartOfSpeech) => {
     if (isAnswered) return;
     setSelected(option);
-    const correct = option === question.vocab.partOfSpeech;
-    if (correct) {
+    const outcome = await submitPosAnswerAction(question.item.vocabId, option);
+    if ("error" in outcome) {
+      setSelected(null);
+      return;
+    }
+    setResult(outcome);
+    if (outcome.isCorrect) {
       setScore((s) => s + 1);
     }
-    void recordVocabAttemptAction(question.vocab.id, correct);
   };
 
   const handleNext = () => {
@@ -78,11 +80,13 @@ export function PosClassificationGame({
     }
     setIndex((i) => i + 1);
     setSelected(null);
+    setResult(null);
   };
 
   const handleRestart = () => {
     setIndex(0);
     setSelected(null);
+    setResult(null);
     setScore(0);
     setFinished(false);
   };
@@ -123,49 +127,49 @@ export function PosClassificationGame({
       </Progress>
 
       <div className="flex flex-col items-center gap-2 text-center">
-        <Badge variant="secondary">{getTopicName(topics, question.vocab.topicId)}</Badge>
+        <Badge variant="secondary">{getTopicName(topics, question.item.topicId)}</Badge>
         <div className="flex items-center gap-1">
           <h2 className="font-heading text-2xl font-semibold tracking-tight">
-            {question.vocab.vocab}
+            {question.item.vocab}
           </h2>
           <Button
             type="button"
             variant="ghost"
             size="icon-sm"
             aria-label={dict.vocabulary.playPronunciation}
-            onClick={() => speakWord(question.vocab.vocab)}
+            onClick={() => speakWord(question.item.vocab)}
           >
             <Volume2 className="size-4" />
           </Button>
         </div>
-        <p className="text-sm text-muted-foreground">{question.vocab.definition}</p>
+        <p className="text-sm text-muted-foreground">{question.item.definition}</p>
         <p className="text-base font-medium">{dict.posGame.questionPrompt}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         {question.options.map((option) => {
-          const isThisCorrect = option === question.vocab.partOfSpeech;
+          const isThisCorrect = result !== null && option === result.correctPos;
           const isSelected = option === selected;
 
           return (
             <button
               key={option}
               type="button"
-              onClick={() => handleSelect(option)}
+              onClick={() => void handleSelect(option)}
               disabled={isAnswered}
               className={cn(
                 "flex items-center justify-between rounded-2xl border-2 border-border bg-card px-4 py-3 text-left text-base font-medium capitalize transition-colors disabled:cursor-default",
                 !isAnswered && "hover:border-primary/50",
-                isAnswered && isThisCorrect && "border-emerald-500 bg-emerald-50 text-emerald-700",
-                isAnswered &&
+                isThisCorrect && "border-emerald-500 bg-emerald-50 text-emerald-700",
+                result !== null &&
                   isSelected &&
                   !isThisCorrect &&
                   "border-red-400 bg-red-50 text-red-700"
               )}
             >
               {posLabel[option]}
-              {isAnswered && isThisCorrect && <Check className="size-5 shrink-0 text-emerald-600" />}
-              {isAnswered && isSelected && !isThisCorrect && (
+              {isThisCorrect && <Check className="size-5 shrink-0 text-emerald-600" />}
+              {result !== null && isSelected && !isThisCorrect && (
                 <X className="size-5 shrink-0 text-red-500" />
               )}
             </button>
@@ -173,15 +177,12 @@ export function PosClassificationGame({
         })}
       </div>
 
-      {isAnswered && (
+      {result !== null && (
         <div className="flex flex-col items-center gap-4 text-center">
           <p className="text-sm text-muted-foreground">
             {isCorrect ? dict.posGame.feedbackCorrect : dict.posGame.feedbackWrong}{" "}
-            {formatMessage(dict.posGame.resultPrefix, { word: question.vocab.vocab })}{" "}
-            <span className="font-medium text-foreground">
-              {posLabel[question.vocab.partOfSpeech]}
-            </span>
-            .
+            {formatMessage(dict.posGame.resultPrefix, { word: question.item.vocab })}{" "}
+            <span className="font-medium text-foreground">{posLabel[result.correctPos]}</span>.
           </p>
           <Button onClick={handleNext}>
             {index + 1 >= total ? dict.posGame.viewResults : dict.posGame.nextQuestion}

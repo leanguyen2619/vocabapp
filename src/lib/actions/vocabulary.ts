@@ -334,6 +334,59 @@ export async function submitQuizAnswerAction(
   return { isCorrect, correctOptionId, status };
 }
 
+const POS_QUESTION_COUNT = 8;
+
+export interface PosClassificationItem {
+  vocabId: string;
+  topicId: number;
+  vocab: string;
+  definition: string;
+}
+
+/**
+ * Picks today's part-of-speech round from the student's unlocked levels only — unlike the raw
+ * vocabulary bank this used to read from, which had no level check at all. The correct
+ * partOfSpeech is intentionally NOT included here; see submitPosAnswerAction, which grades
+ * server-side instead of shipping the answer to the client (the 4 options — noun/verb/adjective/
+ * adverb — are a fixed, public list the UI already knows, so nothing about *this* word's data
+ * needs to leave the server before the student answers).
+ */
+export async function getPosClassificationItemsAction(): Promise<PosClassificationItem[]> {
+  const account = await getCurrentAccount();
+  if (!account) return [];
+
+  const unlockedLevelIds = await computeUnlockedLevelIds(account.id_login);
+  const rows = await prisma.vocabulary.findMany({
+    where: { levelId: { in: [...unlockedLevelIds] } },
+  });
+
+  return shuffle(rows)
+    .slice(0, POS_QUESTION_COUNT)
+    .map((v) => ({ vocabId: v.id, topicId: v.topicId, vocab: v.vocab, definition: v.definition }));
+}
+
+/** Grades a part-of-speech answer server-side and re-checks the word's level is unlocked. */
+export async function submitPosAnswerAction(
+  vocabId: string,
+  selectedPos: PartOfSpeech
+): Promise<{ isCorrect: boolean; correctPos: PartOfSpeech; status: LearningStatus } | { error: string }> {
+  const account = await getCurrentAccount();
+  if (!account) return { error: "Bạn cần đăng nhập." };
+
+  const [vocab, unlockedLevelIds] = await Promise.all([
+    prisma.vocabulary.findUnique({ where: { id: vocabId } }),
+    computeUnlockedLevelIds(account.id_login),
+  ]);
+  if (!vocab) return { error: "Không tìm thấy từ vựng này." };
+  if (!unlockedLevelIds.has(vocab.levelId)) {
+    return { error: "Từ vựng này chưa được mở khóa." };
+  }
+
+  const isCorrect = selectedPos === vocab.partOfSpeech;
+  const status = await recordForVocab(account.id_login, vocab.id, vocab.levelId, isCorrect);
+  return { isCorrect, correctPos: vocab.partOfSpeech, status };
+}
+
 type VocabInput = {
   vocab: string;
   definition: string;
