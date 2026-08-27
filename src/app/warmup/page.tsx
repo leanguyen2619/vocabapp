@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { FillBlankGame } from "@/components/fill-blank-game";
 import { ListeningGame } from "@/components/listening-game";
+import { ListeningComprehensionGame } from "@/components/listening-comprehension-game";
 import { MatchingGame } from "@/components/matching-game";
 import { PosClassificationGame } from "@/components/pos-classification-game";
 import { QuizSession } from "@/components/quiz-session";
@@ -13,6 +14,7 @@ import { WordFormationGame } from "@/components/word-formation-game";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import {
   getFillBlankQuestionsAction,
+  getListeningComprehensionQuestionsAction,
   getSentenceWritingPromptsAction,
   getSynonymAntonymQuestionsAction,
   getWordFormationPromptsAction,
@@ -70,6 +72,10 @@ async function renderGameFor(code: PracticeTypeCode, dict: Dictionary) {
     case "sentence_writing": {
       const prompts = await getSentenceWritingPromptsAction();
       return <SentenceWritingExercise prompts={prompts} dict={dict} warmupCode={code} />;
+    }
+    case "listening_comprehension": {
+      const questions = await getListeningComprehensionQuestionsAction();
+      return <ListeningComprehensionGame questions={questions} dict={dict} warmupCode={code} />;
     }
     case "flashcard":
       // Never actually assigned (excluded from selectWarmupTypes), but the switch must stay

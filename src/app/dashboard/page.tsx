@@ -7,6 +7,7 @@ import { listClassesAction } from "@/lib/actions/classes";
 import { getMyLevelsAction } from "@/lib/actions/levels";
 import { listAllAssignedVocabAction, listAllStudentsAction } from "@/lib/actions/students";
 import { countPendingWritingSubmissionsAction } from "@/lib/actions/writing-submissions";
+import { countWeakWordsAction } from "@/lib/actions/class-report";
 import {
   getMyDailyAssignmentsAction,
   getMyWordsForScopeAction,
@@ -26,14 +27,16 @@ export default async function DashboardPage() {
   const dict = getDictionary(await getLocale());
 
   if (account.role === "admin") {
-    const [accounts, classes, vocabulary, students, assignedVocab, pendingWritingCount] = await Promise.all([
-      listAccountsAction(),
-      listClassesAction(),
-      listVocabularyAction(),
-      listAllStudentsAction(),
-      listAllAssignedVocabAction(),
-      countPendingWritingSubmissionsAction(),
-    ]);
+    const [accounts, classes, vocabulary, students, assignedVocab, pendingWritingCount, weakWordsCount] =
+      await Promise.all([
+        listAccountsAction(),
+        listClassesAction(),
+        listVocabularyAction(),
+        listAllStudentsAction(),
+        listAllAssignedVocabAction(),
+        countPendingWritingSubmissionsAction(),
+        countWeakWordsAction(),
+      ]);
     const studentCount = accounts.filter((a) => a.account.role === "student").length;
 
     return (
@@ -44,6 +47,7 @@ export default async function DashboardPage() {
           classCount={classes.length}
           vocabCount={vocabulary.length}
           pendingWritingCount={pendingWritingCount}
+          weakWordsCount={weakWordsCount}
           students={students}
           vocabularyBank={vocabulary}
           assignedVocab={assignedVocab}

@@ -61,6 +61,7 @@ enum PracticeTypeCode {
   synonym_antonym
   fill_blank
   word_formation
+  listening_comprehension
 }
 
 enum QuestionStatus {

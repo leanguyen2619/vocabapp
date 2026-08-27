@@ -6,6 +6,7 @@ import {
   Library,
   PenLine,
   Settings2,
+  TrendingDown,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -32,6 +33,7 @@ export function AdminDashboardContent({
   classCount,
   vocabCount,
   pendingWritingCount,
+  weakWordsCount,
   students,
   vocabularyBank,
   assignedVocab,
@@ -42,6 +44,7 @@ export function AdminDashboardContent({
   classCount: number;
   vocabCount: number;
   pendingWritingCount: number;
+  weakWordsCount: number;
   students: StudentSummary[];
   vocabularyBank: Vocabulary[];
   assignedVocab: AssignedVocabSummary[];
@@ -90,6 +93,13 @@ export function AdminDashboardContent({
       icon: PenLine,
       href: "/admin/writing-submissions",
       count: pendingWritingCount,
+    },
+    {
+      title: dict.adminDashboard.fnClassReportTitle,
+      description: dict.adminDashboard.fnClassReportDesc,
+      icon: TrendingDown,
+      href: "/admin/class-report",
+      count: weakWordsCount,
     },
   ];
 

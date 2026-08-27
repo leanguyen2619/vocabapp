@@ -5,6 +5,7 @@ import {
   ArrowLeftRight,
   BookOpen,
   Clock,
+  Headphones,
   Layers,
   ListChecks,
   PenLine,
@@ -39,6 +40,7 @@ const iconByCode: Record<PracticeTypeCode, LucideIcon> = {
   word_formation: Puzzle,
   typing: TextCursorInput,
   listening: TextCursorInput,
+  listening_comprehension: Headphones,
 };
 
 export default async function ExercisesPage({

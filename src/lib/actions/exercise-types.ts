@@ -23,6 +23,7 @@ const HREF_BY_CODE: Record<PracticeTypeCode, string | null> = {
   word_formation: "/practice/word-formation",
   typing: "/practice/typing",
   listening: "/practice/listening",
+  listening_comprehension: "/practice/listening-comprehension",
 };
 
 export interface ExerciseTypeSummary {

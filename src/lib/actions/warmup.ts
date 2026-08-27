@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { listVisibleExerciseTypesAction } from "@/lib/actions/exercise-types";
 import {
   getFillBlankQuestionsAction,
+  getListeningComprehensionQuestionsAction,
   getSentenceWritingPromptsAction,
   getSynonymAntonymQuestionsAction,
   getWordFormationPromptsAction,
@@ -43,6 +44,8 @@ async function typeHasContent(code: PracticeTypeCode): Promise<boolean> {
       return (await getWordFormationPromptsAction()).length > 0;
     case "sentence_writing":
       return (await getSentenceWritingPromptsAction()).length > 0;
+    case "listening_comprehension":
+      return (await getListeningComprehensionQuestionsAction()).length > 0;
     case "flashcard":
       return false;
   }

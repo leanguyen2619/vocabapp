@@ -18,6 +18,7 @@ const QUESTION_BASED_CODES: PracticeTypeCode[] = [
   "fill_blank",
   "word_formation",
   "sentence_writing",
+  "listening_comprehension",
 ];
 
 export default async function AdminQuestionBankPage() {

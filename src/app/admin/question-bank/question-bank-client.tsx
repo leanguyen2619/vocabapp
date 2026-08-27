@@ -47,7 +47,12 @@ const statusVariant: Record<QuestionStatus, "default" | "outline" | "destructive
   rejected: "outline",
 };
 
-const ANSWER_TYPES: PracticeTypeCode[] = ["multiple_choice", "synonym_antonym", "fill_blank"];
+const ANSWER_TYPES: PracticeTypeCode[] = [
+  "multiple_choice",
+  "synonym_antonym",
+  "fill_blank",
+  "listening_comprehension",
+];
 
 export function AdminQuestionBankClient({
   initialQuestions,

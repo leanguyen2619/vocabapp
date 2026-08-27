@@ -91,7 +91,8 @@ export type PracticeTypeCode =
   | "sentence_writing"
   | "synonym_antonym"
   | "fill_blank"
-  | "word_formation";
+  | "word_formation"
+  | "listening_comprehension";
 
 export interface PracticeType {
   id: string; // PK
