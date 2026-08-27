@@ -6,22 +6,24 @@ import { PosClassificationGame } from "@/components/pos-classification-game";
 import { RandomExerciseButton } from "@/components/random-exercise-button";
 import { listVisibleExerciseTypesAction } from "@/lib/actions/exercise-types";
 import { getPosClassificationItemsAction, listTopicsAction } from "@/lib/actions/vocabulary";
+import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
-import { requireWarmupComplete } from "@/lib/warmup-guard";
+import { redirectIfWarmupIncomplete } from "@/lib/warmup-guard";
 
 export default async function PosClassificationPage() {
   const account = await getCurrentAccount();
   if (!account) redirect("/login");
-  await requireWarmupComplete();
   const dict = getDictionary(await getLocale());
 
-  const [items, topics, exerciseTypes] = await Promise.all([
+  const [warmupStatus, items, topics, exerciseTypes] = await Promise.all([
+    getMyWarmupStatusAction(),
     getPosClassificationItemsAction(),
     listTopicsAction(),
     listVisibleExerciseTypesAction(),
   ]);
+  redirectIfWarmupIncomplete(warmupStatus);
 
   return (
     <div className="flex flex-1 flex-col bg-background">

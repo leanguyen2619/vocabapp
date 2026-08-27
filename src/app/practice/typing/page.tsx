@@ -6,11 +6,12 @@ import { RandomExerciseButton } from "@/components/random-exercise-button";
 import { TypingGame } from "@/components/typing-game";
 import { listVisibleExerciseTypesAction } from "@/lib/actions/exercise-types";
 import { getMyWordsForScopeAction } from "@/lib/actions/vocabulary";
+import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
 import { parseWordScope } from "@/lib/word-scope";
-import { requireWarmupComplete } from "@/lib/warmup-guard";
+import { redirectIfWarmupIncomplete } from "@/lib/warmup-guard";
 
 export default async function TypingPage({
   searchParams,
@@ -19,14 +20,15 @@ export default async function TypingPage({
 }) {
   const account = await getCurrentAccount();
   if (!account) redirect("/login");
-  await requireWarmupComplete();
   const dict = getDictionary(await getLocale());
   const scope = parseWordScope((await searchParams).scope);
 
-  const [dailyWords, exerciseTypes] = await Promise.all([
+  const [warmupStatus, dailyWords, exerciseTypes] = await Promise.all([
+    getMyWarmupStatusAction(),
     getMyWordsForScopeAction(scope),
     listVisibleExerciseTypesAction(),
   ]);
+  redirectIfWarmupIncomplete(warmupStatus);
 
   return (
     <div className="flex flex-1 flex-col bg-background">

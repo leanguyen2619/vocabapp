@@ -6,21 +6,23 @@ import { WordFormationGame } from "@/components/word-formation-game";
 import { RandomExerciseButton } from "@/components/random-exercise-button";
 import { listVisibleExerciseTypesAction } from "@/lib/actions/exercise-types";
 import { getWordFormationPromptsAction } from "@/lib/actions/practice-content";
+import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
-import { requireWarmupComplete } from "@/lib/warmup-guard";
+import { redirectIfWarmupIncomplete } from "@/lib/warmup-guard";
 
 export default async function WordFormationPage() {
   const account = await getCurrentAccount();
   if (!account) redirect("/login");
-  await requireWarmupComplete();
   const dict = getDictionary(await getLocale());
 
-  const [exerciseTypes, prompts] = await Promise.all([
+  const [warmupStatus, exerciseTypes, prompts] = await Promise.all([
+    getMyWarmupStatusAction(),
     listVisibleExerciseTypesAction(),
     getWordFormationPromptsAction(),
   ]);
+  redirectIfWarmupIncomplete(warmupStatus);
 
   return (
     <div className="flex flex-1 flex-col bg-background">

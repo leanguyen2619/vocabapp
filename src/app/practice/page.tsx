@@ -6,11 +6,12 @@ import { PracticeSession } from "@/components/practice-session";
 import { RandomExerciseButton } from "@/components/random-exercise-button";
 import { listVisibleExerciseTypesAction } from "@/lib/actions/exercise-types";
 import { getMyWordsForScopeAction, listTopicsAction } from "@/lib/actions/vocabulary";
+import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
 import { parseWordScope } from "@/lib/word-scope";
-import { requireWarmupComplete } from "@/lib/warmup-guard";
+import { redirectIfWarmupIncomplete } from "@/lib/warmup-guard";
 
 export default async function PracticePage({
   searchParams,
@@ -19,15 +20,16 @@ export default async function PracticePage({
 }) {
   const account = await getCurrentAccount();
   if (!account) redirect("/login");
-  await requireWarmupComplete();
   const dict = getDictionary(await getLocale());
   const scope = parseWordScope((await searchParams).scope);
 
-  const [dailyWords, topics, exerciseTypes] = await Promise.all([
+  const [warmupStatus, dailyWords, topics, exerciseTypes] = await Promise.all([
+    getMyWarmupStatusAction(),
     getMyWordsForScopeAction(scope),
     listTopicsAction(),
     listVisibleExerciseTypesAction(),
   ]);
+  redirectIfWarmupIncomplete(warmupStatus);
 
   return (
     <div className="flex flex-1 flex-col bg-background">

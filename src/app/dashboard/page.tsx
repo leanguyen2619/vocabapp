@@ -14,14 +14,14 @@ import {
 } from "@/lib/actions/vocabulary";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
+import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
 import { getCurrentAccount } from "@/lib/session";
-import { requireWarmupComplete } from "@/lib/warmup-guard";
+import { redirectIfWarmupIncomplete } from "@/lib/warmup-guard";
 import { DashboardShell } from "./dashboard-client";
 
 export default async function DashboardPage() {
   const account = await getCurrentAccount();
   if (!account) redirect("/login");
-  await requireWarmupComplete();
   const dict = getDictionary(await getLocale());
 
   if (account.role === "admin") {
@@ -50,12 +50,14 @@ export default async function DashboardPage() {
     );
   }
 
-  const [levels, dailyAssignments, topics, newWords] = await Promise.all([
+  const [warmupStatus, levels, dailyAssignments, topics, newWords] = await Promise.all([
+    getMyWarmupStatusAction(),
     getMyLevelsAction(),
     getMyDailyAssignmentsAction(),
     listTopicsAction(),
     getMyWordsForScopeAction("new"),
   ]);
+  redirectIfWarmupIncomplete(warmupStatus);
   // Matches profile-client.tsx's formula so the two pages never disagree on the number shown.
   const streak = Math.max(0, ...levels.map((l) => l.streak));
 

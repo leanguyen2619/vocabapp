@@ -22,10 +22,11 @@ import { listExerciseTypesAction } from "@/lib/actions/exercise-types";
 import { getMyStudentLevelIndexAction, listLevelsAction } from "@/lib/actions/levels";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
+import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
 import { getCurrentAccount } from "@/lib/session";
 import type { PracticeTypeCode } from "@/types";
 import { parseWordScope, WORD_SCOPED_CODES, WORD_SCOPES, type WordScope } from "@/lib/word-scope";
-import { requireWarmupComplete } from "@/lib/warmup-guard";
+import { redirectIfWarmupIncomplete } from "@/lib/warmup-guard";
 
 const iconByCode: Record<PracticeTypeCode, LucideIcon> = {
   multiple_choice: ListChecks,
@@ -47,7 +48,6 @@ export default async function ExercisesPage({
 }) {
   const account = await getCurrentAccount();
   if (!account) redirect("/login");
-  await requireWarmupComplete();
   const dict = getDictionary(await getLocale());
 
   const isStudent = account.role === "student";
@@ -55,11 +55,13 @@ export default async function ExercisesPage({
 
   // getMyStudentLevelIndexAction doesn't depend on levels/types (it derives its own level list
   // internally), so it belongs in the same round trip instead of a second sequential one.
-  const [levels, types, fetchedStudentLevelIndex] = await Promise.all([
+  const [warmupStatus, levels, types, fetchedStudentLevelIndex] = await Promise.all([
+    getMyWarmupStatusAction(),
     listLevelsAction(),
     listExerciseTypesAction(),
     isStudent ? getMyStudentLevelIndexAction() : Promise.resolve(null),
   ]);
+  redirectIfWarmupIncomplete(warmupStatus);
   const studentLevelIndex = fetchedStudentLevelIndex ?? levels.length;
   const studentLevelName = levels[studentLevelIndex - 1]?.level;
 

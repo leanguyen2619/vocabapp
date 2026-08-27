@@ -6,21 +6,23 @@ import { FillBlankGame } from "@/components/fill-blank-game";
 import { RandomExerciseButton } from "@/components/random-exercise-button";
 import { listVisibleExerciseTypesAction } from "@/lib/actions/exercise-types";
 import { getFillBlankQuestionsAction } from "@/lib/actions/practice-content";
+import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
-import { requireWarmupComplete } from "@/lib/warmup-guard";
+import { redirectIfWarmupIncomplete } from "@/lib/warmup-guard";
 
 export default async function FillBlankPage() {
   const account = await getCurrentAccount();
   if (!account) redirect("/login");
-  await requireWarmupComplete();
   const dict = getDictionary(await getLocale());
 
-  const [exerciseTypes, questions] = await Promise.all([
+  const [warmupStatus, exerciseTypes, questions] = await Promise.all([
+    getMyWarmupStatusAction(),
     listVisibleExerciseTypesAction(),
     getFillBlankQuestionsAction(),
   ]);
+  redirectIfWarmupIncomplete(warmupStatus);
 
   return (
     <div className="flex flex-1 flex-col bg-background">

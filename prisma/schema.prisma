@@ -366,7 +366,7 @@ model DailyWordPick {
 
 // ---------- Daily_Warmups (new) ----------
 // Tracks the mandatory "3 random exercises" a student must clear once per calendar day before any
-// other student page lets them through (see requireWarmupComplete). practiceTypeCodes is picked
+// other student page lets them through (see redirectIfWarmupIncomplete). practiceTypeCodes is picked
 // once per day (excluding flashcard, level-gated, verified to actually have content) and pinned
 // here so it can't drift mid-day; completedCodes accumulates as each one is finished.
 
