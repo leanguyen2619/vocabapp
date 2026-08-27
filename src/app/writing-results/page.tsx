@@ -1,0 +1,49 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { ArrowLeft, BookOpen } from "lucide-react";
+
+import { WritingResultsClient } from "./writing-results-client";
+import { listMyWritingSubmissionsAction } from "@/lib/actions/writing-submissions";
+import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+import { getLocale } from "@/lib/i18n/locale";
+import { getCurrentAccount } from "@/lib/session";
+import { redirectIfWarmupIncomplete } from "@/lib/warmup-guard";
+
+export default async function WritingResultsPage() {
+  const account = await getCurrentAccount();
+  if (!account) redirect("/login");
+  const dict = getDictionary(await getLocale());
+
+  const [warmupStatus, submissions] = await Promise.all([
+    getMyWarmupStatusAction(),
+    listMyWritingSubmissionsAction(),
+  ]);
+  redirectIfWarmupIncomplete(warmupStatus);
+
+  return (
+    <div className="flex flex-1 flex-col bg-background">
+      <header className="border-b border-border">
+        <div className="mx-auto flex w-full max-w-2xl items-center justify-between px-6 py-4">
+          <Link
+            href="/exercises"
+            className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="size-4" />
+            {dict.common.backToExercises}
+          </Link>
+          <div className="flex items-center gap-2">
+            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <BookOpen className="size-3.5" />
+            </div>
+            <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-10 sm:py-16">
+        <WritingResultsClient submissions={submissions} dict={dict} />
+      </main>
+    </div>
+  );
+}

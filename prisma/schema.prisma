@@ -87,6 +87,11 @@ enum AssignmentStatus {
   overdue
 }
 
+enum WritingSubmissionStatus {
+  pending
+  graded
+}
+
 // ---------- Accounts ----------
 
 model Account {
@@ -110,6 +115,7 @@ model Account {
   dailyWordPicks        DailyWordPick[]
   dailyWarmups          DailyWarmup[]
   passwordResetRequests PasswordResetRequest[]
+  writingSubmissions    WritingSubmission[]
 
   @@index([classId])
   @@index([role])
@@ -208,13 +214,14 @@ model Vocabulary {
   level Level @relation(fields: [levelId], references: [id])
   topic Topic @relation(fields: [topicId], references: [id])
 
-  mainRelations    WordRelation[]    @relation("MainVocab")
-  subRelations     WordRelation[]    @relation("SubVocab")
-  questions        Question[]
-  learningHistory  LearningHistory[]
-  exerciseAttempts ExerciseAttempt[]
-  dailyAssignments DailyAssignment[]
-  dailyWordPicks   DailyWordPick[]
+  mainRelations      WordRelation[]       @relation("MainVocab")
+  subRelations       WordRelation[]       @relation("SubVocab")
+  questions          Question[]
+  learningHistory    LearningHistory[]
+  exerciseAttempts   ExerciseAttempt[]
+  dailyAssignments   DailyAssignment[]
+  dailyWordPicks     DailyWordPick[]
+  writingSubmissions WritingSubmission[]
 
   @@index([levelId])
 }
@@ -380,4 +387,31 @@ model DailyWarmup {
   account Account @relation(fields: [accountId], references: [id_login], onDelete: Cascade)
 
   @@unique([accountId, warmupDate])
+}
+
+// ---------- Writing_Submissions (new) ----------
+// Sentence-writing answers are free-form English text, not multiple-choice — an admin (acting as
+// the teacher) reads and scores each one 0-100 by hand rather than the student self-reporting
+// "I wrote it correctly" (see gradeWritingSubmissionAction). Grading is what feeds recordForVocab,
+// so LearningHistory/AccountLevel progress for this practice type now reflects a real assessment
+// instead of self-report. Submitting still completes the exercise/warmup step immediately — the
+// student doesn't wait on the admin to move on, only to see their score.
+
+model WritingSubmission {
+  id          String                  @id @default(cuid())
+  accountId   String
+  vocabId     String
+  sentence    String
+  status      WritingSubmissionStatus @default(pending)
+  score       Int?
+  feedback    String?
+  submittedAt DateTime                @default(now())
+  gradedAt    DateTime?
+  gradedBy    String?
+
+  account Account    @relation(fields: [accountId], references: [id_login], onDelete: Cascade)
+  vocab   Vocabulary @relation(fields: [vocabId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, status])
+  @@index([status])
 }

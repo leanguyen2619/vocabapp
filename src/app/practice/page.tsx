@@ -5,6 +5,7 @@ import { ArrowLeft, BookOpen } from "lucide-react";
 import { PracticeSession } from "@/components/practice-session";
 import { RandomExerciseButton } from "@/components/random-exercise-button";
 import { listVisibleExerciseTypesAction } from "@/lib/actions/exercise-types";
+import { getExampleSentenceMapAction } from "@/lib/actions/practice-content";
 import { getMyWordsForScopeAction, listTopicsAction } from "@/lib/actions/vocabulary";
 import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -23,11 +24,12 @@ export default async function PracticePage({
   const dict = getDictionary(await getLocale());
   const scope = parseWordScope((await searchParams).scope);
 
-  const [warmupStatus, dailyWords, topics, exerciseTypes] = await Promise.all([
+  const [warmupStatus, dailyWords, topics, exerciseTypes, exampleSentences] = await Promise.all([
     getMyWarmupStatusAction(),
     getMyWordsForScopeAction(scope),
     listTopicsAction(),
     listVisibleExerciseTypesAction(),
+    getExampleSentenceMapAction(),
   ]);
   redirectIfWarmupIncomplete(warmupStatus);
 
@@ -55,7 +57,12 @@ export default async function PracticePage({
       </header>
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-10 sm:py-16">
-        <PracticeSession vocabList={dailyWords} topics={topics} dict={dict} />
+        <PracticeSession
+          vocabList={dailyWords}
+          topics={topics}
+          exampleSentences={exampleSentences}
+          dict={dict}
+        />
       </main>
     </div>
   );

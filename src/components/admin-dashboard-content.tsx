@@ -4,6 +4,7 @@ import {
   Building2,
   Clock,
   Library,
+  PenLine,
   Settings2,
   Users,
   type LucideIcon,
@@ -22,6 +23,7 @@ interface AdminFunction {
   description: string;
   icon: LucideIcon;
   href: string | null;
+  count?: number;
 }
 
 export function AdminDashboardContent({
@@ -29,6 +31,7 @@ export function AdminDashboardContent({
   studentCount,
   classCount,
   vocabCount,
+  pendingWritingCount,
   students,
   vocabularyBank,
   assignedVocab,
@@ -38,6 +41,7 @@ export function AdminDashboardContent({
   studentCount: number;
   classCount: number;
   vocabCount: number;
+  pendingWritingCount: number;
   students: StudentSummary[];
   vocabularyBank: Vocabulary[];
   assignedVocab: AssignedVocabSummary[];
@@ -79,6 +83,13 @@ export function AdminDashboardContent({
       description: dict.adminDashboard.fnLevelsDesc,
       icon: Users,
       href: "/admin/levels",
+    },
+    {
+      title: dict.adminDashboard.fnWritingTitle,
+      description: dict.adminDashboard.fnWritingDesc,
+      icon: PenLine,
+      href: "/admin/writing-submissions",
+      count: pendingWritingCount,
     },
   ];
 
@@ -142,6 +153,7 @@ export function AdminDashboardContent({
                   <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
                     <Icon className="size-5 text-primary" />
                   </div>
+                  {Boolean(fn.count) && <Badge>{fn.count}</Badge>}
                 </div>
                 <div>
                   <p className="font-medium">{fn.title}</p>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Circle, Library, Sparkles } from "lucide-react";
+import { ArrowRight, CheckCircle2, Circle, Library, PenLine, Sparkles } from "lucide-react";
 
 import { LevelCard } from "@/components/level-card";
 import { Badge } from "@/components/ui/badge";
@@ -55,10 +55,16 @@ export function StudentDashboardContent({
             })}
           </p>
         </div>
-        <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/vocabulary" />}>
-          <Library className="size-4" />
-          {dict.studentDashboard.myVocabulary}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/vocabulary" />}>
+            <Library className="size-4" />
+            {dict.studentDashboard.myVocabulary}
+          </Button>
+          <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/writing-results" />}>
+            <PenLine className="size-4" />
+            {dict.studentDashboard.writingResults}
+          </Button>
+        </div>
       </div>
 
       <Card>

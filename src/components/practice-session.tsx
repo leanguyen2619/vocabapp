@@ -18,10 +18,12 @@ import type { Topic, Vocabulary } from "@/types";
 export function PracticeSession({
   vocabList,
   topics,
+  exampleSentences,
   dict,
 }: {
   vocabList: Vocabulary[];
   topics: Topic[];
+  exampleSentences: Record<string, string>;
   dict: Dictionary;
 }) {
   const [index, setIndex] = useState(0);
@@ -141,6 +143,11 @@ export function PracticeSession({
             <p className="max-w-sm text-center text-sm text-muted-foreground">
               {current.definition}
             </p>
+            {exampleSentences[current.id] && (
+              <p className="max-w-sm text-center text-sm italic text-foreground/80">
+                “{exampleSentences[current.id]}”
+              </p>
+            )}
           </div>
         </button>
 

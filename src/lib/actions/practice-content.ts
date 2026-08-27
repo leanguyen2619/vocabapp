@@ -202,3 +202,26 @@ export async function getSentenceWritingPromptsAction(): Promise<SentencePromptI
       exampleSentence: q.explanation,
     }));
 }
+
+/** vocabId -> a real example sentence, reusing the sentence_writing Question bank's `explanation`
+ * so the flashcard can show the word in context instead of just an isolated meaning/definition.
+ * Not level-filtered — cheap to return in full since only entries matching whatever vocab list the
+ * caller is already displaying ever get looked up. */
+export async function getExampleSentenceMapAction(): Promise<Record<string, string>> {
+  const account = await getCurrentAccount();
+  if (!account) return {};
+
+  const pracTypeIdValue = await practiceTypeId("sentence_writing");
+  if (!pracTypeIdValue) return {};
+
+  const rows = await prisma.question.findMany({
+    where: { pracTypeId: pracTypeIdValue, status: "approved" },
+    select: { vocabId: true, explanation: true },
+  });
+
+  const map: Record<string, string> = {};
+  for (const row of rows) {
+    if (row.explanation) map[row.vocabId] = row.explanation;
+  }
+  return map;
+}

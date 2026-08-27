@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { Check, Lightbulb, PartyPopper, RotateCcw, Volume2, X } from "lucide-react";
+import { Lightbulb, PartyPopper, RotateCcw, Send, Volume2 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
-import { recordVocabAttemptAction } from "@/lib/actions/progress";
+import { submitSentenceAction } from "@/lib/actions/writing-submissions";
 import type { SentencePromptItem } from "@/lib/actions/practice-content";
 import { markWarmupTypeCompleteAction } from "@/lib/actions/warmup";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
@@ -28,9 +27,10 @@ export function SentenceWritingExercise({
   const [index, setIndex] = useState(0);
   const [text, setText] = useState("");
   const [showExample, setShowExample] = useState(false);
-  const [confidentCount, setConfidentCount] = useState(0);
-  const [practiceCount, setPracticeCount] = useState(0);
+  const [submittedCount, setSubmittedCount] = useState(0);
   const [finished, setFinished] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const total = prompts.length;
 
@@ -64,20 +64,27 @@ export function SentenceWritingExercise({
     setShowExample(false);
   };
 
-  const handleSelfMark = (confident: boolean) => {
-    if (confident) setConfidentCount((c) => c + 1);
-    else setPracticeCount((c) => c + 1);
-    void recordVocabAttemptAction(prompt.vocabId, confident);
-    goNext();
+  const handleSubmit = () => {
+    if (!text.trim() || isPending) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await submitSentenceAction(prompt.vocabId, text);
+      if ("error" in result) {
+        setError(result.error);
+        return;
+      }
+      setSubmittedCount((c) => c + 1);
+      goNext();
+    });
   };
 
   const handleRestart = () => {
     setIndex(0);
     setText("");
     setShowExample(false);
-    setConfidentCount(0);
-    setPracticeCount(0);
+    setSubmittedCount(0);
     setFinished(false);
+    setError(null);
   };
 
   if (finished) {
@@ -90,24 +97,17 @@ export function SentenceWritingExercise({
           <h2 className="font-heading text-2xl font-semibold tracking-tight">
             {dict.writingExercise.finishedTitle}
           </h2>
-          <p className="text-muted-foreground">
-            {formatMessage(dict.writingExercise.finishedSubtitle, { total })}
+          <p className="max-w-sm text-muted-foreground">
+            {formatMessage(dict.writingExercise.finishedSubtitle, { total: submittedCount })}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Badge variant="outline" className="gap-1.5 py-1 text-sm">
-            <Check className="size-3.5 text-emerald-600" />
-            {dict.writingExercise.confidentLabel}: {confidentCount}
-          </Badge>
-          <Badge variant="outline" className="gap-1.5 py-1 text-sm">
-            <RotateCcw className="size-3.5 text-amber-600" />
-            {dict.writingExercise.practiceLabel}: {practiceCount}
-          </Badge>
-        </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-center gap-3">
           <Button variant="outline" onClick={handleRestart}>
             <RotateCcw className="size-4" />
             {dict.writingExercise.restart}
+          </Button>
+          <Button variant="outline" nativeButton={false} render={<Link href="/writing-results" />}>
+            {dict.writingExercise.viewResultsButton}
           </Button>
           <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
             {warmupCode ? dict.warmup.continueButton : dict.writingExercise.changeType}
@@ -147,6 +147,7 @@ export function SentenceWritingExercise({
         onChange={(e) => setText(e.target.value)}
         placeholder={formatMessage(dict.writingExercise.textareaPlaceholder, { word: prompt.vocab })}
         rows={4}
+        disabled={isPending}
       />
 
       {showExample ? (
@@ -158,28 +159,24 @@ export function SentenceWritingExercise({
           </p>
         </div>
       ) : (
-        <Button variant="outline" size="sm" className="self-start" onClick={() => setShowExample(true)}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="self-start"
+          onClick={() => setShowExample(true)}
+          disabled={isPending}
+        >
           <Lightbulb className="size-4" />
           {dict.writingExercise.showExample}
         </Button>
       )}
 
-      <div className="flex items-center justify-center gap-3">
-        <Button
-          variant="outline"
-          className="border-amber-300 text-amber-700 hover:bg-amber-50"
-          onClick={() => handleSelfMark(false)}
-        >
-          <X className="size-4" />
-          {dict.writingExercise.practiceLabel}
-        </Button>
-        <Button
-          className="bg-emerald-600 text-white hover:bg-emerald-600/90"
-          disabled={!text.trim()}
-          onClick={() => handleSelfMark(true)}
-        >
-          <Check className="size-4" />
-          {dict.writingExercise.confidentButton}
+      {error && <p className="text-center text-sm text-destructive">{error}</p>}
+
+      <div className="flex items-center justify-center">
+        <Button disabled={!text.trim() || isPending} onClick={handleSubmit}>
+          <Send className="size-4" />
+          {isPending ? dict.writingExercise.submitting : dict.writingExercise.submitButton}
         </Button>
       </div>
     </div>
