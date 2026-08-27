@@ -123,7 +123,6 @@ export function TypingGame({
       <div className="flex flex-col items-center gap-2 text-center">
         <p className="text-sm text-muted-foreground">{dict.typingGame.promptLabel}</p>
         <h2 className="font-heading text-2xl font-semibold tracking-tight">{current.meanVI}</h2>
-        <p className="max-w-sm text-sm text-muted-foreground">{current.definition}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4">
