@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Check, PartyPopper, RotateCcw, Volume2, X } from "lucide-react";
 
@@ -8,12 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { submitPosAnswerAction, type PosClassificationItem } from "@/lib/actions/vocabulary";
+import { markWarmupTypeCompleteAction } from "@/lib/actions/warmup";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { getTopicName, posLabel } from "@/lib/labels";
 import { speakWord } from "@/lib/speech";
 import { cn, shuffle } from "@/lib/utils";
-import type { PartOfSpeech, Topic } from "@/types";
+import type { PartOfSpeech, PracticeTypeCode, Topic } from "@/types";
 
 const POS_OPTIONS: PartOfSpeech[] = ["noun", "verb", "adjective", "adverb"];
 
@@ -30,10 +31,12 @@ export function PosClassificationGame({
   items,
   topics,
   dict,
+  warmupCode,
 }: {
   items: PosClassificationItem[];
   topics: Topic[];
   dict: Dictionary;
+  warmupCode?: PracticeTypeCode;
 }) {
   const [questions] = useState<PosQuestion[]>(() => buildQuestions(items));
   const [index, setIndex] = useState(0);
@@ -44,12 +47,19 @@ export function PosClassificationGame({
 
   const total = questions.length;
 
+  useEffect(() => {
+    if (finished && warmupCode) {
+      void markWarmupTypeCompleteAction(warmupCode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finished]);
+
   if (total === 0) {
     return (
       <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
         <p>{dict.posGame.noQuestions}</p>
-        <Button nativeButton={false} render={<Link href="/exercises" />}>
-          {dict.posGame.changeType}
+        <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
+          {warmupCode ? dict.warmup.continueButton : dict.posGame.changeType}
         </Button>
       </div>
     );
@@ -110,8 +120,8 @@ export function PosClassificationGame({
             <RotateCcw className="size-4" />
             {dict.posGame.restart}
           </Button>
-          <Button nativeButton={false} render={<Link href="/exercises" />}>
-            {dict.posGame.changeType}
+          <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
+            {warmupCode ? dict.warmup.continueButton : dict.posGame.changeType}
           </Button>
         </div>
       </div>

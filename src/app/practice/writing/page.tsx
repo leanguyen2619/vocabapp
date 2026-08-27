@@ -9,10 +9,12 @@ import { getSentenceWritingPromptsAction } from "@/lib/actions/practice-content"
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
+import { requireWarmupComplete } from "@/lib/warmup-guard";
 
 export default async function SentenceWritingPage() {
   const account = await getCurrentAccount();
   if (!account) redirect("/login");
+  await requireWarmupComplete();
   const dict = getDictionary(await getLocale());
 
   const [exerciseTypes, prompts] = await Promise.all([

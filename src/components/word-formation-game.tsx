@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Check, Delete, PartyPopper, RotateCcw, Volume2 } from "lucide-react";
 
@@ -9,10 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { recordVocabAttemptAction } from "@/lib/actions/progress";
 import type { WordFormationItem } from "@/lib/actions/practice-content";
+import { markWarmupTypeCompleteAction } from "@/lib/actions/warmup";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { speakWord } from "@/lib/speech";
 import { cn, shuffle } from "@/lib/utils";
+import type { PracticeTypeCode } from "@/types";
 
 interface Tile {
   id: number;
@@ -33,9 +35,11 @@ function prepare(prompts: WordFormationItem[]): PreparedPrompt[] {
 export function WordFormationGame({
   prompts,
   dict,
+  warmupCode,
 }: {
   prompts: WordFormationItem[];
   dict: Dictionary;
+  warmupCode?: PracticeTypeCode;
 }) {
   const [prepared] = useState<PreparedPrompt[]>(() => prepare(prompts));
   const [index, setIndex] = useState(0);
@@ -47,12 +51,19 @@ export function WordFormationGame({
 
   const total = prepared.length;
 
+  useEffect(() => {
+    if (finished && warmupCode) {
+      void markWarmupTypeCompleteAction(warmupCode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finished]);
+
   if (total === 0) {
     return (
       <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
         <p>{dict.wordFormationGame.noQuestions}</p>
-        <Button nativeButton={false} render={<Link href="/exercises" />}>
-          {dict.wordFormationGame.changeType}
+        <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
+          {warmupCode ? dict.warmup.continueButton : dict.wordFormationGame.changeType}
         </Button>
       </div>
     );
@@ -129,8 +140,8 @@ export function WordFormationGame({
             <RotateCcw className="size-4" />
             {dict.wordFormationGame.restart}
           </Button>
-          <Button nativeButton={false} render={<Link href="/exercises" />}>
-            {dict.wordFormationGame.changeType}
+          <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
+            {warmupCode ? dict.warmup.continueButton : dict.wordFormationGame.changeType}
           </Button>
         </div>
       </div>

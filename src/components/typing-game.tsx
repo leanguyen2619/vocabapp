@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type SubmitEvent } from "react";
+import { useEffect, useState, type SubmitEvent } from "react";
 import Link from "next/link";
 import { Check, PartyPopper, RotateCcw, Volume2, X } from "lucide-react";
 
@@ -9,13 +9,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { recordVocabAttemptAction } from "@/lib/actions/progress";
+import { markWarmupTypeCompleteAction } from "@/lib/actions/warmup";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { speakWord } from "@/lib/speech";
 import { cn } from "@/lib/utils";
-import type { Vocabulary } from "@/types";
+import type { PracticeTypeCode, Vocabulary } from "@/types";
 
-export function TypingGame({ vocabList, dict }: { vocabList: Vocabulary[]; dict: Dictionary }) {
+export function TypingGame({
+  vocabList,
+  dict,
+  warmupCode,
+}: {
+  vocabList: Vocabulary[];
+  dict: Dictionary;
+  warmupCode?: PracticeTypeCode;
+}) {
   const [index, setIndex] = useState(0);
   const [value, setValue] = useState("");
   const [checked, setChecked] = useState(false);
@@ -24,12 +33,19 @@ export function TypingGame({ vocabList, dict }: { vocabList: Vocabulary[]; dict:
 
   const total = vocabList.length;
 
+  useEffect(() => {
+    if (finished && warmupCode) {
+      void markWarmupTypeCompleteAction(warmupCode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finished]);
+
   if (total === 0) {
     return (
       <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
         <p>{dict.typingGame.noQuestions}</p>
-        <Button nativeButton={false} render={<Link href="/exercises" />}>
-          {dict.typingGame.changeType}
+        <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
+          {warmupCode ? dict.warmup.continueButton : dict.typingGame.changeType}
         </Button>
       </div>
     );
@@ -88,8 +104,8 @@ export function TypingGame({ vocabList, dict }: { vocabList: Vocabulary[]; dict:
             <RotateCcw className="size-4" />
             {dict.typingGame.restart}
           </Button>
-          <Button nativeButton={false} render={<Link href="/exercises" />}>
-            {dict.typingGame.changeType}
+          <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
+            {warmupCode ? dict.warmup.continueButton : dict.typingGame.changeType}
           </Button>
         </div>
       </div>

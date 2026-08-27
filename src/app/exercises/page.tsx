@@ -25,6 +25,7 @@ import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
 import type { PracticeTypeCode } from "@/types";
 import { parseWordScope, WORD_SCOPED_CODES, WORD_SCOPES, type WordScope } from "@/lib/word-scope";
+import { requireWarmupComplete } from "@/lib/warmup-guard";
 
 const iconByCode: Record<PracticeTypeCode, LucideIcon> = {
   multiple_choice: ListChecks,
@@ -46,6 +47,7 @@ export default async function ExercisesPage({
 }) {
   const account = await getCurrentAccount();
   if (!account) redirect("/login");
+  await requireWarmupComplete();
   const dict = getDictionary(await getLocale());
 
   const isStudent = account.role === "student";

@@ -109,6 +109,7 @@ model Account {
   exerciseAttempts      ExerciseAttempt[]
   dailyAssignments      DailyAssignment[]
   dailyWordPicks        DailyWordPick[]
+  dailyWarmups          DailyWarmup[]
   passwordResetRequests PasswordResetRequest[]
 
   @@index([classId])
@@ -362,4 +363,22 @@ model DailyWordPick {
   vocab   Vocabulary @relation(fields: [vocabId], references: [id], onDelete: Restrict)
 
   @@unique([accountId, vocabId, pickedDate])
+}
+
+// ---------- Daily_Warmups (new) ----------
+// Tracks the mandatory "3 random exercises" a student must clear once per calendar day before any
+// other student page lets them through (see requireWarmupComplete). practiceTypeCodes is picked
+// once per day (excluding flashcard, level-gated, verified to actually have content) and pinned
+// here so it can't drift mid-day; completedCodes accumulates as each one is finished.
+
+model DailyWarmup {
+  id                String             @id @default(cuid())
+  accountId         String
+  warmupDate        DateTime
+  practiceTypeCodes PracticeTypeCode[]
+  completedCodes    PracticeTypeCode[]
+
+  account Account @relation(fields: [accountId], references: [id_login], onDelete: Cascade)
+
+  @@unique([accountId, warmupDate])
 }

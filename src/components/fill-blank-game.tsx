@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
 
@@ -8,11 +8,21 @@ import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { submitFillBlankAnswerAction } from "@/lib/actions/practice-content";
 import type { FillBlankItem } from "@/lib/actions/practice-content";
+import { markWarmupTypeCompleteAction } from "@/lib/actions/warmup";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { cn, shuffle } from "@/lib/utils";
+import type { PracticeTypeCode } from "@/types";
 
-export function FillBlankGame({ questions, dict }: { questions: FillBlankItem[]; dict: Dictionary }) {
+export function FillBlankGame({
+  questions,
+  dict,
+  warmupCode,
+}: {
+  questions: FillBlankItem[];
+  dict: Dictionary;
+  warmupCode?: PracticeTypeCode;
+}) {
   const [prepared] = useState(() =>
     shuffle(questions).map((q) => ({ ...q, options: shuffle(q.options) }))
   );
@@ -24,12 +34,19 @@ export function FillBlankGame({ questions, dict }: { questions: FillBlankItem[];
 
   const total = prepared.length;
 
+  useEffect(() => {
+    if (finished && warmupCode) {
+      void markWarmupTypeCompleteAction(warmupCode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finished]);
+
   if (total === 0) {
     return (
       <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
         <p>{dict.fillBlankGame.noQuestions}</p>
-        <Button nativeButton={false} render={<Link href="/exercises" />}>
-          {dict.fillBlankGame.changeType}
+        <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
+          {warmupCode ? dict.warmup.continueButton : dict.fillBlankGame.changeType}
         </Button>
       </div>
     );
@@ -92,8 +109,8 @@ export function FillBlankGame({ questions, dict }: { questions: FillBlankItem[];
             <RotateCcw className="size-4" />
             {dict.fillBlankGame.restart}
           </Button>
-          <Button nativeButton={false} render={<Link href="/exercises" />}>
-            {dict.fillBlankGame.changeType}
+          <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
+            {warmupCode ? dict.warmup.continueButton : dict.fillBlankGame.changeType}
           </Button>
         </div>
       </div>

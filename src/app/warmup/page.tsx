@@ -1,0 +1,130 @@
+import { BookOpen } from "lucide-react";
+import { redirect } from "next/navigation";
+
+import { FillBlankGame } from "@/components/fill-blank-game";
+import { ListeningGame } from "@/components/listening-game";
+import { MatchingGame } from "@/components/matching-game";
+import { PosClassificationGame } from "@/components/pos-classification-game";
+import { QuizSession } from "@/components/quiz-session";
+import { SentenceWritingExercise } from "@/components/sentence-writing-exercise";
+import { SynonymAntonymGame } from "@/components/synonym-antonym-game";
+import { TypingGame } from "@/components/typing-game";
+import { WordFormationGame } from "@/components/word-formation-game";
+import { Progress, ProgressLabel } from "@/components/ui/progress";
+import {
+  getFillBlankQuestionsAction,
+  getSentenceWritingPromptsAction,
+  getSynonymAntonymQuestionsAction,
+  getWordFormationPromptsAction,
+} from "@/lib/actions/practice-content";
+import {
+  getMyQuizQuestionsAction,
+  getMyWordsForScopeAction,
+  getPosClassificationItemsAction,
+  listTopicsAction,
+} from "@/lib/actions/vocabulary";
+import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
+import { getDictionary, type Dictionary } from "@/lib/i18n/dictionaries";
+import { formatMessage } from "@/lib/i18n/format";
+import { getLocale } from "@/lib/i18n/locale";
+import { getCurrentAccount } from "@/lib/session";
+import type { PracticeTypeCode } from "@/types";
+
+async function renderGameFor(code: PracticeTypeCode, dict: Dictionary) {
+  switch (code) {
+    case "multiple_choice": {
+      const [questions, topics] = await Promise.all([
+        getMyQuizQuestionsAction("mixed"),
+        listTopicsAction(),
+      ]);
+      return <QuizSession questions={questions} topics={topics} dict={dict} warmupCode={code} />;
+    }
+    case "matching": {
+      const vocabList = await getMyWordsForScopeAction("mixed");
+      return <MatchingGame vocabList={vocabList} dict={dict} warmupCode={code} />;
+    }
+    case "typing": {
+      const vocabList = await getMyWordsForScopeAction("mixed");
+      return <TypingGame vocabList={vocabList} dict={dict} warmupCode={code} />;
+    }
+    case "listening": {
+      const vocabList = await getMyWordsForScopeAction("mixed");
+      return <ListeningGame vocabList={vocabList} dict={dict} warmupCode={code} />;
+    }
+    case "pos_classification": {
+      const [items, topics] = await Promise.all([getPosClassificationItemsAction(), listTopicsAction()]);
+      return <PosClassificationGame items={items} topics={topics} dict={dict} warmupCode={code} />;
+    }
+    case "synonym_antonym": {
+      const questions = await getSynonymAntonymQuestionsAction();
+      return <SynonymAntonymGame questions={questions} dict={dict} warmupCode={code} />;
+    }
+    case "fill_blank": {
+      const questions = await getFillBlankQuestionsAction();
+      return <FillBlankGame questions={questions} dict={dict} warmupCode={code} />;
+    }
+    case "word_formation": {
+      const prompts = await getWordFormationPromptsAction();
+      return <WordFormationGame prompts={prompts} dict={dict} warmupCode={code} />;
+    }
+    case "sentence_writing": {
+      const prompts = await getSentenceWritingPromptsAction();
+      return <SentenceWritingExercise prompts={prompts} dict={dict} warmupCode={code} />;
+    }
+    case "flashcard":
+      // Never actually assigned (excluded from selectWarmupTypes), but the switch must stay
+      // exhaustive over PracticeTypeCode.
+      redirect("/dashboard");
+  }
+}
+
+export default async function WarmupPage() {
+  const account = await getCurrentAccount();
+  if (!account) redirect("/login");
+  if (account.role !== "student") redirect("/dashboard");
+
+  const dict = getDictionary(await getLocale());
+  const status = await getMyWarmupStatusAction();
+  if (!status || status.types.length === 0) redirect("/dashboard");
+
+  const remaining = status.types.filter((t) => !status.completed.includes(t));
+  if (remaining.length === 0) redirect("/dashboard");
+
+  const currentType = remaining[0];
+  const stepIndex = status.completed.length + 1;
+  const totalSteps = status.types.length;
+
+  const game = await renderGameFor(currentType, dict);
+
+  return (
+    <div className="flex flex-1 flex-col bg-background">
+      <header className="border-b border-border">
+        <div className="mx-auto flex w-full max-w-2xl items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-2">
+            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <BookOpen className="size-3.5" />
+            </div>
+            <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-10 sm:py-16">
+        <div className="flex flex-col gap-1 text-center">
+          <h1 className="font-heading text-xl font-semibold tracking-tight">{dict.warmup.title}</h1>
+          <p className="text-sm text-muted-foreground">
+            {formatMessage(dict.warmup.subtitle, { total: totalSteps })}
+          </p>
+        </div>
+
+        <Progress value={((stepIndex - 1) / totalSteps) * 100}>
+          <ProgressLabel>
+            {formatMessage(dict.warmup.stepCounter, { current: stepIndex, total: totalSteps })}
+          </ProgressLabel>
+        </Progress>
+
+        {game}
+      </main>
+    </div>
+  );
+}

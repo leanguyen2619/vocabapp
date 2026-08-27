@@ -17,11 +17,13 @@ import {
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
+import { requireWarmupComplete } from "@/lib/warmup-guard";
 import { DashboardShell } from "./dashboard-client";
 
 export default async function DashboardPage() {
   const account = await getCurrentAccount();
   if (!account) redirect("/login");
+  await requireWarmupComplete();
   const dict = getDictionary(await getLocale());
 
   if (account.role === "admin") {

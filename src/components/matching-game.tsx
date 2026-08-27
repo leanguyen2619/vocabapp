@@ -7,10 +7,11 @@ import { PartyPopper, RotateCcw, Timer } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { recordVocabAttemptAction } from "@/lib/actions/progress";
+import { markWarmupTypeCompleteAction } from "@/lib/actions/warmup";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { cn, shuffle } from "@/lib/utils";
-import type { Vocabulary } from "@/types";
+import type { PracticeTypeCode, Vocabulary } from "@/types";
 
 interface Selection {
   side: "left" | "right";
@@ -23,7 +24,15 @@ function formatTime(totalSeconds: number) {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
-export function MatchingGame({ vocabList, dict }: { vocabList: Vocabulary[]; dict: Dictionary }) {
+export function MatchingGame({
+  vocabList,
+  dict,
+  warmupCode,
+}: {
+  vocabList: Vocabulary[];
+  dict: Dictionary;
+  warmupCode?: PracticeTypeCode;
+}) {
   const [leftItems] = useState(() => shuffle(vocabList));
   const [rightItems] = useState(() => shuffle(vocabList));
   const [matchedIds, setMatchedIds] = useState<Set<string>>(new Set());
@@ -41,12 +50,19 @@ export function MatchingGame({ vocabList, dict }: { vocabList: Vocabulary[]; dic
     return () => clearInterval(interval);
   }, [finished]);
 
+  useEffect(() => {
+    if (finished && warmupCode) {
+      void markWarmupTypeCompleteAction(warmupCode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finished]);
+
   if (total === 0) {
     return (
       <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
         <p>{dict.matchingGame.noQuestions}</p>
-        <Button nativeButton={false} render={<Link href="/dashboard" />}>
-          {dict.errors.backToDashboard}
+        <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/dashboard"} />}>
+          {warmupCode ? dict.warmup.continueButton : dict.errors.backToDashboard}
         </Button>
       </div>
     );
@@ -111,8 +127,8 @@ export function MatchingGame({ vocabList, dict }: { vocabList: Vocabulary[]; dic
             <RotateCcw className="size-4" />
             {dict.matchingGame.restart}
           </Button>
-          <Button nativeButton={false} render={<Link href="/dashboard" />}>
-            {dict.errors.backToDashboard}
+          <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/dashboard"} />}>
+            {warmupCode ? dict.warmup.continueButton : dict.errors.backToDashboard}
           </Button>
         </div>
       </div>

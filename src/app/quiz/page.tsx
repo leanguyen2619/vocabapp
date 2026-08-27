@@ -10,6 +10,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
 import { parseWordScope } from "@/lib/word-scope";
+import { requireWarmupComplete } from "@/lib/warmup-guard";
 
 export default async function QuizPage({
   searchParams,
@@ -18,6 +19,7 @@ export default async function QuizPage({
 }) {
   const account = await getCurrentAccount();
   if (!account) redirect("/login");
+  await requireWarmupComplete();
   const dict = getDictionary(await getLocale());
   const scope = parseWordScope((await searchParams).scope);
 

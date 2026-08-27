@@ -28,6 +28,12 @@ const en: Dictionary = {
     switchToLightMode: "Switch to light mode",
     switchToDarkMode: "Switch to dark mode",
   },
+  warmup: {
+    title: "Warm up before you start",
+    subtitle: "Complete the {total} random exercises below to start today's learning.",
+    stepCounter: "Exercise {current}/{total}",
+    continueButton: "Continue",
+  },
   language: {
     label: "Language",
     vi: "Tiếng Việt",

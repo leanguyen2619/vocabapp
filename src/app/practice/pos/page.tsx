@@ -9,10 +9,12 @@ import { getPosClassificationItemsAction, listTopicsAction } from "@/lib/actions
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
+import { requireWarmupComplete } from "@/lib/warmup-guard";
 
 export default async function PosClassificationPage() {
   const account = await getCurrentAccount();
   if (!account) redirect("/login");
+  await requireWarmupComplete();
   const dict = getDictionary(await getLocale());
 
   const [items, topics, exerciseTypes] = await Promise.all([

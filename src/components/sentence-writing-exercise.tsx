@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Check, Lightbulb, PartyPopper, RotateCcw, Volume2, X } from "lucide-react";
 
@@ -10,16 +10,20 @@ import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { recordVocabAttemptAction } from "@/lib/actions/progress";
 import type { SentencePromptItem } from "@/lib/actions/practice-content";
+import { markWarmupTypeCompleteAction } from "@/lib/actions/warmup";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { speakWord } from "@/lib/speech";
+import type { PracticeTypeCode } from "@/types";
 
 export function SentenceWritingExercise({
   prompts,
   dict,
+  warmupCode,
 }: {
   prompts: SentencePromptItem[];
   dict: Dictionary;
+  warmupCode?: PracticeTypeCode;
 }) {
   const [index, setIndex] = useState(0);
   const [text, setText] = useState("");
@@ -30,12 +34,19 @@ export function SentenceWritingExercise({
 
   const total = prompts.length;
 
+  useEffect(() => {
+    if (finished && warmupCode) {
+      void markWarmupTypeCompleteAction(warmupCode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finished]);
+
   if (total === 0) {
     return (
       <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
         <p>{dict.writingExercise.noQuestions}</p>
-        <Button nativeButton={false} render={<Link href="/exercises" />}>
-          {dict.writingExercise.changeType}
+        <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
+          {warmupCode ? dict.warmup.continueButton : dict.writingExercise.changeType}
         </Button>
       </div>
     );
@@ -98,8 +109,8 @@ export function SentenceWritingExercise({
             <RotateCcw className="size-4" />
             {dict.writingExercise.restart}
           </Button>
-          <Button nativeButton={false} render={<Link href="/exercises" />}>
-            {dict.writingExercise.changeType}
+          <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
+            {warmupCode ? dict.warmup.continueButton : dict.writingExercise.changeType}
           </Button>
         </div>
       </div>

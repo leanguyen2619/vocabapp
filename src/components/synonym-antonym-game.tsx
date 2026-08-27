@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
 
@@ -9,16 +9,20 @@ import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { submitSynonymAntonymAnswerAction } from "@/lib/actions/practice-content";
 import type { SynonymAntonymItem } from "@/lib/actions/practice-content";
+import { markWarmupTypeCompleteAction } from "@/lib/actions/warmup";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { cn, shuffle } from "@/lib/utils";
+import type { PracticeTypeCode } from "@/types";
 
 export function SynonymAntonymGame({
   questions,
   dict,
+  warmupCode,
 }: {
   questions: SynonymAntonymItem[];
   dict: Dictionary;
+  warmupCode?: PracticeTypeCode;
 }) {
   const [prepared] = useState(() =>
     shuffle(questions).map((q) => ({ ...q, options: shuffle(q.options) }))
@@ -31,12 +35,19 @@ export function SynonymAntonymGame({
 
   const total = prepared.length;
 
+  useEffect(() => {
+    if (finished && warmupCode) {
+      void markWarmupTypeCompleteAction(warmupCode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finished]);
+
   if (total === 0) {
     return (
       <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
         <p>{dict.synonymAntonymGame.noQuestions}</p>
-        <Button nativeButton={false} render={<Link href="/exercises" />}>
-          {dict.synonymAntonymGame.changeType}
+        <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
+          {warmupCode ? dict.warmup.continueButton : dict.synonymAntonymGame.changeType}
         </Button>
       </div>
     );
@@ -98,8 +109,8 @@ export function SynonymAntonymGame({
             <RotateCcw className="size-4" />
             {dict.synonymAntonymGame.restart}
           </Button>
-          <Button nativeButton={false} render={<Link href="/exercises" />}>
-            {dict.synonymAntonymGame.changeType}
+          <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
+            {warmupCode ? dict.warmup.continueButton : dict.synonymAntonymGame.changeType}
           </Button>
         </div>
       </div>

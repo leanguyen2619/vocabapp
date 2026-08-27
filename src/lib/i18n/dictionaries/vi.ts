@@ -26,6 +26,12 @@ const vi = {
     switchToLightMode: "Chuyển sang giao diện sáng",
     switchToDarkMode: "Chuyển sang giao diện tối",
   },
+  warmup: {
+    title: "Khởi động trước khi học",
+    subtitle: "Hoàn thành {total} bài tập ngẫu nhiên dưới đây để bắt đầu ngày học hôm nay.",
+    stepCounter: "Bài {current}/{total}",
+    continueButton: "Tiếp tục",
+  },
   language: {
     label: "Ngôn ngữ",
     vi: "Tiếng Việt",

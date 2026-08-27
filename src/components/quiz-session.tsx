@@ -1,28 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
+import { markWarmupTypeCompleteAction } from "@/lib/actions/warmup";
 import { submitQuizAnswerAction } from "@/lib/actions/vocabulary";
 import type { QuizQuestionItem } from "@/lib/actions/vocabulary";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { getTopicName } from "@/lib/labels";
 import { cn } from "@/lib/utils";
-import type { Topic } from "@/types";
+import type { PracticeTypeCode, Topic } from "@/types";
 
 export function QuizSession({
   questions,
   topics,
   dict,
+  warmupCode,
 }: {
   questions: QuizQuestionItem[];
   topics: Topic[];
   dict: Dictionary;
+  /** Set when rendered from /warmup for this practice type — swaps the exit links to /warmup
+   * instead of /exercises or /dashboard, and reports completion the moment results are reached. */
+  warmupCode?: PracticeTypeCode;
 }) {
   const [index, setIndex] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -32,12 +37,19 @@ export function QuizSession({
 
   const total = questions.length;
 
+  useEffect(() => {
+    if (finished && warmupCode) {
+      void markWarmupTypeCompleteAction(warmupCode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finished]);
+
   if (total === 0) {
     return (
       <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
         <p>{dict.quizSession.noQuestions}</p>
-        <Button nativeButton={false} render={<Link href="/exercises" />}>
-          {dict.quizSession.changeType}
+        <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
+          {warmupCode ? dict.warmup.continueButton : dict.quizSession.changeType}
         </Button>
       </div>
     );
@@ -98,8 +110,8 @@ export function QuizSession({
             <RotateCcw className="size-4" />
             {dict.quizSession.restart}
           </Button>
-          <Button nativeButton={false} render={<Link href="/dashboard" />}>
-            {dict.errors.backToDashboard}
+          <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/dashboard"} />}>
+            {warmupCode ? dict.warmup.continueButton : dict.errors.backToDashboard}
           </Button>
         </div>
       </div>
