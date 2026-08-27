@@ -60,7 +60,7 @@ export default async function Home() {
               {dict.landing.ctaRegister}
             </Button>
             <Link href="/login" className="text-sm font-medium text-primary hover:underline">
-              {dict.landing.ctaTeacher}
+              {dict.landing.ctaAdmin}
             </Link>
           </div>
         </section>

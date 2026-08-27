@@ -410,8 +410,8 @@ export function AdminAccountsClient({
                       {dict.roles.student}
                     </Label>
                     <Label className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 has-data-checked:border-primary">
-                      <RadioGroupItem value="teacher" />
-                      {dict.roles.teacher}
+                      <RadioGroupItem value="admin" />
+                      {dict.roles.admin}
                     </Label>
                   </RadioGroup>
                 </div>
@@ -717,11 +717,7 @@ export function AdminAccountsClient({
 
                   {detailTarget.account.role !== "admin" && (
                     <div className="flex flex-col gap-1.5">
-                      <Label>
-                        {detailTarget.account.role === "teacher"
-                          ? dict.admin.accounts.classInChargeLabel
-                          : dict.admin.accounts.classLabel}
-                      </Label>
+                      <Label>{dict.admin.accounts.classLabel}</Label>
                       <Select
                         value={editClassId}
                         onValueChange={(value) => setEditClassId(value ?? NONE_CLASS)}

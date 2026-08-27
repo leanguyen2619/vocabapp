@@ -2,12 +2,10 @@ import { redirect } from "next/navigation";
 
 import { AdminDashboardContent } from "@/components/admin-dashboard-content";
 import { StudentDashboardContent } from "@/components/student-dashboard-content";
-import { TeacherDashboardContent } from "@/components/teacher-dashboard-content";
 import { listAccountsAction } from "@/lib/actions/accounts";
 import { listClassesAction } from "@/lib/actions/classes";
 import { getMyLevelsAction } from "@/lib/actions/levels";
-import { getMyClassStudentsAction, listMyAssignedVocabAction } from "@/lib/actions/teacher";
-import { listMyClassResetRequestsAction } from "@/lib/actions/password-reset-requests";
+import { listAllAssignedVocabAction, listAllStudentsAction } from "@/lib/actions/students";
 import {
   getMyDailyAssignmentsAction,
   getMyWordsForScopeAction,
@@ -27,10 +25,12 @@ export default async function DashboardPage() {
   const dict = getDictionary(await getLocale());
 
   if (account.role === "admin") {
-    const [accounts, classes, vocabulary] = await Promise.all([
+    const [accounts, classes, vocabulary, students, assignedVocab] = await Promise.all([
       listAccountsAction(),
       listClassesAction(),
       listVocabularyAction(),
+      listAllStudentsAction(),
+      listAllAssignedVocabAction(),
     ]);
     const studentCount = accounts.filter((a) => a.account.role === "student").length;
 
@@ -41,32 +41,9 @@ export default async function DashboardPage() {
           studentCount={studentCount}
           classCount={classes.length}
           vocabCount={vocabulary.length}
-          dict={dict}
-        />
-      </DashboardShell>
-    );
-  }
-
-  if (account.role === "teacher") {
-    const [classes, students, vocabularyBank, assignedVocab, resetRequests] = await Promise.all([
-      listClassesAction(),
-      getMyClassStudentsAction(),
-      listVocabularyAction(),
-      listMyAssignedVocabAction(),
-      listMyClassResetRequestsAction(),
-    ]);
-    const myClass = classes.find((c) => c.id === account.classId) ?? null;
-
-    return (
-      <DashboardShell account={account} streak={0}>
-        <TeacherDashboardContent
-          account={account}
-          className={myClass?.className ?? null}
-          dailyWordTarget={myClass?.dailyWordTarget ?? 5}
           students={students}
-          vocabularyBank={vocabularyBank}
+          vocabularyBank={vocabulary}
           assignedVocab={assignedVocab}
-          resetRequests={resetRequests}
           dict={dict}
         />
       </DashboardShell>

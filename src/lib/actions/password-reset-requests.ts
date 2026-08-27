@@ -34,25 +34,6 @@ export interface PendingResetRequest {
   createdAt: string;
 }
 
-/** Teacher: pending requests from students in their own class only. */
-export async function listMyClassResetRequestsAction(): Promise<PendingResetRequest[]> {
-  const account = await getCurrentAccount();
-  if (!account || account.role !== "teacher" || !account.classId) return [];
-
-  const rows = await prisma.passwordResetRequest.findMany({
-    where: { status: "pending", account: { classId: account.classId, role: "student" } },
-    include: { account: true },
-    orderBy: { createdAt: "asc" },
-  });
-  return rows.map((r) => ({
-    id: r.id,
-    accountId: r.accountId,
-    fullName: r.account.fullName,
-    email: r.account.email,
-    createdAt: r.createdAt.toISOString(),
-  }));
-}
-
 /** Admin: every pending request across the whole app. */
 export async function listAllResetRequestsAction(): Promise<PendingResetRequest[]> {
   const account = await getCurrentAccount();
@@ -72,19 +53,11 @@ export async function listAllResetRequestsAction(): Promise<PendingResetRequest[
   }));
 }
 
-/** Lets a teacher/admin dismiss a request without resetting the password (e.g. handled another
- * way, or submitted by mistake). Actually resetting the password auto-resolves the request too. */
+/** Lets an admin dismiss a request without resetting the password (e.g. handled another way, or
+ * submitted by mistake). Actually resetting the password auto-resolves the request too. */
 export async function dismissResetRequestAction(id: string): Promise<boolean> {
   const account = await getCurrentAccount();
-  if (!account || (account.role !== "admin" && account.role !== "teacher")) return false;
-
-  if (account.role === "teacher") {
-    const request = await prisma.passwordResetRequest.findUnique({
-      where: { id },
-      include: { account: true },
-    });
-    if (!request || request.account.classId !== account.classId) return false;
-  }
+  if (!account || account.role !== "admin") return false;
 
   const updated = await prisma.passwordResetRequest
     .update({ where: { id }, data: { status: "resolved", resolvedAt: new Date() } })

@@ -3,7 +3,6 @@ import type { Role } from "@/types";
 
 const ROLE_PREFIX: Record<Role, string> = {
   student: "HS",
-  teacher: "GV",
   admin: "QT",
 };
 

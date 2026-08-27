@@ -4,7 +4,7 @@
  * from mock data to real endpoints without touching UI code.
  */
 
-export type Role = "student" | "teacher" | "admin";
+export type Role = "student" | "admin";
 export type AccountStatus = "active" | "inactive";
 
 // ---------- Accounts ----------

@@ -1,14 +1,12 @@
 "use server";
 
-import bcrypt from "bcryptjs";
-
 import { prisma } from "@/lib/prisma";
 import { getCurrentAccount } from "@/lib/session";
 import type { AssignmentStatus } from "@/types";
 
-async function requireTeacher() {
+async function requireAdmin() {
   const account = await getCurrentAccount();
-  if (!account || account.role !== "teacher") return null;
+  if (!account || account.role !== "admin") return null;
   return account;
 }
 
@@ -34,9 +32,10 @@ function pickActiveLevel<T extends { levelId: string; status: string }>(
   );
 }
 
-export interface ClassStudentSummary {
+export interface StudentSummary {
   id_login: string;
   fullName: string;
+  className: string | null;
   levelName: string;
   score: number;
   streak: number;
@@ -44,13 +43,15 @@ export interface ClassStudentSummary {
   todayStatus: AssignmentStatus;
 }
 
-/** Students in the signed-in teacher's assigned class, with real progress from Postgres. */
-export async function getMyClassStudentsAction(): Promise<ClassStudentSummary[]> {
-  const teacher = await requireTeacher();
-  if (!teacher || !teacher.classId) return [];
+/** Every student account, with real progress from Postgres — the admin manages the whole school,
+ * not just one class, so this is deliberately not scoped by classId. */
+export async function listAllStudentsAction(): Promise<StudentSummary[]> {
+  const admin = await requireAdmin();
+  if (!admin) return [];
 
   const students = await prisma.account.findMany({
-    where: { classId: teacher.classId, role: "student" },
+    where: { role: "student" },
+    include: { class: true },
     orderBy: { fullName: "asc" },
   });
   if (students.length === 0) return [];
@@ -83,6 +84,7 @@ export async function getMyClassStudentsAction(): Promise<ClassStudentSummary[]>
     return {
       id_login: s.id_login,
       fullName: s.fullName,
+      className: s.class?.className ?? null,
       levelName,
       score: activeLevel?.score ?? 0,
       streak,
@@ -92,20 +94,19 @@ export async function getMyClassStudentsAction(): Promise<ClassStudentSummary[]>
   });
 }
 
-/** Persists a real assignment (DailyAssignment rows) for every student in the teacher's class. */
-export async function assignVocabularyToClassAction(
+/** Persists a real assignment (DailyAssignment rows) for every current student. */
+export async function assignVocabularyToAllStudentsAction(
   vocabIds: string[]
 ): Promise<{ error: string } | { error?: undefined; studentCount: number }> {
-  const teacher = await requireTeacher();
-  if (!teacher) return { error: "Bạn không có quyền thực hiện thao tác này." };
-  if (!teacher.classId) return { error: "Bạn chưa được gán vào lớp nào. Vui lòng liên hệ quản trị viên." };
+  const admin = await requireAdmin();
+  if (!admin) return { error: "Bạn không có quyền thực hiện thao tác này." };
   if (vocabIds.length === 0) return { error: "Vui lòng chọn ít nhất 1 từ vựng." };
 
   const students = await prisma.account.findMany({
-    where: { classId: teacher.classId, role: "student" },
+    where: { role: "student" },
     select: { id_login: true },
   });
-  if (students.length === 0) return { error: "Lớp của bạn chưa có học sinh nào." };
+  if (students.length === 0) return { error: "Chưa có học sinh nào trong hệ thống." };
 
   const assignedDate = new Date();
   assignedDate.setHours(0, 0, 0, 0);
@@ -125,6 +126,34 @@ export async function assignVocabularyToClassAction(
   return { studentCount: students.length };
 }
 
+/** Persists a real assignment (DailyAssignment rows) for exactly one student. */
+export async function assignVocabularyToStudentAction(
+  studentId: string,
+  vocabIds: string[]
+): Promise<{ error: string } | { error?: undefined; count: number }> {
+  const admin = await requireAdmin();
+  if (!admin) return { error: "Bạn không có quyền thực hiện thao tác này." };
+  if (vocabIds.length === 0) return { error: "Vui lòng chọn ít nhất 1 từ vựng." };
+
+  const student = await prisma.account.findFirst({ where: { id_login: studentId, role: "student" } });
+  if (!student) return { error: "Không tìm thấy học sinh này." };
+
+  const assignedDate = new Date();
+  assignedDate.setHours(0, 0, 0, 0);
+
+  const data = vocabIds.map((vocabId) => ({
+    accountId: studentId,
+    vocabId,
+    assignedDate,
+    status: "pending" as const,
+  }));
+
+  const result = await prisma.dailyAssignment.createMany({ data, skipDuplicates: true }).catch(() => null);
+  if (!result) return { error: "Một hoặc nhiều từ vựng đã chọn không còn hợp lệ. Vui lòng thử lại." };
+
+  return { count: result.count };
+}
+
 export interface AssignedVocabSummary {
   vocabId: string;
   vocab: string;
@@ -133,25 +162,18 @@ export interface AssignedVocabSummary {
   studentCount: number;
 }
 
-/** Distinct words currently assigned to the teacher's class, most recent first. */
-export async function listMyAssignedVocabAction(): Promise<AssignedVocabSummary[]> {
-  const teacher = await requireTeacher();
-  if (!teacher || !teacher.classId) return [];
-
-  const students = await prisma.account.findMany({
-    where: { classId: teacher.classId, role: "student" },
-    select: { id_login: true },
-  });
-  const studentIds = students.map((s) => s.id_login);
-  if (studentIds.length === 0) return [];
+/** Distinct words currently assigned to any student, most recent first. */
+export async function listAllAssignedVocabAction(): Promise<AssignedVocabSummary[]> {
+  const admin = await requireAdmin();
+  if (!admin) return [];
 
   const assignments = await prisma.dailyAssignment.findMany({
-    where: { accountId: { in: studentIds } },
+    where: { account: { role: "student" } },
     include: { vocab: true },
   });
 
   // studentCount must count distinct students, not assignment rows — the same word can have
-  // multiple rows per student (one per assignedDate) if a teacher re-assigns it on a later day.
+  // multiple rows per student (one per assignedDate) if it's re-assigned on a later day.
   const byVocab = new Map<
     string,
     { vocab: string; meanVI: string; assignedDate: Date; students: Set<string> }
@@ -182,63 +204,13 @@ export async function listMyAssignedVocabAction(): Promise<AssignedVocabSummary[
     .sort((a, b) => b.assignedDate.localeCompare(a.assignedDate));
 }
 
-/** Removes this word's assignment for every student in the teacher's class. */
+/** Removes this word's assignment for every student who currently has it. */
 export async function cancelAssignmentAction(vocabId: string): Promise<boolean> {
-  const teacher = await requireTeacher();
-  if (!teacher || !teacher.classId) return false;
+  const admin = await requireAdmin();
+  if (!admin) return false;
 
-  const students = await prisma.account.findMany({
-    where: { classId: teacher.classId, role: "student" },
-    select: { id_login: true },
-  });
-  const studentIds = students.map((s) => s.id_login);
-  if (studentIds.length === 0) return false;
-
-  await prisma.dailyAssignment.deleteMany({ where: { accountId: { in: studentIds }, vocabId } });
+  await prisma.dailyAssignment.deleteMany({ where: { vocabId, account: { role: "student" } } });
   return true;
-}
-
-/** Sets the daily word target for the signed-in teacher's own class only. */
-export async function updateMyClassTargetAction(dailyWordTarget: number): Promise<boolean> {
-  const teacher = await requireTeacher();
-  if (!teacher || !teacher.classId) return false;
-  if (!Number.isInteger(dailyWordTarget) || dailyWordTarget < 1) return false;
-
-  const updated = await prisma.schoolClass
-    .update({ where: { id: teacher.classId }, data: { dailyWordTarget } })
-    .catch(() => null);
-  return updated !== null;
-}
-
-/**
- * Resets a student's password — scoped to students in the signed-in teacher's own class only
- * (re-verified server-side against teacher.classId, not just filtered client-side).
- */
-export async function resetStudentPasswordAction(
-  studentId: string,
-  newPassword: string
-): Promise<{ error: string } | { error?: undefined }> {
-  const teacher = await requireTeacher();
-  if (!teacher || !teacher.classId) return { error: "Bạn không có quyền thực hiện thao tác này." };
-  if (newPassword.length < 6) return { error: "Mật khẩu cần ít nhất 6 ký tự." };
-
-  const student = await prisma.account.findFirst({
-    where: { id_login: studentId, classId: teacher.classId, role: "student" },
-  });
-  if (!student) return { error: "Không tìm thấy học sinh này trong lớp bạn phụ trách." };
-
-  const passwordHash = await bcrypt.hash(newPassword, 10);
-  const updated = await prisma.account
-    .update({ where: { id_login: studentId }, data: { passwordHash } })
-    .catch(() => null);
-  if (!updated) return { error: "Không tìm thấy học sinh này." };
-
-  await prisma.passwordResetRequest.updateMany({
-    where: { accountId: studentId, status: "pending" },
-    data: { status: "resolved", resolvedAt: new Date() },
-  });
-
-  return {};
 }
 
 export interface StudentDetail {
@@ -254,14 +226,12 @@ export interface StudentDetail {
   learningWords: { vocab: string; meanVI: string }[];
 }
 
-/** Full progress detail for one student — only reachable for students in the teacher's own class. */
+/** Full progress detail for one student. */
 export async function getStudentDetailAction(studentId: string): Promise<StudentDetail | null> {
-  const teacher = await requireTeacher();
-  if (!teacher || !teacher.classId) return null;
+  const admin = await requireAdmin();
+  if (!admin) return null;
 
-  const student = await prisma.account.findFirst({
-    where: { id_login: studentId, classId: teacher.classId, role: "student" },
-  });
+  const student = await prisma.account.findFirst({ where: { id_login: studentId, role: "student" } });
   if (!student) return null;
 
   const [levels, accountLevels, history, totalVocab] = await Promise.all([

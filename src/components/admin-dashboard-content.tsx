@@ -9,11 +9,13 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { AdminStudentsPanel } from "@/components/admin-students-panel";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatMessage } from "@/lib/i18n/format";
+import type { AssignedVocabSummary, StudentSummary } from "@/lib/actions/students";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
-import type { Account } from "@/types";
+import type { Account, Vocabulary } from "@/types";
 
 interface AdminFunction {
   title: string;
@@ -27,12 +29,18 @@ export function AdminDashboardContent({
   studentCount,
   classCount,
   vocabCount,
+  students,
+  vocabularyBank,
+  assignedVocab,
   dict,
 }: {
   account: Account;
   studentCount: number;
   classCount: number;
   vocabCount: number;
+  students: StudentSummary[];
+  vocabularyBank: Vocabulary[];
+  assignedVocab: AssignedVocabSummary[];
   dict: Dictionary;
 }) {
   const adminFunctions: AdminFunction[] = [
@@ -164,6 +172,13 @@ export function AdminDashboardContent({
           })}
         </div>
       </div>
+
+      <AdminStudentsPanel
+        students={students}
+        vocabularyBank={vocabularyBank}
+        assignedVocab={assignedVocab}
+        dict={dict}
+      />
     </div>
   );
 }

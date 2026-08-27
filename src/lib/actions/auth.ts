@@ -10,7 +10,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type AuthResult = { error: string } | { error?: undefined; id_login: string };
 
-/** Students/teachers/admins log in with their email, not id_login. */
+/** Students and admins log in with their email, not id_login. */
 export async function loginAction(email: string, password: string): Promise<AuthResult> {
   const account = await prisma.account.findUnique({ where: { email: email.trim().toLowerCase() } });
   if (!account) {
@@ -30,8 +30,8 @@ export async function loginAction(email: string, password: string): Promise<Auth
 }
 
 /**
- * Public self-registration is student-only by design — a teacher account grants access to
- * assign vocabulary and view real student data, so it must be created by an admin (see
+ * Public self-registration is student-only by design — an admin account grants access to every
+ * student's real data and management functions, so it must be created by an existing admin (see
  * createAccountByAdminAction) rather than claimed by anyone who finds this form.
  */
 export async function registerAction(input: {

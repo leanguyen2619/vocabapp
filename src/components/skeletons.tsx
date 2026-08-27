@@ -103,7 +103,7 @@ export function GameSkeleton() {
 }
 
 /** Dashboard — greeting, a row of stat/level cards, and a list card underneath. Rough enough to
- * fit all three roles (student/teacher/admin), since each renders quite different real content. */
+ * fit both roles (student/admin), since each renders quite different real content. */
 export function DashboardSkeleton() {
   return (
     <div className="flex flex-1 flex-col bg-background">
