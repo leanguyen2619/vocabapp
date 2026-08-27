@@ -76,7 +76,6 @@ const vi = {
     heroSubtitle:
       "Ghi nhớ từ vựng lâu hơn với thẻ ghi nhớ tương tác, bài kiểm tra thử và trò chơi ghép thẻ của VocabApp.",
     ctaRegister: "Đăng ký miễn phí",
-    ctaAdmin: "Đăng nhập quản trị",
     ctaLogin: "Đăng nhập",
     goToDashboard: "Vào Dashboard",
     featuresTitle: "Chọn cách học phù hợp với bạn",

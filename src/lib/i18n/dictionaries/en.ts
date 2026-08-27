@@ -78,7 +78,6 @@ const en: Dictionary = {
     heroSubtitle:
       "Remember vocabulary longer with interactive flashcards, practice quizzes, and VocabApp's matching game.",
     ctaRegister: "Sign up for free",
-    ctaAdmin: "Admin login",
     ctaLogin: "Log in",
     goToDashboard: "Go to Dashboard",
     featuresTitle: "Choose the way you learn best",
