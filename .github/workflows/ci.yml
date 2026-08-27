@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# `next build` never queries the database (every route is server-rendered on demand, nothing is
+# statically generated from Prisma data at build time) — Prisma's client generator only reads the
+# schema file, so a well-formed but non-working connection string is enough for install/build/test
+# to succeed without needing real Neon credentials as a CI secret.
+env:
+  DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci_placeholder"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build

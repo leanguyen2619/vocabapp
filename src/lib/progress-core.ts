@@ -4,17 +4,20 @@ import type { AccountLevelStatus, LearningStatus } from "@/types";
 const STATUS_ORDER: LearningStatus[] = ["new", "learning", "mastered"];
 const LEVEL_STATUS_RANK: Record<AccountLevelStatus, number> = { locked: 0, in_progress: 1, completed: 2 };
 
-function nextStatus(current: LearningStatus, isCorrect: boolean): LearningStatus {
+// Exported (not just used internally) so this business-critical status/streak logic is unit
+// testable without a database — see progress-core.test.ts.
+
+export function nextStatus(current: LearningStatus, isCorrect: boolean): LearningStatus {
   const index = STATUS_ORDER.indexOf(current);
   const nextIndex = isCorrect ? Math.min(index + 1, STATUS_ORDER.length - 1) : Math.max(index - 1, 0);
   return STATUS_ORDER[nextIndex];
 }
 
-function isSameCalendarDay(a: Date, b: Date): boolean {
+export function isSameCalendarDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
-function isNextCalendarDay(previous: Date, current: Date): boolean {
+export function isNextCalendarDay(previous: Date, current: Date): boolean {
   const prevDay = new Date(previous.getFullYear(), previous.getMonth(), previous.getDate());
   const currentDay = new Date(current.getFullYear(), current.getMonth(), current.getDate());
   const diffDays = Math.round((currentDay.getTime() - prevDay.getTime()) / 86_400_000);
@@ -23,7 +26,7 @@ function isNextCalendarDay(previous: Date, current: Date): boolean {
 
 /** Consecutive-day streak: +1 if practiced the day right after the last activity, reset to 1 on
  * any gap, unchanged if already counted today. */
-function computeStreak(currentStreak: number, lastActivityDate: Date | null, now: Date): number {
+export function computeStreak(currentStreak: number, lastActivityDate: Date | null, now: Date): number {
   if (!lastActivityDate) return 1;
   if (isSameCalendarDay(lastActivityDate, now)) return Math.max(currentStreak, 1);
   if (isNextCalendarDay(lastActivityDate, now)) return currentStreak + 1;
