@@ -388,7 +388,7 @@ const vi = {
     title: "Báo cáo lớp học",
     subtitle: "Những từ cả lớp còn yếu nhất, để biết cần dạy lại từ nào.",
     listTitle: "Từ cần dạy lại",
-    listDesc: "Xếp theo tỷ lệ học sinh chưa nắm được, cao nhất trước. Chỉ tính từ có ít nhất 3 học sinh đã học.",
+    listDesc: "Xếp theo tỷ lệ học sinh chưa nắm được, cao nhất trước. Chỉ tính từ có đủ số học sinh đã học để so sánh công bằng.",
     empty: "Chưa đủ dữ liệu để lên báo cáo.",
     attemptedLabel: "{count} học sinh đã học từ này",
     percentLabel: "{count}/{total} chưa thành thạo ({percent}%)",

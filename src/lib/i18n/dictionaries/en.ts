@@ -390,7 +390,7 @@ const en: Dictionary = {
     title: "Class report",
     subtitle: "The words the whole class is weakest on, so you know what to reteach.",
     listTitle: "Words to reteach",
-    listDesc: "Sorted by share of students who haven't mastered it yet, highest first. Only counts words at least 3 students have studied.",
+    listDesc: "Sorted by share of students who haven't mastered it yet, highest first. Only counts words enough students have studied for a fair comparison.",
     empty: "Not enough data for a report yet.",
     attemptedLabel: "{count} students have studied this word",
     percentLabel: "{count}/{total} not mastered ({percent}%)",
