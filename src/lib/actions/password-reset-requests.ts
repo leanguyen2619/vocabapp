@@ -3,7 +3,9 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentAccount } from "@/lib/session";
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Bounded quantifiers (not `+`) so this also caps length — an unbounded pattern would accept an
+// arbitrarily long string as a valid "email" as long as it has no whitespace/@ before the last dot.
+const EMAIL_PATTERN = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,24}$/;
 
 /**
  * Public self-service "forgot password" — no login required, since the whole point is the

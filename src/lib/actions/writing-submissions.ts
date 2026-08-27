@@ -9,6 +9,12 @@ import { getCurrentAccount } from "@/lib/session";
  * as a wrong answer, so a shaky sentence doesn't silently advance mastery. */
 const PASS_THRESHOLD = 70;
 
+// The textarea has no client-side maxLength today, and even if it did, a Server Action is callable
+// directly — so this is the only real backstop against someone submitting a multi-megabyte string.
+// One practice sentence has no legitimate reason to be this long.
+const MAX_SENTENCE_LENGTH = 1000;
+const MAX_FEEDBACK_LENGTH = 1000;
+
 async function requireAdmin() {
   const account = await getCurrentAccount();
   if (!account || account.role !== "admin") return null;
@@ -24,6 +30,9 @@ export async function submitSentenceAction(
 
   const trimmed = sentence.trim();
   if (!trimmed) return { error: "Vui lòng viết một câu trước khi nộp." };
+  if (trimmed.length > MAX_SENTENCE_LENGTH) {
+    return { error: `Câu quá dài (tối đa ${MAX_SENTENCE_LENGTH} ký tự).` };
+  }
 
   const vocab = await prisma.vocabulary.findUnique({ where: { id: vocabId } });
   if (!vocab) return { error: "Không tìm thấy từ vựng này." };
@@ -117,6 +126,9 @@ export async function gradeWritingSubmissionAction(
 
   if (!Number.isInteger(score) || score < 0 || score > 100) {
     return { error: "Điểm phải là số nguyên từ 0 đến 100." };
+  }
+  if (feedback.trim().length > MAX_FEEDBACK_LENGTH) {
+    return { error: `Nhận xét quá dài (tối đa ${MAX_FEEDBACK_LENGTH} ký tự).` };
   }
 
   const submission = await prisma.writingSubmission.findUnique({

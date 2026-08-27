@@ -94,6 +94,7 @@ export function RegisterForm({ dict }: { dict: Dictionary }) {
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           placeholder={dict.register.fullNamePlaceholder}
+          maxLength={100}
           aria-invalid={invalidField === "fullName"}
         />
       </div>

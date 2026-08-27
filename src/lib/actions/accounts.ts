@@ -12,7 +12,10 @@ export interface AccountSummary {
   email: string;
 }
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Bounded quantifiers (not `+`) so this also caps length — an unbounded pattern would accept an
+// arbitrarily long string as a valid "email" as long as it has no whitespace/@ before the last dot.
+const EMAIL_PATTERN = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,24}$/;
+const MAX_FULL_NAME_LENGTH = 100;
 
 async function requireAdmin() {
   const account = await getCurrentAccount();
@@ -52,6 +55,7 @@ export async function createAccountByAdminAction(input: {
   const email = input.email.trim().toLowerCase();
 
   if (!fullName || !email || !input.password) return { error: "Vui lòng điền đầy đủ thông tin." };
+  if (fullName.length > MAX_FULL_NAME_LENGTH) return { error: "Họ tên quá dài." };
   if (!EMAIL_PATTERN.test(email)) return { error: "Email không hợp lệ." };
   if (input.password.length < 6) return { error: "Mật khẩu cần ít nhất 6 ký tự." };
 
@@ -141,6 +145,7 @@ export async function updateAccountByAdminAction(
 
   const fullName = patch.fullName.trim();
   if (!fullName) return { error: "Vui lòng nhập họ và tên." };
+  if (fullName.length > MAX_FULL_NAME_LENGTH) return { error: "Họ tên quá dài." };
 
   if (patch.classId) {
     const classExists = await prisma.schoolClass.findUnique({ where: { id: patch.classId } });

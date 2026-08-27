@@ -215,6 +215,7 @@ export function AdminWritingSubmissionsClient({
               onChange={(e) => setFeedback(e.target.value)}
               placeholder={dict.adminWriting.feedbackPlaceholder}
               rows={3}
+              maxLength={1000}
             />
           </div>
 

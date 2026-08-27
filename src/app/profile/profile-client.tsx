@@ -231,6 +231,7 @@ export function ProfileClient({
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     autoFocus
+                    maxLength={100}
                     className="max-w-56"
                   />
                   <div className="flex justify-center gap-2 sm:justify-start">

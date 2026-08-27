@@ -6,7 +6,10 @@ import { generateLoginId } from "@/lib/id-gen";
 import { prisma } from "@/lib/prisma";
 import { createSession, destroySession, getCurrentAccount } from "@/lib/session";
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Bounded quantifiers (not `+`) so this also caps length — an unbounded pattern would accept an
+// arbitrarily long string as a valid "email" as long as it has no whitespace/@ before the last dot.
+const EMAIL_PATTERN = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,24}$/;
+const MAX_FULL_NAME_LENGTH = 100;
 
 type AuthResult = { error: string } | { error?: undefined; id_login: string };
 
@@ -43,6 +46,7 @@ export async function registerAction(input: {
   const email = input.email.trim().toLowerCase();
 
   if (!fullName) return { error: "Vui lòng nhập họ và tên." };
+  if (fullName.length > MAX_FULL_NAME_LENGTH) return { error: "Họ tên quá dài." };
   if (!EMAIL_PATTERN.test(email)) return { error: "Email không đúng định dạng." };
   if (input.password.length < 6) return { error: "Mật khẩu cần ít nhất 6 ký tự." };
 
@@ -86,6 +90,7 @@ export async function updateFullNameAction(
 
   const trimmed = fullName.trim();
   if (!trimmed) return { error: "Họ tên không được để trống." };
+  if (trimmed.length > MAX_FULL_NAME_LENGTH) return { error: "Họ tên quá dài." };
 
   await prisma.account.update({ where: { id_login: session.id_login }, data: { fullName: trimmed } });
   return { fullName: trimmed };

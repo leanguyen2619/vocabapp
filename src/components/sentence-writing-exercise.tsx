@@ -147,6 +147,7 @@ export function SentenceWritingExercise({
         onChange={(e) => setText(e.target.value)}
         placeholder={formatMessage(dict.writingExercise.textareaPlaceholder, { word: prompt.vocab })}
         rows={4}
+        maxLength={1000}
         disabled={isPending}
       />
 

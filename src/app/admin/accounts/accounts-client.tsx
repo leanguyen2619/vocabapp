@@ -373,6 +373,7 @@ export function AdminAccountsClient({
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder={dict.register.fullNamePlaceholder}
+                    maxLength={100}
                   />
                 </div>
 
