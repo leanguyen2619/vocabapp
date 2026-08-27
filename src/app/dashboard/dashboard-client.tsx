@@ -3,14 +3,19 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BookOpen, Flame, LogOut } from "lucide-react";
+import { BookOpen, Flame, LogOut, UserRound } from "lucide-react";
 
 import { useLocale } from "@/components/locale-provider";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { logoutAction } from "@/lib/actions/auth";
 import { getInitials } from "@/lib/utils";
 import type { Account } from "@/types";
@@ -54,15 +59,26 @@ export function DashboardShell({
             )}
             <ThemeToggle />
             <LanguageToggle />
-            <Link href="/profile" aria-label={dict.common.profile}>
-              <Avatar>
-                {account.avatarUrl && <AvatarImage src={account.avatarUrl} alt={account.fullName} />}
-                <AvatarFallback>{initials}</AvatarFallback>
-              </Avatar>
-            </Link>
-            <Button variant="ghost" size="icon-sm" aria-label={dict.common.logout} onClick={handleLogout}>
-              <LogOut className="size-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={<button type="button" aria-label={dict.common.profile} className="rounded-full" />}
+              >
+                <Avatar>
+                  {account.avatarUrl && <AvatarImage src={account.avatarUrl} alt={account.fullName} />}
+                  <AvatarFallback>{initials}</AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem render={<Link href="/profile" />}>
+                  <UserRound className="size-4" />
+                  {dict.common.profile}
+                </DropdownMenuItem>
+                <DropdownMenuItem variant="destructive" onClick={() => void handleLogout()}>
+                  <LogOut className="size-4" />
+                  {dict.common.logout}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
