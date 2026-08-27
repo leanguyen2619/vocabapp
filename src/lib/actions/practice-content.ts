@@ -218,11 +218,14 @@ export async function getListeningSentenceAudioAction(
   const account = await getCurrentAccount();
   if (!account) return { error: "Bạn cần đăng nhập." };
 
-  const question = await prisma.question.findUnique({
-    where: { id: questionId },
-    include: { answers: true },
-  });
+  const [question, unlockedLevelIds] = await Promise.all([
+    prisma.question.findUnique({ where: { id: questionId }, include: { vocab: true, answers: true } }),
+    computeUnlockedLevelIds(account.id_login),
+  ]);
   if (!question || question.status !== "approved") return { error: "Không tìm thấy câu hỏi này." };
+  if (!unlockedLevelIds.has(question.vocab.levelId)) {
+    return { error: "Từ vựng này chưa được mở khóa." };
+  }
 
   const correct = question.answers.find((a) => a.isCorrect);
   if (!correct) return { error: "Câu hỏi này chưa có đáp án đúng." };
