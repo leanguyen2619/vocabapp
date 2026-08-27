@@ -117,18 +117,18 @@ export function PracticeSession({
         </ProgressLabel>
       </Progress>
 
-      <div className="relative [perspective:1200px]">
+      <div className="relative perspective-distant">
         <button
           type="button"
           onClick={() => setFlipped((f) => !f)}
           aria-label={dict.practiceSession.flipCardAriaLabel}
           className={cn(
-            "relative h-72 w-full cursor-pointer rounded-3xl transition-transform duration-500 [transform-style:preserve-3d] sm:h-80",
-            flipped && "[transform:rotateY(180deg)]"
+            "relative h-72 w-full cursor-pointer rounded-3xl transition-transform duration-500 transform-3d sm:h-80",
+            flipped && "transform-[rotateY(180deg)]"
           )}
         >
           {/* Front */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-3xl border border-border bg-card p-8 shadow-sm [backface-visibility:hidden]">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-3xl border border-border bg-card p-8 shadow-sm backface-hidden">
             <Badge variant="secondary">{getTopicName(topics, current.topicId)}</Badge>
             <p className="font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
               {current.vocab}
@@ -138,7 +138,7 @@ export function PracticeSession({
           </div>
 
           {/* Back */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-3xl border border-border bg-card p-8 shadow-sm [backface-visibility:hidden] [transform:rotateY(180deg)]">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-3xl border border-border bg-card p-8 shadow-sm backface-hidden transform-[rotateY(180deg)]">
             <p className="text-2xl font-semibold text-foreground">{current.meanVI}</p>
             <p className="max-w-sm text-center text-sm text-muted-foreground">
               {current.definition}
