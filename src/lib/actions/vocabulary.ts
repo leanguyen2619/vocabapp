@@ -90,8 +90,100 @@ export async function getMyWordsForScopeAction(scope: WordScope): Promise<Vocabu
  * a word mid-session can't cause it to be silently swapped for a different one and the "today's
  * words" list stays the same set the student started with.
  */
+/** Question-bank practice types a word must have real content for before it's handed out as a
+ * new daily word (auto-picked, not explicitly assigned — see READY_GATE_TYPES below).
+ * "multiple_choice" is deliberately excluded: it's a pre-existing, separately-tracked content gap
+ * (2/34 words covered, unrelated to any recent import) — gating on it too would make almost every
+ * word in the app "not ready" and break daily assignment entirely, which isn't what this exists to
+ * prevent. */
+const READY_GATE_TYPES = [
+  "sentence_writing",
+  "synonym_antonym",
+  "fill_blank",
+  "word_formation",
+  "listening_comprehension",
+] as const;
+
+/** Words with real exercise content for every type in READY_GATE_TYPES — the auto-pick "remaining"
+ * pool below only introduces NEW words from this set, so a student is never hand a word that then
+ * dead-ends into "no questions" on most exercise types. An explicit admin assignment bypasses this
+ * (see pickTodaysWordIds) since that's a deliberate override, not an auto-pick. */
+async function computeReadyVocabIds(): Promise<Set<string>> {
+  const gateTypes = await prisma.practiceType.findMany({
+    where: { type: { in: [...READY_GATE_TYPES] } },
+    select: { id: true },
+  });
+  if (gateTypes.length === 0) return new Set();
+  const gateTypeIds = gateTypes.map((t) => t.id);
+
+  const coverage = await prisma.question.findMany({
+    where: { pracTypeId: { in: gateTypeIds }, status: "approved" },
+    select: { vocabId: true, pracTypeId: true },
+    distinct: ["vocabId", "pracTypeId"],
+  });
+
+  const typeIdsByVocab = new Map<string, Set<string>>();
+  for (const row of coverage) {
+    const set = typeIdsByVocab.get(row.vocabId) ?? new Set<string>();
+    set.add(row.pracTypeId);
+    typeIdsByVocab.set(row.vocabId, set);
+  }
+
+  const ready = new Set<string>();
+  for (const [vocabId, typeIds] of typeIdsByVocab) {
+    if (typeIds.size >= gateTypeIds.length) ready.add(vocabId);
+  }
+  return ready;
+}
+
+/**
+ * Picks the auto-assigned "remaining" pool in curriculum order: earliest unlocked level first,
+ * then earliest topic within that level (Topic.id order — for A2 this matches the Cambridge
+ * source file's category order), introducing every word in a topic before moving to the next one
+ * — a student works through one theme at a time rather than a random grab-bag across 25+ topics.
+ * Only draws NEW words from the ready set (see computeReadyVocabIds). A topic contributes its own
+ * ready, not-yet-mastered words (new first, then learning) while it still has anything new to
+ * introduce; once a topic's new supply is exhausted it's skipped entirely (its learning words fall
+ * to the tier-2 review pool in the caller, not here) — but picking still spills into the next
+ * topic/level to fill the daily target rather than stopping at whatever a single small topic has,
+ * so "Family" having only 1 A1 word doesn't leave a student with a 1-word day.
+ */
+function pickSequentialRemaining(
+  levelOrder: string[],
+  vocabulary: Vocabulary[],
+  readyIds: Set<string>,
+  statusOf: (vocabId: string) => LearningStatus,
+  priority: Record<LearningStatus, number>,
+  target: number
+): { vocab: Vocabulary; status: LearningStatus }[] {
+  const collected: { vocab: Vocabulary; status: LearningStatus }[] = [];
+
+  for (const levelId of levelOrder) {
+    if (collected.length >= target) break;
+    const levelVocab = vocabulary.filter((v) => v.levelId === levelId);
+    const topicIds = [...new Set(levelVocab.map((v) => v.topicId))].sort((a, b) => a - b);
+
+    for (const topicId of topicIds) {
+      if (collected.length >= target) break;
+      const readyTopicVocab = levelVocab.filter((v) => v.topicId === topicId && readyIds.has(v.id));
+      const hasNew = readyTopicVocab.some((v) => statusOf(v.id) === "new");
+      if (!hasNew) continue; // this topic's ready words are already all introduced — move on
+
+      const sorted = readyTopicVocab
+        .filter((v) => statusOf(v.id) !== "mastered")
+        .map((vocab) => ({ vocab, status: statusOf(vocab.id) }))
+        .sort((a, b) => priority[a.status] - priority[b.status]);
+      for (const item of sorted) {
+        if (collected.length >= target) break;
+        collected.push(item);
+      }
+    }
+  }
+  return collected;
+}
+
 async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<string[]> {
-  const [cls, vocabulary, history, assignments, unlockedLevelIds] = await Promise.all([
+  const [cls, vocabulary, history, assignments, unlockedLevelIds, readyIds, levels] = await Promise.all([
     account.classId ? prisma.schoolClass.findUnique({ where: { id: account.classId } }) : null,
     prisma.vocabulary.findMany({ orderBy: { id: "asc" } }),
     prisma.learningHistory.findMany({ where: { accountId: account.id_login } }),
@@ -101,6 +193,8 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
       distinct: ["vocabId"],
     }),
     computeUnlockedLevelIds(account.id_login),
+    computeReadyVocabIds(),
+    prisma.level.findMany({ orderBy: { id: "asc" }, select: { id: true } }),
   ]);
 
   const target = cls?.dailyWordTarget ?? 5;
@@ -111,6 +205,7 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
   const assignedIds = new Set(assignments.map((a) => a.vocabId));
   const withStatus = vocabulary.map((vocab) => ({ vocab, status: statusOf(vocab.id) }));
 
+  // Explicit admin assignments are a deliberate override — never gated by content readiness.
   const assignedWords = withStatus
     .filter((w) => assignedIds.has(w.vocab.id) && w.status !== "mastered")
     .sort((a, b) => priority[a.status] - priority[b.status]);
@@ -119,13 +214,37 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
   if (assignedWords.length >= target) {
     picked = assignedWords.slice(0, Math.max(1, target));
   } else {
-    const remaining = withStatus
-      .filter(
-        (w) =>
-          (!assignedIds.has(w.vocab.id) || w.status === "mastered") &&
-          unlockedLevelIds.has(w.vocab.levelId)
-      )
-      .sort((a, b) => priority[a.status] - priority[b.status]);
+    const unassignedVocab = vocabulary.filter(
+      (v) => (!assignedIds.has(v.id) || statusOf(v.id) === "mastered") && unlockedLevelIds.has(v.levelId)
+    );
+    const levelOrder = levels.map((l) => l.id).filter((id) => unlockedLevelIds.has(id));
+
+    // Tier 1: curriculum-ordered, content-ready words (the normal path).
+    const remainingQuota = Math.max(1, target) - assignedWords.length;
+    let remaining = pickSequentialRemaining(
+      levelOrder,
+      unassignedVocab,
+      readyIds,
+      statusOf,
+      priority,
+      remainingQuota
+    );
+    // Tier 2: every ready word has already been introduced somewhere — fall back to any ready,
+    // not-yet-mastered word so review still flows once a level/topic's new content runs out.
+    if (remaining.length === 0) {
+      remaining = unassignedVocab
+        .filter((v) => readyIds.has(v.id) && statusOf(v.id) !== "mastered")
+        .map((vocab) => ({ vocab, status: statusOf(vocab.id) }))
+        .sort((a, b) => priority[a.status] - priority[b.status]);
+    }
+    // Tier 3: nothing ready at all (e.g. a freshly unlocked level with no authored content yet) —
+    // fall back to the old any-unlocked-word behavior so a student is never left with zero words.
+    if (remaining.length === 0) {
+      remaining = unassignedVocab
+        .map((vocab) => ({ vocab, status: statusOf(vocab.id) }))
+        .sort((a, b) => priority[a.status] - priority[b.status]);
+    }
+
     picked = [...assignedWords, ...remaining].slice(0, Math.max(1, target));
   }
 
