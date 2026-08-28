@@ -634,7 +634,7 @@ export function AdminStudentsPanel({
                     type="text"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder={dict.register.passwordPlaceholder}
+                    placeholder={dict.admin.accounts.passwordPlaceholder}
                   />
                 </div>
 

@@ -35,13 +35,6 @@ export default async function LoginPage() {
           <LoginForm dict={dict} />
         </CardContent>
       </Card>
-
-      <p className="text-sm text-muted-foreground">
-        {dict.login.noAccount}{" "}
-        <Link href="/register" className="font-medium text-primary hover:underline">
-          {dict.login.registerNow}
-        </Link>
-      </p>
     </div>
   );
 }

@@ -55,13 +55,10 @@ export default async function Home() {
               size="lg"
               className="h-11 rounded-full px-6 text-base"
               nativeButton={false}
-              render={<Link href="/register" />}
+              render={<Link href="/login" />}
             >
-              {dict.landing.ctaRegister}
-            </Button>
-            <Link href="/login" className="text-sm font-medium text-primary hover:underline">
               {dict.landing.ctaLogin}
-            </Link>
+            </Button>
           </div>
         </section>
 

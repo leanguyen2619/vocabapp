@@ -372,7 +372,7 @@ export function AdminAccountsClient({
                     id="fullName"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder={dict.register.fullNamePlaceholder}
+                    placeholder={dict.admin.accounts.fullNamePlaceholder}
                     maxLength={100}
                   />
                 </div>
@@ -395,7 +395,7 @@ export function AdminAccountsClient({
                     type="text"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder={dict.register.passwordPlaceholder}
+                    placeholder={dict.admin.accounts.passwordPlaceholder}
                   />
                 </div>
 
@@ -776,7 +776,7 @@ export function AdminAccountsClient({
                           type="text"
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
-                          placeholder={dict.register.passwordPlaceholder}
+                          placeholder={dict.admin.accounts.passwordPlaceholder}
                         />
                       </div>
 

@@ -2,13 +2,9 @@
 
 import bcrypt from "bcryptjs";
 
-import { generateLoginId } from "@/lib/id-gen";
 import { prisma } from "@/lib/prisma";
 import { createSession, destroySession, getCurrentAccount } from "@/lib/session";
 
-// Bounded quantifiers (not `+`) so this also caps length — an unbounded pattern would accept an
-// arbitrarily long string as a valid "email" as long as it has no whitespace/@ before the last dot.
-const EMAIL_PATTERN = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,24}$/;
 const MAX_FULL_NAME_LENGTH = 100;
 
 type AuthResult = { error: string } | { error?: undefined; id_login: string };
@@ -30,51 +26,6 @@ export async function loginAction(email: string, password: string): Promise<Auth
 
   await createSession(account.id_login);
   return { id_login: account.id_login };
-}
-
-/**
- * Public self-registration is student-only by design — an admin account grants access to every
- * student's real data and management functions, so it must be created by an existing admin (see
- * createAccountByAdminAction) rather than claimed by anyone who finds this form.
- */
-export async function registerAction(input: {
-  fullName: string;
-  email: string;
-  password: string;
-}): Promise<AuthResult> {
-  const fullName = input.fullName.trim();
-  const email = input.email.trim().toLowerCase();
-
-  if (!fullName) return { error: "Vui lòng nhập họ và tên." };
-  if (fullName.length > MAX_FULL_NAME_LENGTH) return { error: "Họ tên quá dài." };
-  if (!EMAIL_PATTERN.test(email)) return { error: "Email không đúng định dạng." };
-  if (input.password.length < 6) return { error: "Mật khẩu cần ít nhất 6 ký tự." };
-
-  const existing = await prisma.account.findUnique({ where: { email } });
-  if (existing) return { error: "Email này đã được sử dụng." };
-
-  const passwordHash = await bcrypt.hash(input.password, 10);
-
-  // generateLoginId picks the next sequential ID from a COUNT query, so two concurrent
-  // registrations (double-submit, two tabs) can compute the same id_login. Retry with a fresh ID
-  // on collision rather than surfacing a raw unique-constraint 500.
-  const MAX_ATTEMPTS = 5;
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const id_login = await generateLoginId("student");
-    const account = await prisma.account
-      .create({ data: { id_login, fullName, email, role: "student", passwordHash } })
-      .catch((e: unknown) => {
-        const code = (e as { code?: string } | null)?.code;
-        if (code === "P2002") return null;
-        throw e;
-      });
-    if (account) {
-      await createSession(account.id_login);
-      return { id_login: account.id_login };
-    }
-  }
-
-  return { error: "Không thể tạo tài khoản, vui lòng thử lại." };
 }
 
 export async function logoutAction(): Promise<void> {

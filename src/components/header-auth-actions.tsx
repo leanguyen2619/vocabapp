@@ -30,16 +30,8 @@ export function HeaderAuthActions({
 
   return (
     <div className="flex shrink-0 items-center gap-2">
-      <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/login" />}>
+      <Button size="sm" className="rounded-full px-4" nativeButton={false} render={<Link href="/login" />}>
         {dict.landing.ctaLogin}
-      </Button>
-      <Button
-        size="sm"
-        className="rounded-full px-4"
-        nativeButton={false}
-        render={<Link href="/register" />}
-      >
-        {dict.register.submit}
       </Button>
     </div>
   );
