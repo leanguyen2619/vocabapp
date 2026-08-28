@@ -17,7 +17,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { formatMessage } from "@/lib/i18n/format";
 import type { AssignedVocabSummary, StudentSummary } from "@/lib/actions/students";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
-import type { Account, Vocabulary } from "@/types";
+import type { Account, Level, Topic, Vocabulary } from "@/types";
 
 interface AdminFunction {
   title: string;
@@ -37,6 +37,8 @@ export function AdminDashboardContent({
   students,
   vocabularyBank,
   assignedVocab,
+  topics,
+  levels,
   dict,
 }: {
   account: Account;
@@ -48,6 +50,8 @@ export function AdminDashboardContent({
   students: StudentSummary[];
   vocabularyBank: Vocabulary[];
   assignedVocab: AssignedVocabSummary[];
+  topics: Topic[];
+  levels: Level[];
   dict: Dictionary;
 }) {
   const adminFunctions: AdminFunction[] = [
@@ -199,6 +203,8 @@ export function AdminDashboardContent({
         students={students}
         vocabularyBank={vocabularyBank}
         assignedVocab={assignedVocab}
+        topics={topics}
+        levels={levels}
         dict={dict}
       />
     </div>

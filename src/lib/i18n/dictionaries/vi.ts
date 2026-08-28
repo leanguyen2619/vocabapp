@@ -129,6 +129,8 @@ const vi = {
     assignVocabTitle: "Giao từ vựng cho học sinh",
     assignVocabDesc: "Chọn từ vựng muốn giao cho toàn bộ học sinh.",
     searchVocab: "Tìm từ vựng...",
+    allTopics: "Tất cả chủ đề",
+    allLevels: "Tất cả cấp độ",
     noVocabFound: "Không tìm thấy từ vựng phù hợp.",
     assignButton: "Giao bài ({count})",
     assigning: "Đang giao...",

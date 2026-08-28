@@ -43,6 +43,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import {
   assignVocabularyToAllStudentsAction,
@@ -56,7 +63,9 @@ import {
 } from "@/lib/actions/students";
 import { formatMessage } from "@/lib/i18n/format";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
-import type { Vocabulary } from "@/types";
+import type { Level, Topic, Vocabulary } from "@/types";
+
+const ALL = "all";
 
 interface KnownCredentials {
   fullName: string;
@@ -68,16 +77,22 @@ export function AdminStudentsPanel({
   students,
   vocabularyBank,
   assignedVocab: initialAssignedVocab,
+  topics,
+  levels,
   dict,
 }: {
   students: StudentSummary[];
   vocabularyBank: Vocabulary[];
   assignedVocab: AssignedVocabSummary[];
+  topics: Topic[];
+  levels: Level[];
   dict: Dictionary;
 }) {
   const [selectedVocab, setSelectedVocab] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [vocabSearch, setVocabSearch] = useState("");
+  const [vocabTopicFilter, setVocabTopicFilter] = useState(ALL);
+  const [vocabLevelFilter, setVocabLevelFilter] = useState(ALL);
   const [assigning, setAssigning] = useState(false);
   const [assignedVocab, setAssignedVocab] = useState(initialAssignedVocab);
   const [cancelingId, setCancelingId] = useState<string | null>(null);
@@ -97,6 +112,8 @@ export function AdminStudentsPanel({
   const [studentAssignTarget, setStudentAssignTarget] = useState<StudentSummary | null>(null);
   const [studentAssignVocab, setStudentAssignVocab] = useState<string[]>([]);
   const [studentAssignSearch, setStudentAssignSearch] = useState("");
+  const [studentAssignTopicFilter, setStudentAssignTopicFilter] = useState(ALL);
+  const [studentAssignLevelFilter, setStudentAssignLevelFilter] = useState(ALL);
   const [studentAssigning, setStudentAssigning] = useState(false);
 
   const studentCount = students.length;
@@ -106,14 +123,19 @@ export function AdminStudentsPanel({
 
   const query = vocabSearch.trim().toLowerCase();
   const filteredVocab = vocabularyBank.filter(
-    (v) => v.vocab.toLowerCase().includes(query) || v.meanVI.toLowerCase().includes(query)
+    (v) =>
+      (v.vocab.toLowerCase().includes(query) || v.meanVI.toLowerCase().includes(query)) &&
+      (vocabTopicFilter === ALL || v.topicId === Number(vocabTopicFilter)) &&
+      (vocabLevelFilter === ALL || v.levelId === vocabLevelFilter)
   );
 
   const studentAssignQuery = studentAssignSearch.trim().toLowerCase();
   const filteredStudentAssignVocab = vocabularyBank.filter(
     (v) =>
-      v.vocab.toLowerCase().includes(studentAssignQuery) ||
-      v.meanVI.toLowerCase().includes(studentAssignQuery)
+      (v.vocab.toLowerCase().includes(studentAssignQuery) ||
+        v.meanVI.toLowerCase().includes(studentAssignQuery)) &&
+      (studentAssignTopicFilter === ALL || v.topicId === Number(studentAssignTopicFilter)) &&
+      (studentAssignLevelFilter === ALL || v.levelId === studentAssignLevelFilter)
   );
 
   const toggleVocab = (vocabId: string) => {
@@ -169,6 +191,8 @@ export function AdminStudentsPanel({
     setStudentAssignTarget(null);
     setStudentAssignVocab([]);
     setStudentAssignSearch("");
+    setStudentAssignTopicFilter(ALL);
+    setStudentAssignLevelFilter(ALL);
     setAssignedVocab(await listAllAssignedVocabAction());
   };
 
@@ -253,6 +277,8 @@ export function AdminStudentsPanel({
               if (!open) {
                 setSelectedVocab([]);
                 setVocabSearch("");
+                setVocabTopicFilter(ALL);
+                setVocabLevelFilter(ALL);
               }
             }}
           >
@@ -274,6 +300,47 @@ export function AdminStudentsPanel({
                   placeholder={dict.adminStudents.searchVocab}
                   className="pl-8"
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <Select value={vocabTopicFilter} onValueChange={(v) => setVocabTopicFilter(v ?? ALL)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue>
+                      {(value: string) =>
+                        value === ALL
+                          ? dict.adminStudents.allTopics
+                          : (topics.find((t) => String(t.id) === value)?.topic ?? dict.adminStudents.allTopics)
+                      }
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL}>{dict.adminStudents.allTopics}</SelectItem>
+                    {topics.map((topic) => (
+                      <SelectItem key={topic.id} value={String(topic.id)}>
+                        {topic.topic}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={vocabLevelFilter} onValueChange={(v) => setVocabLevelFilter(v ?? ALL)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue>
+                      {(value: string) =>
+                        value === ALL
+                          ? dict.adminStudents.allLevels
+                          : (levels.find((l) => l.id === value)?.level ?? dict.adminStudents.allLevels)
+                      }
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL}>{dict.adminStudents.allLevels}</SelectItem>
+                    {levels.map((level) => (
+                      <SelectItem key={level.id} value={level.id}>
+                        {level.level}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex max-h-72 flex-col gap-2 overflow-y-auto">
@@ -440,6 +507,8 @@ export function AdminStudentsPanel({
                       setStudentAssignTarget(student);
                       setStudentAssignVocab([]);
                       setStudentAssignSearch("");
+                      setStudentAssignTopicFilter(ALL);
+                      setStudentAssignLevelFilter(ALL);
                     }}
                   >
                     <Send className="size-3.5" />
@@ -463,6 +532,8 @@ export function AdminStudentsPanel({
             setStudentAssignTarget(null);
             setStudentAssignVocab([]);
             setStudentAssignSearch("");
+            setStudentAssignTopicFilter(ALL);
+            setStudentAssignLevelFilter(ALL);
           }
         }}
       >
@@ -484,6 +555,53 @@ export function AdminStudentsPanel({
               placeholder={dict.adminStudents.searchVocab}
               className="pl-8"
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <Select
+              value={studentAssignTopicFilter}
+              onValueChange={(v) => setStudentAssignTopicFilter(v ?? ALL)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  {(value: string) =>
+                    value === ALL
+                      ? dict.adminStudents.allTopics
+                      : (topics.find((t) => String(t.id) === value)?.topic ?? dict.adminStudents.allTopics)
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>{dict.adminStudents.allTopics}</SelectItem>
+                {topics.map((topic) => (
+                  <SelectItem key={topic.id} value={String(topic.id)}>
+                    {topic.topic}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={studentAssignLevelFilter}
+              onValueChange={(v) => setStudentAssignLevelFilter(v ?? ALL)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  {(value: string) =>
+                    value === ALL
+                      ? dict.adminStudents.allLevels
+                      : (levels.find((l) => l.id === value)?.level ?? dict.adminStudents.allLevels)
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>{dict.adminStudents.allLevels}</SelectItem>
+                {levels.map((level) => (
+                  <SelectItem key={level.id} value={level.id}>
+                    {level.level}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex max-h-72 flex-col gap-2 overflow-y-auto">

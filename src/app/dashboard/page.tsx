@@ -4,7 +4,7 @@ import { AdminDashboardContent } from "@/components/admin-dashboard-content";
 import { StudentDashboardContent } from "@/components/student-dashboard-content";
 import { listAccountsAction } from "@/lib/actions/accounts";
 import { listClassesAction } from "@/lib/actions/classes";
-import { getMyLevelsAction } from "@/lib/actions/levels";
+import { getMyLevelsAction, listLevelsAction } from "@/lib/actions/levels";
 import { listAllAssignedVocabAction, listAllStudentsAction } from "@/lib/actions/students";
 import { countPendingWritingSubmissionsAction } from "@/lib/actions/writing-submissions";
 import { countWeakWordsAction } from "@/lib/actions/class-report";
@@ -27,16 +27,27 @@ export default async function DashboardPage() {
   const dict = getDictionary(await getLocale());
 
   if (account.role === "admin") {
-    const [accounts, classes, vocabulary, students, assignedVocab, pendingWritingCount, weakWordsCount] =
-      await Promise.all([
-        listAccountsAction(),
-        listClassesAction(),
-        listVocabularyAction(),
-        listAllStudentsAction(),
-        listAllAssignedVocabAction(),
-        countPendingWritingSubmissionsAction(),
-        countWeakWordsAction(),
-      ]);
+    const [
+      accounts,
+      classes,
+      vocabulary,
+      students,
+      assignedVocab,
+      pendingWritingCount,
+      weakWordsCount,
+      topics,
+      levels,
+    ] = await Promise.all([
+      listAccountsAction(),
+      listClassesAction(),
+      listVocabularyAction(),
+      listAllStudentsAction(),
+      listAllAssignedVocabAction(),
+      countPendingWritingSubmissionsAction(),
+      countWeakWordsAction(),
+      listTopicsAction(),
+      listLevelsAction(),
+    ]);
     const studentCount = accounts.filter((a) => a.account.role === "student").length;
 
     return (
@@ -51,6 +62,8 @@ export default async function DashboardPage() {
           students={students}
           vocabularyBank={vocabulary}
           assignedVocab={assignedVocab}
+          topics={topics}
+          levels={levels}
           dict={dict}
         />
       </DashboardShell>

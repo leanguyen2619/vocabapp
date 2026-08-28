@@ -131,6 +131,8 @@ const en: Dictionary = {
     assignVocabTitle: "Assign vocabulary to students",
     assignVocabDesc: "Choose the vocabulary to assign to all students.",
     searchVocab: "Search vocabulary...",
+    allTopics: "All topics",
+    allLevels: "All levels",
     noVocabFound: "No matching vocabulary found.",
     assignButton: "Assign ({count})",
     assigning: "Assigning...",
