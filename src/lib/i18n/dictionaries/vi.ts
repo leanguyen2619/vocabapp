@@ -544,6 +544,8 @@ const vi = {
       editDesc: "Cập nhật thông tin từ vựng.",
       addDesc: "Thêm một từ mới vào kho từ vựng.",
       wordLabel: "Từ (tiếng Anh)",
+      ipaLabel: "Phiên âm IPA (không bắt buộc)",
+      ipaPlaceholder: "/ɪɡˈzɑːmpəl/",
       meanLabel: "Nghĩa tiếng Việt",
       definitionLabel: "Định nghĩa (tiếng Anh)",
       posLabel: "Loại từ",

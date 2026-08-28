@@ -133,6 +133,7 @@ export function PracticeSession({
             <p className="font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
               {current.vocab}
             </p>
+            {current.ipa && <p className="text-sm text-muted-foreground">{current.ipa}</p>}
             <span className="text-sm text-muted-foreground">{current.partOfSpeech}</span>
             <p className="mt-4 text-sm text-muted-foreground">{dict.practiceSession.tapToReveal}</p>
           </div>

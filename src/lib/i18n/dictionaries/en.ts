@@ -546,6 +546,8 @@ const en: Dictionary = {
       editDesc: "Update this word's information.",
       addDesc: "Add a new word to the vocabulary bank.",
       wordLabel: "Word (English)",
+      ipaLabel: "IPA pronunciation (optional)",
+      ipaPlaceholder: "/ɪɡˈzɑːmpəl/",
       meanLabel: "Vietnamese meaning",
       definitionLabel: "Definition (English)",
       posLabel: "Part of speech",

@@ -67,6 +67,7 @@ export interface Vocabulary {
   definition: string;
   meanVI: string;
   partOfSpeech: PartOfSpeech;
+  ipa: string | null;
   levelId: string; // FK -> Level
   topicId: number; // FK -> Topic
 }

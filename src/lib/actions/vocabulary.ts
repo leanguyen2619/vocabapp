@@ -392,6 +392,7 @@ type VocabInput = {
   definition: string;
   meanVI: string;
   partOfSpeech: PartOfSpeech;
+  ipa?: string | null;
   topicId: number;
   levelId: string;
 };

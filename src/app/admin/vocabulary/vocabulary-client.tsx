@@ -66,11 +66,20 @@ interface ImportRow {
   definition?: string;
   meanVI?: string;
   partOfSpeech?: string;
+  ipa?: string;
   topic?: string;
   level?: string;
 }
 
-const IMPORT_COLUMNS: (keyof ImportRow)[] = ["vocab", "definition", "meanVI", "partOfSpeech", "topic", "level"];
+const IMPORT_COLUMNS: (keyof ImportRow)[] = [
+  "vocab",
+  "definition",
+  "meanVI",
+  "partOfSpeech",
+  "ipa",
+  "topic",
+  "level",
+];
 
 /** Matches each expected column against the file's actual header text case-insensitively (and
  * ignoring stray leading/trailing spaces), so a header like "Vocab" or "PARTOFSPEECH" still maps
@@ -103,6 +112,7 @@ export function AdminVocabularyClient({
     definition: "",
     meanVI: "",
     partOfSpeech: "noun" as PartOfSpeech,
+    ipa: "",
     topicId: String(topics[0]?.id ?? ""),
     levelId: levels[0]?.id ?? "",
   };
@@ -154,6 +164,7 @@ export function AdminVocabularyClient({
       definition: word.definition,
       meanVI: word.meanVI,
       partOfSpeech: word.partOfSpeech,
+      ipa: word.ipa ?? "",
       topicId: String(word.topicId),
       levelId: word.levelId,
     });
@@ -175,6 +186,7 @@ export function AdminVocabularyClient({
       definition: form.definition.trim(),
       meanVI: form.meanVI.trim(),
       partOfSpeech: form.partOfSpeech,
+      ipa: form.ipa.trim() || null,
       topicId: Number(form.topicId),
       levelId: form.levelId,
     };
@@ -218,6 +230,7 @@ export function AdminVocabularyClient({
         definition: "a thing characteristic of its kind",
         meanVI: "ví dụ",
         partOfSpeech: "noun",
+        ipa: "/ɪɡˈzɑːmpəl/",
         topic: topics[0]?.topic ?? "",
         level: levels[0]?.level ?? "",
       },
@@ -248,6 +261,7 @@ export function AdminVocabularyClient({
         const definition = row.definition?.toString().trim();
         const meanVI = row.meanVI?.toString().trim();
         const posRaw = row.partOfSpeech?.toString().trim().toLowerCase();
+        const ipa = row.ipa?.toString().trim() || null;
         const topicRaw = row.topic?.toString().trim().toLowerCase();
         const levelRaw = row.level?.toString().trim().toLowerCase();
 
@@ -272,6 +286,7 @@ export function AdminVocabularyClient({
           definition,
           meanVI,
           partOfSpeech: pos,
+          ipa,
           topicId: topic.id,
           levelId: level.id,
         });
@@ -404,6 +419,9 @@ export function AdminVocabularyClient({
                   <div>
                     <p className="font-medium">
                       {word.vocab}{" "}
+                      {word.ipa && (
+                        <span className="font-normal text-muted-foreground">{word.ipa}</span>
+                      )}{" "}
                       <span className="text-xs font-normal text-muted-foreground">
                         {dict.partOfSpeech[word.partOfSpeech]}
                       </span>
@@ -469,6 +487,16 @@ export function AdminVocabularyClient({
                 id="vocab"
                 value={form.vocab}
                 onChange={(e) => setForm((f) => ({ ...f, vocab: e.target.value }))}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="ipa">{dict.admin.vocabulary.ipaLabel}</Label>
+              <Input
+                id="ipa"
+                value={form.ipa}
+                onChange={(e) => setForm((f) => ({ ...f, ipa: e.target.value }))}
+                placeholder={dict.admin.vocabulary.ipaPlaceholder}
               />
             </div>
 

@@ -209,6 +209,7 @@ model Vocabulary {
   definition   String
   meanVI       String
   partOfSpeech PartOfSpeech
+  ipa          String?
   levelId      String
   topicId      Int
 

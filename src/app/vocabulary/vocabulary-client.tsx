@@ -208,7 +208,10 @@ export function VocabularyClient({
                           <Volume2 className="size-3.5" />
                         </Button>
                       </div>
-                      <p className="text-xs text-muted-foreground">{dict.partOfSpeech[word.partOfSpeech]}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {word.ipa && <>{word.ipa} · </>}
+                        {dict.partOfSpeech[word.partOfSpeech]}
+                      </p>
                     </div>
                     <Badge variant={statusVariant[word.learningStatus]} className="shrink-0">
                       {dict.learningStatus[word.learningStatus]}
