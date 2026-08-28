@@ -31,6 +31,27 @@ export async function listTopicsAction(): Promise<Topic[]> {
   return prisma.topic.findMany({ orderBy: { id: "asc" } });
 }
 
+/** Creates any of the given topic names that don't already exist (matched case-insensitively) and
+ * returns the full, current topic list — used by the Excel import flow so a file naming topics the
+ * app doesn't have yet (e.g. a new CEFR level's Cambridge-style categories) doesn't require an
+ * admin to hand-create them first just to get past the importer's topic-matching step. */
+export async function ensureTopicsAction(names: string[]): Promise<Topic[]> {
+  const admin = await requireAdmin();
+  if (!admin) return [];
+
+  const wanted = [...new Set(names.map((n) => n.trim()).filter(Boolean))];
+  if (wanted.length === 0) return prisma.topic.findMany({ orderBy: { id: "asc" } });
+
+  const existing = await prisma.topic.findMany();
+  const existingLower = new Set(existing.map((t) => t.topic.toLowerCase()));
+  const toCreate = wanted.filter((name) => !existingLower.has(name.toLowerCase()));
+
+  if (toCreate.length > 0) {
+    await prisma.topic.createMany({ data: toCreate.map((topic) => ({ topic, definition: topic })) });
+  }
+  return prisma.topic.findMany({ orderBy: { id: "asc" } });
+}
+
 /** Any signed-in user may read the full bank (e.g. the POS-classification game samples from it). */
 export async function listVocabularyAction(): Promise<Vocabulary[]> {
   const account = await getCurrentAccount();

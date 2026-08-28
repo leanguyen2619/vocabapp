@@ -42,64 +42,20 @@ import {
   bulkCreateVocabularyAction,
   createVocabularyAction,
   deleteVocabularyAction,
+  ensureTopicsAction,
   listVocabularyAction,
   updateVocabularyAction,
 } from "@/lib/actions/vocabulary";
 import { formatMessage } from "@/lib/i18n/format";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { getLevelName, getTopicName } from "@/lib/labels";
+import { normalizeImportRow, normalizePartOfSpeech, POS_VALUES } from "@/lib/vocab-import";
 import type { Level, PartOfSpeech, Topic, Vocabulary } from "@/types";
-
-const POS_VALUES: PartOfSpeech[] = [
-  "noun",
-  "verb",
-  "adjective",
-  "adverb",
-  "preposition",
-  "pronoun",
-  "conjunction",
-  "interjection",
-];
-
-interface ImportRow {
-  vocab?: string;
-  definition?: string;
-  meanVI?: string;
-  partOfSpeech?: string;
-  ipa?: string;
-  topic?: string;
-  level?: string;
-}
-
-const IMPORT_COLUMNS: (keyof ImportRow)[] = [
-  "vocab",
-  "definition",
-  "meanVI",
-  "partOfSpeech",
-  "ipa",
-  "topic",
-  "level",
-];
-
-/** Matches each expected column against the file's actual header text case-insensitively (and
- * ignoring stray leading/trailing spaces), so a header like "Vocab" or "PARTOFSPEECH" still maps
- * to the right field instead of silently dropping every row. */
-function normalizeImportRow(raw: Record<string, unknown>): ImportRow {
-  const byLowerHeader = new Map(Object.keys(raw).map((key) => [key.trim().toLowerCase(), key]));
-  const row: ImportRow = {};
-  for (const column of IMPORT_COLUMNS) {
-    const actualHeader = byLowerHeader.get(column.toLowerCase());
-    if (actualHeader !== undefined) {
-      row[column] = raw[actualHeader] as string | undefined;
-    }
-  }
-  return row;
-}
 
 export function AdminVocabularyClient({
   initialWords,
   levels,
-  topics,
+  topics: initialTopics,
   dict,
 }: {
   initialWords: Vocabulary[];
@@ -107,6 +63,7 @@ export function AdminVocabularyClient({
   topics: Topic[];
   dict: Dictionary;
 }) {
+  const [topics, setTopics] = useState<Topic[]>(initialTopics);
   const emptyForm = {
     vocab: "",
     definition: "",
@@ -250,6 +207,19 @@ export function AdminVocabularyClient({
       const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet);
       const rows = rawRows.map(normalizeImportRow);
 
+      // Any topic name the file uses that doesn't exist yet gets created on the fly — a file
+      // naming a new CEFR level's own categories (e.g. the Cambridge-style "primaryTopic" column)
+      // shouldn't require an admin to hand-create every topic first just to get past matching.
+      const existingTopicNames = new Set(topics.map((t) => t.topic.toLowerCase()));
+      const topicNamesInFile = rows
+        .map((r) => r.topic?.toString().trim())
+        .filter((name): name is string => Boolean(name) && !existingTopicNames.has(name!.toLowerCase()));
+      let currentTopics = topics;
+      if (topicNamesInFile.length > 0) {
+        currentTopics = await ensureTopicsAction(topicNamesInFile);
+        setTopics(currentTopics);
+      }
+
       const existingWords = new Set(words.map((w) => w.vocab.toLowerCase()));
       const seenInFile = new Set<string>();
       const validRows: Omit<Vocabulary, "id">[] = [];
@@ -260,13 +230,12 @@ export function AdminVocabularyClient({
         const vocab = row.vocab?.toString().trim();
         const definition = row.definition?.toString().trim();
         const meanVI = row.meanVI?.toString().trim();
-        const posRaw = row.partOfSpeech?.toString().trim().toLowerCase();
         const ipa = row.ipa?.toString().trim() || null;
         const topicRaw = row.topic?.toString().trim().toLowerCase();
         const levelRaw = row.level?.toString().trim().toLowerCase();
 
-        const pos = POS_VALUES.find((p) => p === posRaw);
-        const topic = topics.find((t) => t.topic.toLowerCase() === topicRaw);
+        const pos = normalizePartOfSpeech(row.partOfSpeech);
+        const topic = currentTopics.find((t) => t.topic.toLowerCase() === topicRaw);
         const level = levels.find((l) => l.level.toLowerCase() === levelRaw);
 
         if (!vocab || !definition || !meanVI || !pos || !topic || !level) {
