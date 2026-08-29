@@ -10,6 +10,9 @@ export default defineConfig({
     seed: "tsx prisma/seed.ts",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // The CLI (migrate/generate/studio) always uses the unpooled connection — see the comment on
+    // DIRECT_URL in .env for why. Falls back to DATABASE_URL so this still works before DIRECT_URL
+    // is set (e.g. a fresh clone that hasn't split the two yet).
+    url: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"],
   },
 });
