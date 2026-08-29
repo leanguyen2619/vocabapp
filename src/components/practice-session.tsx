@@ -129,7 +129,9 @@ export function PracticeSession({
         >
           {/* Front */}
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-3xl border border-border bg-card p-8 shadow-sm backface-hidden">
-            <Badge variant="secondary">{getTopicName(topics, current.topicId)}</Badge>
+            <Badge variant="secondary" className="max-w-xs truncate">
+              {getTopicName(topics, current.topicId)}
+            </Badge>
             <p className="font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
               {current.vocab}
             </p>

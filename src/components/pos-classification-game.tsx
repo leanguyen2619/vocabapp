@@ -137,7 +137,9 @@ export function PosClassificationGame({
       </Progress>
 
       <div className="flex flex-col items-center gap-2 text-center">
-        <Badge variant="secondary">{getTopicName(topics, question.item.topicId)}</Badge>
+        <Badge variant="secondary" className="max-w-xs truncate">
+          {getTopicName(topics, question.item.topicId)}
+        </Badge>
         <div className="flex items-center gap-1">
           <h2 className="font-heading text-2xl font-semibold tracking-tight">
             {question.item.vocab}

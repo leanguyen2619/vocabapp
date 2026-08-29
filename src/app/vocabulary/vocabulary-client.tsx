@@ -231,7 +231,9 @@ export function VocabularyClient({
                   <p className="text-sm text-muted-foreground">{word.definition}</p>
 
                   <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                    <Badge variant="outline">{getTopicName(topics, word.topicId)}</Badge>
+                    <Badge variant="outline" className="max-w-40 truncate">
+                      {getTopicName(topics, word.topicId)}
+                    </Badge>
                     <Badge variant="secondary">{getLevelName(levels, word.levelId)}</Badge>
                   </div>
                 </CardContent>

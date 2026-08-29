@@ -404,7 +404,9 @@ export function AdminVocabularyClient({
                       {word.meanVI} · {word.definition}
                     </p>
                     <div className="mt-1 flex flex-wrap gap-1.5">
-                      <Badge variant="outline">{getTopicName(topics, word.topicId)}</Badge>
+                      <Badge variant="outline" className="max-w-48 truncate">
+                        {getTopicName(topics, word.topicId)}
+                      </Badge>
                       <Badge variant="secondary">{getLevelName(levels, word.levelId)}</Badge>
                     </div>
                   </div>

@@ -127,7 +127,9 @@ export function QuizSession({
       </Progress>
 
       <div className="flex flex-col items-center gap-2 text-center">
-        <Badge variant="secondary">{getTopicName(topics, question.topicId)}</Badge>
+        <Badge variant="secondary" className="max-w-xs truncate">
+          {getTopicName(topics, question.topicId)}
+        </Badge>
         <h2 className="font-heading text-xl font-semibold tracking-tight sm:text-2xl">
           {question.questionText}
         </h2>
