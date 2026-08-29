@@ -106,7 +106,15 @@ model Account {
   passwordHash String
   createdAt    DateTime      @default(now())
 
-  class SchoolClass? @relation(fields: [classId], references: [id])
+  // Per-student auto-assignment overrides (admin-set, student-level rather than class-level so
+  // students in the same class can be on different topics/paces). Both null means "use the normal
+  // behavior" — sequential curriculum order and the class's dailyWordTarget, respectively. See
+  // pickTodaysWordIds in src/lib/actions/vocabulary.ts.
+  pinnedTopicId           Int?
+  dailyWordTargetOverride Int?
+
+  class       SchoolClass? @relation(fields: [classId], references: [id])
+  pinnedTopic Topic?       @relation(fields: [pinnedTopicId], references: [id], onDelete: SetNull)
 
   sessions              Session[]
   accountLevels         AccountLevel[]
@@ -120,6 +128,7 @@ model Account {
 
   @@index([classId])
   @@index([role])
+  @@index([pinnedTopicId])
 }
 
 // ---------- Password reset requests (new — self-service "forgot password" without email) ----------
@@ -198,7 +207,8 @@ model Topic {
   topic      String
   definition String
 
-  vocabulary Vocabulary[]
+  vocabulary       Vocabulary[]
+  pinnedByAccounts Account[]
 }
 
 // ---------- Vocabulations ----------

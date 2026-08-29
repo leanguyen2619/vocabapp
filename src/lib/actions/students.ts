@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { computeUnlockedLevelIds } from "@/lib/level-unlock";
 import { getCurrentAccount } from "@/lib/session";
 import type { AssignmentStatus } from "@/types";
 
@@ -41,6 +42,7 @@ export interface StudentSummary {
   streak: number;
   masteredVocab: number;
   todayStatus: AssignmentStatus;
+  pinnedTopicName: string | null;
 }
 
 /** Every student account, with real progress from Postgres — the admin manages the whole school,
@@ -51,7 +53,7 @@ export async function listAllStudentsAction(): Promise<StudentSummary[]> {
 
   const students = await prisma.account.findMany({
     where: { role: "student" },
-    include: { class: true },
+    include: { class: true, pinnedTopic: true },
     orderBy: { fullName: "asc" },
   });
   if (students.length === 0) return [];
@@ -90,6 +92,7 @@ export async function listAllStudentsAction(): Promise<StudentSummary[]> {
       streak,
       masteredVocab,
       todayStatus,
+      pinnedTopicName: s.pinnedTopic?.topic ?? null,
     };
   });
 }
@@ -224,6 +227,10 @@ export interface StudentDetail {
   learningCount: number;
   newCount: number;
   learningWords: { vocab: string; meanVI: string }[];
+  pinnedTopicId: number | null;
+  pinnedTopicName: string | null;
+  dailyWordTargetOverride: number | null;
+  classDailyWordTarget: number;
 }
 
 /** Full progress detail for one student. */
@@ -231,7 +238,10 @@ export async function getStudentDetailAction(studentId: string): Promise<Student
   const admin = await requireAdmin();
   if (!admin) return null;
 
-  const student = await prisma.account.findFirst({ where: { id_login: studentId, role: "student" } });
+  const student = await prisma.account.findFirst({
+    where: { id_login: studentId, role: "student" },
+    include: { class: true, pinnedTopic: true },
+  });
   if (!student) return null;
 
   const [levels, accountLevels, history, totalVocab] = await Promise.all([
@@ -259,5 +269,90 @@ export async function getStudentDetailAction(studentId: string): Promise<Student
     learningCount: learningEntries.length,
     newCount: Math.max(0, totalVocab - masteredCount - learningEntries.length),
     learningWords: learningEntries.slice(0, 20).map((h) => ({ vocab: h.vocab.vocab, meanVI: h.vocab.meanVI })),
+    pinnedTopicId: student.pinnedTopicId,
+    pinnedTopicName: student.pinnedTopic?.topic ?? null,
+    dailyWordTargetOverride: student.dailyWordTargetOverride,
+    classDailyWordTarget: student.class?.dailyWordTarget ?? 5,
   };
+}
+
+/** Pins a specific topic for one student's auto-assignment (see Account.pinnedTopicId /
+ * pickTodaysWordIds) — stays in effect for every future day until changed or cleared. */
+export async function pinTopicForStudentAction(
+  studentId: string,
+  topicId: number
+): Promise<{ error: string } | { error?: undefined; topicName: string }> {
+  const admin = await requireAdmin();
+  if (!admin) return { error: "Bạn không có quyền thực hiện thao tác này." };
+
+  const [student, topic] = await Promise.all([
+    prisma.account.findFirst({ where: { id_login: studentId, role: "student" } }),
+    prisma.topic.findUnique({ where: { id: topicId } }),
+  ]);
+  if (!student) return { error: "Không tìm thấy học sinh này." };
+  if (!topic) return { error: "Không tìm thấy chủ đề này." };
+
+  await prisma.account.update({ where: { id_login: studentId }, data: { pinnedTopicId: topicId } });
+  return { topicName: topic.topic };
+}
+
+/** Picks a random topic from among those with vocabulary in this student's currently unlocked
+ * levels (so the pin is never immediately dead), then pins it exactly like pinTopicForStudentAction. */
+export async function pinRandomTopicForStudentAction(
+  studentId: string
+): Promise<{ error: string } | { error?: undefined; topicName: string }> {
+  const admin = await requireAdmin();
+  if (!admin) return { error: "Bạn không có quyền thực hiện thao tác này." };
+
+  const student = await prisma.account.findFirst({ where: { id_login: studentId, role: "student" } });
+  if (!student) return { error: "Không tìm thấy học sinh này." };
+
+  const unlockedLevelIds = await computeUnlockedLevelIds(studentId);
+  const vocab = await prisma.vocabulary.findMany({
+    where: { levelId: { in: [...unlockedLevelIds] } },
+    select: { topicId: true },
+  });
+  const topicIds = [...new Set(vocab.map((v) => v.topicId))];
+  if (topicIds.length === 0) {
+    return { error: "Học sinh chưa mở khóa chủ đề nào để chọn ngẫu nhiên." };
+  }
+
+  const topicId = topicIds[Math.floor(Math.random() * topicIds.length)]!;
+  const topic = await prisma.topic.findUnique({ where: { id: topicId } });
+  await prisma.account.update({ where: { id_login: studentId }, data: { pinnedTopicId: topicId } });
+  return { topicName: topic?.topic ?? "" };
+}
+
+/** Clears a student's pinned topic — auto-assignment goes back to the normal sequential
+ * curriculum order (see pickTodaysWordIds). */
+export async function unpinTopicForStudentAction(studentId: string): Promise<boolean> {
+  const admin = await requireAdmin();
+  if (!admin) return false;
+
+  const updated = await prisma.account
+    .update({ where: { id_login: studentId }, data: { pinnedTopicId: null } })
+    .catch(() => null);
+  return updated !== null;
+}
+
+/** Sets (or clears, with `target: null`) a per-student override for how many words are
+ * auto-assigned per day — falls back to the student's class's dailyWordTarget when null. */
+export async function setDailyWordTargetOverrideAction(
+  studentId: string,
+  target: number | null
+): Promise<{ error: string } | { error?: undefined }> {
+  const admin = await requireAdmin();
+  if (!admin) return { error: "Bạn không có quyền thực hiện thao tác này." };
+  if (target !== null && (!Number.isInteger(target) || target <= 0)) {
+    return { error: "Số từ mỗi ngày phải là số nguyên dương." };
+  }
+
+  const student = await prisma.account.findFirst({ where: { id_login: studentId, role: "student" } });
+  if (!student) return { error: "Không tìm thấy học sinh này." };
+
+  await prisma.account.update({
+    where: { id_login: studentId },
+    data: { dailyWordTargetOverride: target },
+  });
+  return {};
 }

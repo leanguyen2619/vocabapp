@@ -218,7 +218,7 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
     prisma.level.findMany({ orderBy: { id: "asc" }, select: { id: true } }),
   ]);
 
-  const target = cls?.dailyWordTarget ?? 5;
+  const target = account.dailyWordTargetOverride ?? cls?.dailyWordTarget ?? 5;
   const priority: Record<LearningStatus, number> = { new: 0, learning: 1, mastered: 2 };
   const statusOf = (vocabId: string): LearningStatus =>
     history.find((h) => h.vocabId === vocabId)?.status ?? "new";
@@ -235,9 +235,18 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
   if (assignedWords.length >= target) {
     picked = assignedWords.slice(0, Math.max(1, target));
   } else {
-    const unassignedVocab = vocabulary.filter(
+    const unassignedVocabAll = vocabulary.filter(
       (v) => (!assignedIds.has(v.id) || statusOf(v.id) === "mastered") && unlockedLevelIds.has(v.levelId)
     );
+    // A pinned topic (admin-set, per student — see Account.pinnedTopicId) restricts auto-pick to
+    // just that topic, day after day, until the admin changes or clears it. Falls back to the
+    // normal cross-topic pool if the pin has nothing usable in this student's unlocked levels
+    // (e.g. the topic has no content there yet) so a pin can never leave a student with 0 words.
+    const pinnedTopicVocab =
+      account.pinnedTopicId !== null
+        ? unassignedVocabAll.filter((v) => v.topicId === account.pinnedTopicId)
+        : [];
+    const unassignedVocab = pinnedTopicVocab.length > 0 ? pinnedTopicVocab : unassignedVocabAll;
     const levelOrder = levels.map((l) => l.id).filter((id) => unlockedLevelIds.has(id));
 
     // Tier 1: curriculum-ordered, content-ready words (the normal path).

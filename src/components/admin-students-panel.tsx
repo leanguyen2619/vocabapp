@@ -14,8 +14,11 @@ import {
   KeyRound,
   Library,
   ListChecks,
+  Pin,
+  PinOff,
   Search,
   Send,
+  Shuffle,
   X,
 } from "lucide-react";
 
@@ -57,6 +60,10 @@ import {
   cancelAssignmentAction,
   getStudentDetailAction,
   listAllAssignedVocabAction,
+  pinRandomTopicForStudentAction,
+  pinTopicForStudentAction,
+  setDailyWordTargetOverrideAction,
+  unpinTopicForStudentAction,
   type AssignedVocabSummary,
   type StudentDetail,
   type StudentSummary,
@@ -108,6 +115,11 @@ export function AdminStudentsPanel({
   // order, e.g. after a second "Chi tiết" click) can't overwrite the currently-open dialog with
   // the wrong student's data.
   const detailRequestId = useRef<string | null>(null);
+
+  const [pinTopicSelect, setPinTopicSelect] = useState(ALL);
+  const [pinning, setPinning] = useState(false);
+  const [dailyTargetInput, setDailyTargetInput] = useState("");
+  const [savingTarget, setSavingTarget] = useState(false);
 
   const [studentAssignTarget, setStudentAssignTarget] = useState<StudentSummary | null>(null);
   const [studentAssignVocab, setStudentAssignVocab] = useState<string[]>([]);
@@ -219,6 +231,83 @@ export function AdminStudentsPanel({
     if (detailRequestId.current !== studentId) return;
     setDetailLoading(false);
     setDetailData(data);
+    setPinTopicSelect(data?.pinnedTopicId != null ? String(data.pinnedTopicId) : ALL);
+    setDailyTargetInput(data?.dailyWordTargetOverride != null ? String(data.dailyWordTargetOverride) : "");
+  };
+
+  const handlePinTopic = async () => {
+    if (!detailData || pinTopicSelect === ALL) return;
+    setPinning(true);
+    const result = await pinTopicForStudentAction(detailData.id_login, Number(pinTopicSelect));
+    setPinning(false);
+
+    if (result.error !== undefined) {
+      toast.error(result.error);
+      return;
+    }
+    setDetailData((prev) =>
+      prev ? { ...prev, pinnedTopicId: Number(pinTopicSelect), pinnedTopicName: result.topicName } : prev
+    );
+    toast.success(formatMessage(dict.adminStudents.pinTopicSuccess, { topic: result.topicName, name: detailData.fullName }));
+  };
+
+  const handlePinRandomTopic = async () => {
+    if (!detailData) return;
+    setPinning(true);
+    const result = await pinRandomTopicForStudentAction(detailData.id_login);
+    setPinning(false);
+
+    if (result.error !== undefined) {
+      toast.error(result.error);
+      return;
+    }
+    setDetailData((prev) => (prev ? { ...prev, pinnedTopicName: result.topicName } : prev));
+    // The action doesn't return which topic id it picked, only its name — refetch to keep the
+    // topic Select's own value in sync (pinnedTopicId is otherwise stale after this call).
+    const refreshed = await getStudentDetailAction(detailData.id_login);
+    if (refreshed) {
+      setDetailData(refreshed);
+      setPinTopicSelect(refreshed.pinnedTopicId != null ? String(refreshed.pinnedTopicId) : ALL);
+    }
+    toast.success(
+      formatMessage(dict.adminStudents.randomTopicSuccess, { topic: result.topicName, name: detailData.fullName })
+    );
+  };
+
+  const handleUnpinTopic = async () => {
+    if (!detailData) return;
+    setPinning(true);
+    const ok = await unpinTopicForStudentAction(detailData.id_login);
+    setPinning(false);
+
+    if (!ok) {
+      toast.error(dict.adminStudents.pinTopicError);
+      return;
+    }
+    setDetailData((prev) => (prev ? { ...prev, pinnedTopicId: null, pinnedTopicName: null } : prev));
+    setPinTopicSelect(ALL);
+    toast.success(formatMessage(dict.adminStudents.autoModeSuccess, { name: detailData.fullName }));
+  };
+
+  const handleSaveDailyTarget = async () => {
+    if (!detailData) return;
+    const trimmed = dailyTargetInput.trim();
+    const target = trimmed === "" ? null : Number(trimmed);
+
+    setSavingTarget(true);
+    const result = await setDailyWordTargetOverrideAction(detailData.id_login, target);
+    setSavingTarget(false);
+
+    if (result.error !== undefined) {
+      toast.error(result.error);
+      return;
+    }
+    setDetailData((prev) => (prev ? { ...prev, dailyWordTargetOverride: target } : prev));
+    toast.success(
+      target === null
+        ? formatMessage(dict.adminStudents.dailyTargetClearSuccess, { name: detailData.fullName })
+        : formatMessage(dict.adminStudents.dailyTargetSuccess, { count: target, name: detailData.fullName })
+    );
   };
 
   const buildCredentialsText = (entry: KnownCredentials) =>
@@ -490,6 +579,12 @@ export function AdminStudentsPanel({
 
                 <div className="flex flex-wrap items-center gap-3 sm:w-auto">
                   <Progress value={student.score} className="flex-1 sm:w-32" />
+                  {student.pinnedTopicName && (
+                    <Badge variant="secondary" className="max-w-32 gap-1 shrink-0 truncate">
+                      <Pin className="size-3" />
+                      {student.pinnedTopicName}
+                    </Badge>
+                  )}
                   <Badge variant="outline" className="gap-1 shrink-0">
                     <Flame className="size-3 text-orange-500" />
                     {student.streak}
@@ -726,6 +821,101 @@ export function AdminStudentsPanel({
                   </Button>
                 </div>
               )}
+
+              <Separator />
+
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Pin className="size-3.5" />
+                  {dict.adminStudents.assignModeTitle}
+                </div>
+                <p className="text-sm text-muted-foreground">{dict.adminStudents.assignModeDesc}</p>
+
+                {detailData.pinnedTopicName ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="secondary" className="max-w-48 gap-1 truncate">
+                      <Pin className="size-3" />
+                      {detailData.pinnedTopicName}
+                    </Badge>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={pinning}
+                      onClick={() => void handleUnpinTopic()}
+                    >
+                      <PinOff className="size-3.5" />
+                      {dict.adminStudents.autoModeButton}
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">{dict.adminStudents.assignModeAuto}</p>
+                )}
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <Select value={pinTopicSelect} onValueChange={(v) => setPinTopicSelect(v ?? ALL)}>
+                    <SelectTrigger className="w-full sm:w-56">
+                      <SelectValue>
+                        {(value: string) =>
+                          value === ALL
+                            ? dict.adminStudents.pinTopicPlaceholder
+                            : (topics.find((t) => String(t.id) === value)?.topic ??
+                              dict.adminStudents.pinTopicPlaceholder)
+                        }
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {topics.map((topic) => (
+                        <SelectItem key={topic.id} value={String(topic.id)}>
+                          {topic.topic}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={pinning || pinTopicSelect === ALL}
+                    onClick={() => void handlePinTopic()}
+                  >
+                    <Pin className="size-3.5" />
+                    {dict.adminStudents.pinTopicButton}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={pinning}
+                    onClick={() => void handlePinRandomTopic()}
+                  >
+                    <Shuffle className="size-3.5" />
+                    {dict.adminStudents.randomTopicButton}
+                  </Button>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="dailyTargetOverride">{dict.adminStudents.dailyTargetTitle}</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {formatMessage(dict.adminStudents.dailyTargetDesc, {
+                      count: detailData.classDailyWordTarget,
+                    })}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="dailyTargetOverride"
+                      type="number"
+                      min={1}
+                      value={dailyTargetInput}
+                      onChange={(e) => setDailyTargetInput(e.target.value)}
+                      placeholder={formatMessage(dict.adminStudents.dailyTargetPlaceholder, {
+                        count: detailData.classDailyWordTarget,
+                      })}
+                      className="w-full sm:w-40"
+                    />
+                    <Button variant="outline" size="sm" disabled={savingTarget} onClick={() => void handleSaveDailyTarget()}>
+                      {dict.adminStudents.dailyTargetSaveButton}
+                    </Button>
+                  </div>
+                </div>
+              </div>
 
               <Separator />
 
