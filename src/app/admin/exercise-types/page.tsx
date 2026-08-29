@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 import { BookOpen, ArrowLeft } from "lucide-react";
 
 import { AdminOnlyDenied } from "@/components/admin-only-denied";
@@ -8,6 +9,11 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
 import { AdminExerciseTypesClient } from "./exercise-types-client";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = getDictionary(await getLocale());
+  return { title: dict.admin.exerciseTypes.title };
+}
 
 export default async function ExerciseTypesSettingsPage() {
   const account = await getCurrentAccount();

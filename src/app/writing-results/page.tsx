@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 import { ArrowLeft, BookOpen } from "lucide-react";
 
 import { WritingResultsClient } from "./writing-results-client";
@@ -9,6 +10,11 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
 import { redirectIfWarmupIncomplete } from "@/lib/warmup-guard";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = getDictionary(await getLocale());
+  return { title: dict.writingResults.title };
+}
 
 export default async function WritingResultsPage() {
   const account = await getCurrentAccount();

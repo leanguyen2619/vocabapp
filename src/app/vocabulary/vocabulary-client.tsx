@@ -187,8 +187,17 @@ export function VocabularyClient({
 
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-16 text-center text-muted-foreground">
-            <Search className="size-8" />
-            <p>{dict.vocabulary.noResults}</p>
+            {myVocabulary.length === 0 ? (
+              <>
+                <BookOpen className="size-8" />
+                <p>{dict.vocabulary.emptyBank}</p>
+              </>
+            ) : (
+              <>
+                <Search className="size-8" />
+                <p>{dict.vocabulary.noResults}</p>
+              </>
+            )}
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

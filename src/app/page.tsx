@@ -69,6 +69,15 @@ export default async function Home() {
           <FeatureCarousel dict={dict} />
         </section>
       </main>
+
+      <footer className="border-t border-border">
+        <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-1 px-6 py-8 text-center text-sm text-muted-foreground sm:flex-row sm:justify-between sm:text-left">
+          <p>
+            © {new Date().getFullYear()} {dict.common.brand}. {dict.landing.footerRights}
+          </p>
+          <p>{dict.landing.footerTagline}</p>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 import {
   ArrowLeft,
   ArrowLeftRight,
@@ -42,6 +43,11 @@ const iconByCode: Record<PracticeTypeCode, LucideIcon> = {
   listening: TextCursorInput,
   listening_comprehension: Headphones,
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = getDictionary(await getLocale());
+  return { title: dict.exercises.title };
+}
 
 export default async function ExercisesPage({
   searchParams,

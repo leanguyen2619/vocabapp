@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 
 import { AdminOnlyDenied } from "@/components/admin-only-denied";
 import {
@@ -9,6 +10,11 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
 import { AdminWritingSubmissionsClient } from "./writing-submissions-client";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = getDictionary(await getLocale());
+  return { title: dict.adminWriting.title };
+}
 
 export default async function AdminWritingSubmissionsPage() {
   const account = await getCurrentAccount();

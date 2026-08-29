@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 import { ArrowLeft, BookOpen } from "lucide-react";
 
 import { MatchingGame } from "@/components/matching-game";
@@ -12,6 +13,11 @@ import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
 import { parseWordScope } from "@/lib/word-scope";
 import { redirectIfWarmupIncomplete } from "@/lib/warmup-guard";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = getDictionary(await getLocale());
+  return { title: dict.pageTitles.matching };
+}
 
 export default async function MatchingPage({
   searchParams,

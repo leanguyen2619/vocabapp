@@ -1,5 +1,6 @@
 import { BookOpen } from "lucide-react";
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 
 import { FillBlankGame } from "@/components/fill-blank-game";
 import { ListeningGame } from "@/components/listening-game";
@@ -82,6 +83,11 @@ async function renderGameFor(code: PracticeTypeCode, dict: Dictionary) {
       // exhaustive over PracticeTypeCode.
       redirect("/dashboard");
   }
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = getDictionary(await getLocale());
+  return { title: dict.warmup.title };
 }
 
 export default async function WarmupPage() {

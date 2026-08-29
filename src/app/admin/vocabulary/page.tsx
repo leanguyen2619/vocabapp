@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 
 import { AdminOnlyDenied } from "@/components/admin-only-denied";
 import { listLevelsAction } from "@/lib/actions/levels";
@@ -7,6 +8,11 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
 import { AdminVocabularyClient } from "./vocabulary-client";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = getDictionary(await getLocale());
+  return { title: dict.admin.vocabulary.title };
+}
 
 export default async function AdminVocabularyPage() {
   const account = await getCurrentAccount();

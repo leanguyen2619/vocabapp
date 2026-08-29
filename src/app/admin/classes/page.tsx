@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 
 import { AdminOnlyDenied } from "@/components/admin-only-denied";
 import { listClassesWithCountsAction } from "@/lib/actions/classes";
@@ -6,6 +7,11 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
 import { AdminClassesClient } from "./classes-client";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = getDictionary(await getLocale());
+  return { title: dict.admin.classes.title };
+}
 
 export default async function AdminClassesPage() {
   const account = await getCurrentAccount();

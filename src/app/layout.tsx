@@ -21,8 +21,19 @@ const geistMono = Geist_Mono({
 export async function generateMetadata(): Promise<Metadata> {
   const dict = getDictionary(await getLocale());
   return {
-    title: dict.meta.title,
+    title: { default: dict.meta.title, template: `%s — ${dict.common.brand}` },
     description: dict.meta.description,
+    openGraph: {
+      title: dict.meta.title,
+      description: dict.meta.description,
+      siteName: dict.common.brand,
+      type: "website",
+    },
+    twitter: {
+      card: "summary",
+      title: dict.meta.title,
+      description: dict.meta.description,
+    },
   };
 }
 

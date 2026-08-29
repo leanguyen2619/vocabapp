@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 
 import { listClassesAction } from "@/lib/actions/classes";
 import { getMyLevelsAction } from "@/lib/actions/levels";
@@ -8,6 +9,11 @@ import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
 import { redirectIfWarmupIncomplete } from "@/lib/warmup-guard";
 import { ProfileClient } from "./profile-client";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = getDictionary(await getLocale());
+  return { title: dict.pageTitles.profile };
+}
 
 export default async function ProfilePage() {
   const account = await getCurrentAccount();

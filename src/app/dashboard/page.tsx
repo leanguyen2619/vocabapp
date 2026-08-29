@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 
 import { AdminDashboardContent } from "@/components/admin-dashboard-content";
 import { StudentDashboardContent } from "@/components/student-dashboard-content";
@@ -20,6 +21,11 @@ import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
 import { getCurrentAccount } from "@/lib/session";
 import { redirectIfWarmupIncomplete } from "@/lib/warmup-guard";
 import { DashboardShell } from "./dashboard-client";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = getDictionary(await getLocale());
+  return { title: dict.pageTitles.dashboard };
+}
 
 export default async function DashboardPage() {
   const account = await getCurrentAccount();

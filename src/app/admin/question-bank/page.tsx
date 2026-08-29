@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 
 import { AdminOnlyDenied } from "@/components/admin-only-denied";
 import { listExerciseTypesAction } from "@/lib/actions/exercise-types";
@@ -20,6 +21,11 @@ const QUESTION_BASED_CODES: PracticeTypeCode[] = [
   "sentence_writing",
   "listening_comprehension",
 ];
+
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = getDictionary(await getLocale());
+  return { title: dict.admin.questionBank.title };
+}
 
 export default async function AdminQuestionBankPage() {
   const account = await getCurrentAccount();

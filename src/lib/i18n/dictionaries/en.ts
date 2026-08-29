@@ -5,6 +5,21 @@ const en: Dictionary = {
     title: "VocabApp — Learn vocabulary every day",
     description: "A vocabulary learning platform with flashcards, quizzes, and progress tracking.",
   },
+  pageTitles: {
+    dashboard: "Dashboard",
+    profile: "Profile",
+    quiz: "Quiz",
+    flashcard: "Flashcards",
+    matching: "Matching",
+    typing: "Typing",
+    listening: "Listening",
+    listeningComprehension: "Listening Comprehension",
+    pos: "Word Types",
+    sentenceWriting: "Sentence Writing",
+    fillBlank: "Fill in the Blank",
+    wordFormation: "Word Formation",
+    synonymAntonym: "Synonyms & Antonyms",
+  },
   common: {
     brand: "VocabApp",
     save: "Save",
@@ -82,6 +97,8 @@ const en: Dictionary = {
     ctaLogin: "Log in",
     goToDashboard: "Go to Dashboard",
     featuresTitle: "Choose the way you learn best",
+    footerRights: "All rights reserved.",
+    footerTagline: "A vocabulary learning platform for students and admins.",
     featureCarousel: {
       prevAriaLabel: "Previous cards",
       nextAriaLabel: "Next cards",
@@ -234,6 +251,7 @@ const en: Dictionary = {
     topicPlaceholder: "Topic",
     searchPlaceholder: "Search vocabulary...",
     noResults: "No matching vocabulary found.",
+    emptyBank: "No vocabulary here yet. Contact your admin to get new words added.",
     playPronunciation: "Listen to pronunciation",
   },
   exercises: {

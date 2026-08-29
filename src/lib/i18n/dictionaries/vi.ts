@@ -3,6 +3,25 @@ const vi = {
     title: "VocabApp — Học từ vựng mỗi ngày",
     description: "Nền tảng luyện từ vựng với flashcard, trắc nghiệm và theo dõi tiến độ học tập.",
   },
+  /** Short browser-tab titles for pages whose own dict section has no generic "title" field
+   * (it only has things like finishedTitle) — composed with the site name via the root layout's
+   * title.template, e.g. "Thẻ ghi nhớ — VocabApp". Pages that already have a natural title (login,
+   * exercises, warmup, every admin page, writingResults, classReport) reuse that instead. */
+  pageTitles: {
+    dashboard: "Bảng điều khiển",
+    profile: "Hồ sơ cá nhân",
+    quiz: "Trắc nghiệm",
+    flashcard: "Thẻ ghi nhớ",
+    matching: "Nối từ",
+    typing: "Gõ từ",
+    listening: "Nghe và gõ từ",
+    listeningComprehension: "Nghe hiểu câu",
+    pos: "Chọn loại từ",
+    sentenceWriting: "Viết câu",
+    fillBlank: "Điền từ vào chỗ trống",
+    wordFormation: "Từ ghép",
+    synonymAntonym: "Từ đồng nghĩa - trái nghĩa",
+  },
   common: {
     brand: "VocabApp",
     save: "Lưu",
@@ -80,6 +99,8 @@ const vi = {
     ctaLogin: "Đăng nhập",
     goToDashboard: "Vào Dashboard",
     featuresTitle: "Chọn cách học phù hợp với bạn",
+    footerRights: "Đã đăng ký bản quyền.",
+    footerTagline: "Nền tảng học từ vựng dành cho học viên và giáo viên.",
     featureCarousel: {
       prevAriaLabel: "Xem thẻ trước",
       nextAriaLabel: "Xem thẻ tiếp theo",
@@ -183,7 +204,7 @@ const vi = {
     fnVocabDesc: "Thêm/sửa/xóa từ, import từ file Excel.",
     fnExerciseTypesTitle: "Dạng bài tập",
     fnExerciseTypesDesc: "Thêm dạng bài, chỉnh level mở khóa, bật/tắt.",
-    fnQuestionBankTitle: "Question Bank",
+    fnQuestionBankTitle: "Kho câu hỏi",
     fnQuestionBankDesc: "Thêm, chỉnh sửa và duyệt câu hỏi.",
     fnLevelsTitle: "Level học viên",
     fnLevelsDesc: "Unlock A1/A2/B1/B2 thủ công cho học viên.",
@@ -220,7 +241,7 @@ const vi = {
     avatarRemoveSuccess: "Đã xóa ảnh đại diện.",
   },
   vocabulary: {
-    title: "My Vocabulary",
+    title: "Kho từ vựng của tôi",
     subtitle: "{filtered}/{total} từ — tiến độ học của riêng bạn.",
     mastered: "Đã thuộc",
     learning: "Đang học",
@@ -232,6 +253,7 @@ const vi = {
     topicPlaceholder: "Chủ đề",
     searchPlaceholder: "Tìm từ vựng...",
     noResults: "Không tìm thấy từ vựng phù hợp.",
+    emptyBank: "Chưa có từ vựng nào ở đây. Liên hệ quản trị viên để được thêm từ mới.",
     playPronunciation: "Nghe phát âm",
   },
   exercises: {

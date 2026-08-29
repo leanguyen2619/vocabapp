@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { BookOpen } from "lucide-react";
 
 import { LanguageToggle } from "@/components/language-toggle";
@@ -7,6 +8,11 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = getDictionary(await getLocale());
+  return { title: dict.login.title };
+}
 
 export default async function LoginPage() {
   const dict = getDictionary(await getLocale());
