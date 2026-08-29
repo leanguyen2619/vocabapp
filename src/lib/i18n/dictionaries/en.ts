@@ -591,6 +591,8 @@ const en: Dictionary = {
       sortLabel: "Sort",
       sortDefault: "Default",
       sortByLevel: "By level",
+      allTopics: "All topics",
+      topicFilterPlaceholder: "Topic",
     },
     questionBank: {
       title: "Question Bank",

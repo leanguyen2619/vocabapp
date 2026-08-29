@@ -593,6 +593,8 @@ const vi = {
       sortLabel: "Sắp xếp",
       sortDefault: "Mặc định",
       sortByLevel: "Theo level",
+      allTopics: "Tất cả chủ đề",
+      topicFilterPlaceholder: "Chủ đề",
     },
     questionBank: {
       title: "Kho câu hỏi",

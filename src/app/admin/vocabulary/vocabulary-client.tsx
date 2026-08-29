@@ -84,6 +84,7 @@ export function AdminVocabularyClient({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [search, setSearch] = useState("");
+  const [topicFilter, setTopicFilter] = useState("all");
   const [sortMode, setSortMode] = useState<"default" | "level">("default");
   const [page, setPage] = useState(1);
 
@@ -92,9 +93,11 @@ export function AdminVocabularyClient({
   const filteredWords = useMemo(
     () =>
       words.filter(
-        (w) => w.vocab.toLowerCase().includes(query) || w.meanVI.toLowerCase().includes(query)
+        (w) =>
+          (w.vocab.toLowerCase().includes(query) || w.meanVI.toLowerCase().includes(query)) &&
+          (topicFilter === "all" || w.topicId === Number(topicFilter))
       ),
-    [words, query]
+    [words, query, topicFilter]
   );
 
   const sortedWords = useMemo(() => {
@@ -340,17 +343,46 @@ export function AdminVocabularyClient({
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative max-w-sm flex-1">
-            <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
+          <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="relative max-w-sm flex-1">
+              <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                placeholder={dict.admin.vocabulary.searchPlaceholder}
+                className="pl-8"
+              />
+            </div>
+
+            <Select
+              value={topicFilter}
+              onValueChange={(value) => {
+                setTopicFilter(value ?? "all");
                 setPage(1);
               }}
-              placeholder={dict.admin.vocabulary.searchPlaceholder}
-              className="pl-8"
-            />
+            >
+              <SelectTrigger className="w-full sm:w-44">
+                <SelectValue placeholder={dict.admin.vocabulary.topicFilterPlaceholder}>
+                  {(value: string) =>
+                    value === "all"
+                      ? dict.admin.vocabulary.allTopics
+                      : (topics.find((t) => String(t.id) === value)?.topic ??
+                        dict.admin.vocabulary.topicFilterPlaceholder)
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{dict.admin.vocabulary.allTopics}</SelectItem>
+                {topics.map((topic) => (
+                  <SelectItem key={topic.id} value={String(topic.id)}>
+                    {topic.topic}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex items-center gap-2">
