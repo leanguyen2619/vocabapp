@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/password-input";
 import { loginAction } from "@/lib/actions/auth";
 import { createPasswordResetRequestAction } from "@/lib/actions/password-reset-requests";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
@@ -157,14 +158,15 @@ export function LoginForm({ dict }: { dict: Dictionary }) {
             </DialogContent>
           </Dialog>
         </div>
-        <Input
+        <PasswordInput
           id="password"
-          type="password"
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="••••••"
           aria-invalid={invalidField === "password"}
+          showLabel={dict.common.showPassword}
+          hideLabel={dict.common.hidePassword}
         />
       </div>
 

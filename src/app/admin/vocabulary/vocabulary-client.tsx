@@ -79,6 +79,8 @@ export function AdminVocabularyClient({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Vocabulary | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [search, setSearch] = useState("");
@@ -168,15 +170,18 @@ export function AdminVocabularyClient({
     setDialogOpen(false);
   };
 
-  const handleDelete = async (word: Vocabulary) => {
-    if (!window.confirm(formatMessage(dict.admin.vocabulary.deleteConfirm, { word: word.vocab }))) return;
-    const result = await deleteVocabularyAction(word.id);
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const result = await deleteVocabularyAction(deleteTarget.id);
+    setDeleting(false);
     if (result.error !== undefined) {
       toast.error(result.error);
       return;
     }
     setWords(await listVocabularyAction());
-    toast.success(formatMessage(dict.admin.vocabulary.deleteSuccess, { word: word.vocab }));
+    toast.success(formatMessage(dict.admin.vocabulary.deleteSuccess, { word: deleteTarget.vocab }));
+    setDeleteTarget(null);
   };
 
   const handleDownloadTemplate = async () => {
@@ -417,7 +422,7 @@ export function AdminVocabularyClient({
                       variant="ghost"
                       size="icon-sm"
                       aria-label={dict.common.delete}
-                      onClick={() => void handleDelete(word)}
+                      onClick={() => setDeleteTarget(word)}
                     >
                       <Trash2 className="size-4 text-destructive" />
                     </Button>
@@ -563,6 +568,26 @@ export function AdminVocabularyClient({
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{dict.admin.vocabulary.deleteConfirmTitle}</DialogTitle>
+            <DialogDescription>
+              {deleteTarget && formatMessage(dict.admin.vocabulary.deleteConfirm, { word: deleteTarget.vocab })}
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+              {dict.common.cancel}
+            </Button>
+            <Button variant="destructive" disabled={deleting} onClick={() => void handleDelete()}>
+              {dict.common.delete}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

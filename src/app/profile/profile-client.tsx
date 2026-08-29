@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/password-input";
 import {
   changePasswordAction,
   logoutAction,
@@ -314,35 +315,38 @@ export function ProfileClient({
 
                     <div className="flex flex-col gap-1.5">
                       <Label htmlFor="currentPassword">{dict.profile.currentPassword}</Label>
-                      <Input
+                      <PasswordInput
                         id="currentPassword"
-                        type="password"
                         autoComplete="current-password"
                         value={currentPassword}
                         onChange={(e) => setCurrentPassword(e.target.value)}
+                        showLabel={dict.common.showPassword}
+                        hideLabel={dict.common.hidePassword}
                       />
                     </div>
 
                     <div className="flex flex-col gap-1.5">
                       <Label htmlFor="newPassword">{dict.profile.newPassword}</Label>
-                      <Input
+                      <PasswordInput
                         id="newPassword"
-                        type="password"
                         autoComplete="new-password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder={dict.profile.newPasswordPlaceholder}
+                        showLabel={dict.common.showPassword}
+                        hideLabel={dict.common.hidePassword}
                       />
                     </div>
 
                     <div className="flex flex-col gap-1.5">
                       <Label htmlFor="confirmPassword">{dict.profile.confirmNewPassword}</Label>
-                      <Input
+                      <PasswordInput
                         id="confirmPassword"
-                        type="password"
                         autoComplete="new-password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
+                        showLabel={dict.common.showPassword}
+                        hideLabel={dict.common.hidePassword}
                       />
                     </div>
 

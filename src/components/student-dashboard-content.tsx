@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Circle, Library, PenLine, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpen, CheckCircle2, Circle, Library, PenLine, Sparkles } from "lucide-react";
 
 import { LevelCard } from "@/components/level-card";
 import { Badge } from "@/components/ui/badge";
@@ -83,6 +83,12 @@ export function StudentDashboardContent({
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-1">
+          {dailyAssignments.length === 0 && (
+            <div className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground">
+              <BookOpen className="size-8" />
+              <p className="max-w-xs text-sm">{dict.studentDashboard.noWordsToday}</p>
+            </div>
+          )}
           {dailyAssignments.map((assignment, index) => (
             <div key={assignment.assignmentId}>
               {index > 0 && <Separator className="my-3" />}
