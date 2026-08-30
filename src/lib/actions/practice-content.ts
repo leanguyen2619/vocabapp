@@ -16,6 +16,7 @@ export interface SynonymAntonymItem {
   vocabId: string;
   word: string;
   meanVI: string;
+  definition: string;
   questionText: string;
   options: { id: string; text: string }[];
 }
@@ -43,6 +44,7 @@ export async function getSynonymAntonymQuestionsAction(): Promise<SynonymAntonym
       vocabId: q.vocabId,
       word: q.vocab.vocab,
       meanVI: q.vocab.meanVI,
+      definition: q.vocab.definition,
       questionText: q.questionText,
       options: q.answers.map((a) => ({ id: a.id, text: a.ansText })),
     }));
@@ -79,7 +81,9 @@ export interface FillBlankItem {
   id: string;
   vocabId: string;
   sentence: string;
+  word: string;
   meanVI: string;
+  definition: string;
   options: { id: string; text: string }[];
 }
 
@@ -104,7 +108,9 @@ export async function getFillBlankQuestionsAction(): Promise<FillBlankItem[]> {
       id: q.id,
       vocabId: q.vocabId,
       sentence: q.questionText,
+      word: q.vocab.vocab,
       meanVI: q.vocab.meanVI,
+      definition: q.vocab.definition,
       options: q.answers.map((a) => ({ id: a.id, text: a.ansText })),
     }));
 }

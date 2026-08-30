@@ -351,6 +351,8 @@ const vi = {
     changeType: "Chọn dạng khác",
     questionCounter: "Câu {current}/{total}",
     hint: "Gợi ý nghĩa: {mean}",
+    feedbackCorrect: "Chính xác! ",
+    feedbackWrong: "Chưa đúng — ",
     nextQuestion: "Câu tiếp theo",
     viewResults: "Xem kết quả",
     noQuestions: "Chưa có câu hỏi nào cho dạng bài này.",

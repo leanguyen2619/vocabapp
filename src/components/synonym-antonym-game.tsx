@@ -171,6 +171,9 @@ export function SynonymAntonymGame({
             {isCorrect
               ? dict.synonymAntonymGame.feedbackCorrect
               : formatMessage(dict.synonymAntonymGame.feedbackWrong, { answer: correctOption.text })}
+            <span className="block">
+              <span className="font-medium text-foreground">{question.word}</span>: {question.definition}
+            </span>
           </p>
           <Button onClick={handleNext}>
             {index + 1 >= total

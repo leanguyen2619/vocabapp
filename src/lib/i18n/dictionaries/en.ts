@@ -349,6 +349,8 @@ const en: Dictionary = {
     changeType: "Choose another type",
     questionCounter: "Question {current}/{total}",
     hint: "Meaning hint: {mean}",
+    feedbackCorrect: "Correct! ",
+    feedbackWrong: "Not quite — ",
     nextQuestion: "Next question",
     viewResults: "View results",
     noQuestions: "No questions available for this exercise yet.",

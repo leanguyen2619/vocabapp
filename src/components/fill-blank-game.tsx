@@ -176,7 +176,13 @@ export function FillBlankGame({
       </div>
 
       {result !== null && (
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <p className="text-sm text-muted-foreground">
+            {isCorrect ? dict.fillBlankGame.feedbackCorrect : dict.fillBlankGame.feedbackWrong}
+            <span className="block">
+              <span className="font-medium text-foreground">{question.word}</span>: {question.definition}
+            </span>
+          </p>
           <Button onClick={handleNext}>
             {index + 1 >= total ? dict.fillBlankGame.viewResults : dict.fillBlankGame.nextQuestion}
           </Button>
