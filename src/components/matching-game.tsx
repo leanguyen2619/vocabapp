@@ -10,7 +10,7 @@ import { recordVocabAttemptAction } from "@/lib/actions/progress";
 import { markWarmupTypeCompleteAction } from "@/lib/actions/warmup";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
-import { cn, shuffle } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import type { PracticeTypeCode, Vocabulary } from "@/types";
 
 interface Selection {
@@ -25,23 +25,26 @@ function formatTime(totalSeconds: number) {
 }
 
 export function MatchingGame({
-  vocabList,
+  leftItems,
+  rightItems,
   dict,
   warmupCode,
 }: {
-  vocabList: Vocabulary[];
+  // Already shuffled server-side (independently for each column) by the page before these props
+  // are passed down — see FillBlankGame's comment on the same pattern for why shuffling
+  // client-side causes a hydration mismatch.
+  leftItems: Vocabulary[];
+  rightItems: Vocabulary[];
   dict: Dictionary;
   warmupCode?: PracticeTypeCode;
 }) {
-  const [leftItems] = useState(() => shuffle(vocabList));
-  const [rightItems] = useState(() => shuffle(vocabList));
   const [matchedIds, setMatchedIds] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<Selection | null>(null);
   const [wrongIds, setWrongIds] = useState<string[]>([]);
   const [attempts, setAttempts] = useState(0);
   const [elapsedSec, setElapsedSec] = useState(0);
 
-  const total = vocabList.length;
+  const total = leftItems.length;
   const finished = matchedIds.size === total;
 
   useEffect(() => {

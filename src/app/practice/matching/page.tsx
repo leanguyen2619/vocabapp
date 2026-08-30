@@ -11,6 +11,7 @@ import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
+import { shuffle } from "@/lib/utils";
 import { parseWordScope } from "@/lib/word-scope";
 import { redirectIfWarmupIncomplete } from "@/lib/warmup-guard";
 
@@ -36,6 +37,11 @@ export default async function MatchingPage({
   ]);
   redirectIfWarmupIncomplete(warmupStatus);
 
+  // Shuffled here (once, server-side, independently per column) rather than in the client
+  // component — see MatchingGame for why shuffling client-side causes a hydration mismatch.
+  const leftItems = shuffle(dailyWords);
+  const rightItems = shuffle(dailyWords);
+
   return (
     <div className="flex flex-1 flex-col bg-background">
       <header className="border-b border-border">
@@ -60,7 +66,7 @@ export default async function MatchingPage({
       </header>
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-10 sm:py-16">
-        <MatchingGame vocabList={dailyWords} dict={dict} />
+        <MatchingGame leftItems={leftItems} rightItems={rightItems} dict={dict} />
       </main>
     </div>
   );

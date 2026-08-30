@@ -30,7 +30,9 @@ import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
 import { getDictionary, type Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { getLocale } from "@/lib/i18n/locale";
+import { buildPosQuestions, prepareWordFormation } from "@/lib/practice-prep";
 import { getCurrentAccount } from "@/lib/session";
+import { shuffle } from "@/lib/utils";
 import type { PracticeTypeCode } from "@/types";
 
 async function renderGameFor(code: PracticeTypeCode, dict: Dictionary) {
@@ -44,7 +46,14 @@ async function renderGameFor(code: PracticeTypeCode, dict: Dictionary) {
     }
     case "matching": {
       const vocabList = await getMyWordsForScopeAction("mixed");
-      return <MatchingGame vocabList={vocabList} dict={dict} warmupCode={code} />;
+      return (
+        <MatchingGame
+          leftItems={shuffle(vocabList)}
+          rightItems={shuffle(vocabList)}
+          dict={dict}
+          warmupCode={code}
+        />
+      );
     }
     case "typing": {
       const vocabList = await getMyWordsForScopeAction("mixed");
@@ -56,26 +65,36 @@ async function renderGameFor(code: PracticeTypeCode, dict: Dictionary) {
     }
     case "pos_classification": {
       const [items, topics] = await Promise.all([getPosClassificationItemsAction(), listTopicsAction()]);
-      return <PosClassificationGame items={items} topics={topics} dict={dict} warmupCode={code} />;
+      return (
+        <PosClassificationGame
+          questions={buildPosQuestions(items)}
+          topics={topics}
+          dict={dict}
+          warmupCode={code}
+        />
+      );
     }
     case "synonym_antonym": {
-      const questions = await getSynonymAntonymQuestionsAction();
+      const rawQuestions = await getSynonymAntonymQuestionsAction();
+      const questions = shuffle(rawQuestions).map((q) => ({ ...q, options: shuffle(q.options) }));
       return <SynonymAntonymGame questions={questions} dict={dict} warmupCode={code} />;
     }
     case "fill_blank": {
-      const questions = await getFillBlankQuestionsAction();
+      const rawQuestions = await getFillBlankQuestionsAction();
+      const questions = shuffle(rawQuestions).map((q) => ({ ...q, options: shuffle(q.options) }));
       return <FillBlankGame questions={questions} dict={dict} warmupCode={code} />;
     }
     case "word_formation": {
-      const prompts = await getWordFormationPromptsAction();
-      return <WordFormationGame prompts={prompts} dict={dict} warmupCode={code} />;
+      const rawPrompts = await getWordFormationPromptsAction();
+      return <WordFormationGame prompts={prepareWordFormation(rawPrompts)} dict={dict} warmupCode={code} />;
     }
     case "sentence_writing": {
       const prompts = await getSentenceWritingPromptsAction();
       return <SentenceWritingExercise prompts={prompts} dict={dict} warmupCode={code} />;
     }
     case "listening_comprehension": {
-      const questions = await getListeningComprehensionQuestionsAction();
+      const rawQuestions = await getListeningComprehensionQuestionsAction();
+      const questions = shuffle(rawQuestions).map((q) => ({ ...q, options: shuffle(q.options) }));
       return <ListeningComprehensionGame questions={questions} dict={dict} warmupCode={code} />;
     }
     case "flashcard":

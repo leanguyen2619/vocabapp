@@ -7,38 +7,30 @@ import { Check, PartyPopper, RotateCcw, Volume2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
-import { submitPosAnswerAction, type PosClassificationItem } from "@/lib/actions/vocabulary";
+import { submitPosAnswerAction } from "@/lib/actions/vocabulary";
 import { markWarmupTypeCompleteAction } from "@/lib/actions/warmup";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { getTopicName, posLabel } from "@/lib/labels";
+import type { PosQuestion } from "@/lib/practice-prep";
 import { speakWord } from "@/lib/speech";
-import { cn, shuffle } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import type { PartOfSpeech, PracticeTypeCode, Topic } from "@/types";
 
-const POS_OPTIONS: PartOfSpeech[] = ["noun", "verb", "adjective", "adverb"];
-
-interface PosQuestion {
-  item: PosClassificationItem;
-  options: PartOfSpeech[];
-}
-
-function buildQuestions(items: PosClassificationItem[]): PosQuestion[] {
-  return items.map((item) => ({ item, options: shuffle(POS_OPTIONS) }));
-}
-
 export function PosClassificationGame({
-  items,
+  questions,
   topics,
   dict,
   warmupCode,
 }: {
-  items: PosClassificationItem[];
+  // Already shuffled server-side (via buildPosQuestions) by the page before this prop is passed
+  // down — see FillBlankGame's comment on the same pattern for why shuffling client-side causes
+  // a hydration mismatch.
+  questions: PosQuestion[];
   topics: Topic[];
   dict: Dictionary;
   warmupCode?: PracticeTypeCode;
 }) {
-  const [questions] = useState<PosQuestion[]>(() => buildQuestions(items));
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<PartOfSpeech | null>(null);
   const [result, setResult] = useState<{ isCorrect: boolean; correctPos: PartOfSpeech } | null>(null);

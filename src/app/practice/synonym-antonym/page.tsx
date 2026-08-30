@@ -11,6 +11,7 @@ import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
+import { shuffle } from "@/lib/utils";
 import { redirectIfWarmupIncomplete } from "@/lib/warmup-guard";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -23,12 +24,16 @@ export default async function SynonymAntonymPage() {
   if (!account) redirect("/login");
   const dict = getDictionary(await getLocale());
 
-  const [warmupStatus, exerciseTypes, questions] = await Promise.all([
+  const [warmupStatus, exerciseTypes, rawQuestions] = await Promise.all([
     getMyWarmupStatusAction(),
     listVisibleExerciseTypesAction(),
     getSynonymAntonymQuestionsAction(),
   ]);
   redirectIfWarmupIncomplete(warmupStatus);
+
+  // Shuffled here (once, server-side) rather than in the client component — see
+  // SynonymAntonymGame for why shuffling client-side causes a hydration mismatch.
+  const questions = shuffle(rawQuestions).map((q) => ({ ...q, options: shuffle(q.options) }));
 
   return (
     <div className="flex flex-1 flex-col bg-background">

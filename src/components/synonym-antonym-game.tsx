@@ -12,7 +12,7 @@ import type { SynonymAntonymItem } from "@/lib/actions/practice-content";
 import { markWarmupTypeCompleteAction } from "@/lib/actions/warmup";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
-import { cn, shuffle } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import type { PracticeTypeCode } from "@/types";
 
 export function SynonymAntonymGame({
@@ -24,9 +24,9 @@ export function SynonymAntonymGame({
   dict: Dictionary;
   warmupCode?: PracticeTypeCode;
 }) {
-  const [prepared] = useState(() =>
-    shuffle(questions).map((q) => ({ ...q, options: shuffle(q.options) }))
-  );
+  // Already shuffled server-side by the page before this prop is passed down — see
+  // FillBlankGame's comment on the same pattern for why (hydration mismatch otherwise).
+  const prepared = questions;
   const [index, setIndex] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [result, setResult] = useState<{ isCorrect: boolean; correctOptionId: string } | null>(null);

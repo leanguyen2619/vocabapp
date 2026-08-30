@@ -10,6 +10,7 @@ import { getWordFormationPromptsAction } from "@/lib/actions/practice-content";
 import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
+import { prepareWordFormation } from "@/lib/practice-prep";
 import { getCurrentAccount } from "@/lib/session";
 import { redirectIfWarmupIncomplete } from "@/lib/warmup-guard";
 
@@ -23,12 +24,16 @@ export default async function WordFormationPage() {
   if (!account) redirect("/login");
   const dict = getDictionary(await getLocale());
 
-  const [warmupStatus, exerciseTypes, prompts] = await Promise.all([
+  const [warmupStatus, exerciseTypes, rawPrompts] = await Promise.all([
     getMyWarmupStatusAction(),
     listVisibleExerciseTypesAction(),
     getWordFormationPromptsAction(),
   ]);
   redirectIfWarmupIncomplete(warmupStatus);
+
+  // Shuffled here (once, server-side) rather than in the client component — see
+  // WordFormationGame for why shuffling client-side causes a hydration mismatch.
+  const prompts = prepareWordFormation(rawPrompts);
 
   return (
     <div className="flex flex-1 flex-col bg-background">

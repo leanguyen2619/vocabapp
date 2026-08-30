@@ -10,6 +10,7 @@ import { getPosClassificationItemsAction, listTopicsAction } from "@/lib/actions
 import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
+import { buildPosQuestions } from "@/lib/practice-prep";
 import { getCurrentAccount } from "@/lib/session";
 import { redirectIfWarmupIncomplete } from "@/lib/warmup-guard";
 
@@ -30,6 +31,10 @@ export default async function PosClassificationPage() {
     listVisibleExerciseTypesAction(),
   ]);
   redirectIfWarmupIncomplete(warmupStatus);
+
+  // Shuffled here (once, server-side) rather than in the client component — see
+  // PosClassificationGame for why shuffling client-side causes a hydration mismatch.
+  const questions = buildPosQuestions(items);
 
   return (
     <div className="flex flex-1 flex-col bg-background">
@@ -55,7 +60,7 @@ export default async function PosClassificationPage() {
       </header>
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-10 sm:py-16">
-        <PosClassificationGame items={items} topics={topics} dict={dict} />
+        <PosClassificationGame questions={questions} topics={topics} dict={dict} />
       </main>
     </div>
   );

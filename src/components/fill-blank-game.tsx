@@ -11,7 +11,7 @@ import type { FillBlankItem } from "@/lib/actions/practice-content";
 import { markWarmupTypeCompleteAction } from "@/lib/actions/warmup";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
-import { cn, shuffle } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import type { PracticeTypeCode } from "@/types";
 
 export function FillBlankGame({
@@ -23,9 +23,11 @@ export function FillBlankGame({
   dict: Dictionary;
   warmupCode?: PracticeTypeCode;
 }) {
-  const [prepared] = useState(() =>
-    shuffle(questions).map((q) => ({ ...q, options: shuffle(q.options) }))
-  );
+  // Already shuffled server-side by the page before this prop is passed down — shuffling here
+  // instead would run once during SSR and again during client hydration with a different random
+  // result each time (Math.random() isn't deterministic between the two), causing a hydration
+  // mismatch. See FillBlankPage.
+  const prepared = questions;
   const [index, setIndex] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [result, setResult] = useState<{ isCorrect: boolean; correctOptionId: string } | null>(null);

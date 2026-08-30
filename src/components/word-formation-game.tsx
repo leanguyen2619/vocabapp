@@ -8,40 +8,28 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { recordVocabAttemptAction } from "@/lib/actions/progress";
-import type { WordFormationItem } from "@/lib/actions/practice-content";
 import { markWarmupTypeCompleteAction } from "@/lib/actions/warmup";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
+import type { PreparedPrompt } from "@/lib/practice-prep";
 import { speakWord } from "@/lib/speech";
-import { cn, shuffle } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import type { PracticeTypeCode } from "@/types";
-
-interface Tile {
-  id: number;
-  char: string;
-}
-
-interface PreparedPrompt extends WordFormationItem {
-  tiles: Tile[];
-}
-
-function prepare(prompts: WordFormationItem[]): PreparedPrompt[] {
-  return shuffle(prompts).map((p) => ({
-    ...p,
-    tiles: shuffle(p.word.split("").map((char, id) => ({ id, char }))),
-  }));
-}
 
 export function WordFormationGame({
   prompts,
   dict,
   warmupCode,
 }: {
-  prompts: WordFormationItem[];
+  // Already shuffled server-side (via prepareWordFormation) by the page before this prop is
+  // passed down. Shuffling here instead would run once during SSR and again during client
+  // hydration with a different random tile order each time, causing a hydration mismatch — and
+  // for this game specifically, the mismatched first paint would briefly show the tiles in their
+  // real, unscrambled word order.
+  prompts: PreparedPrompt[];
   dict: Dictionary;
   warmupCode?: PracticeTypeCode;
 }) {
-  const [prepared] = useState<PreparedPrompt[]>(() => prepare(prompts));
   const [index, setIndex] = useState(0);
   const [placedIds, setPlacedIds] = useState<number[]>([]);
   const [wrongFlash, setWrongFlash] = useState(false);
@@ -49,6 +37,7 @@ export function WordFormationGame({
   const [wrongAttempts, setWrongAttempts] = useState(0);
   const [finished, setFinished] = useState(false);
 
+  const prepared = prompts;
   const total = prepared.length;
 
   useEffect(() => {
