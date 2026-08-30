@@ -13,6 +13,7 @@ import {
   Search,
   Trash2,
   Upload,
+  Volume2,
 } from "lucide-react";
 
 import { PaginationControls } from "@/components/pagination-controls";
@@ -50,6 +51,7 @@ import { formatMessage } from "@/lib/i18n/format";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { getLevelName, getTopicName } from "@/lib/labels";
 import { normalizeImportRow, normalizePartOfSpeech, POS_VALUES } from "@/lib/vocab-import";
+import { speakWord } from "@/lib/speech";
 import type { Level, PartOfSpeech, Topic, Vocabulary } from "@/types";
 
 export function AdminVocabularyClient({
@@ -444,6 +446,14 @@ export function AdminVocabularyClient({
                   </div>
 
                   <div className="flex shrink-0 items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={dict.vocabulary.playPronunciation}
+                      onClick={() => speakWord(word.vocab)}
+                    >
+                      <Volume2 className="size-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon-sm"
