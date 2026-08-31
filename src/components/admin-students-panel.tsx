@@ -26,7 +26,6 @@ import { resetPasswordByAdminAction } from "@/lib/actions/accounts";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
   CardContent,
@@ -471,28 +470,31 @@ export function AdminStudentsPanel({
                 </Button>
               </div>
 
-              <div className="flex max-h-72 flex-col gap-2 overflow-y-auto">
-                {filteredVocab.map((vocab) => (
-                  <Label
-                    key={vocab.id}
-                    className="flex items-center gap-2 rounded-lg border border-border px-3 py-2"
-                  >
-                    <Checkbox
-                      checked={selectedVocab.includes(vocab.id)}
-                      onCheckedChange={() => toggleVocab(vocab.id)}
-                    />
-                    <span className="flex-1">
-                      <span className="font-medium">{vocab.vocab}</span>{" "}
-                      <span className="text-muted-foreground">— {vocab.meanVI}</span>
-                    </span>
-                  </Label>
-                ))}
-                {filteredVocab.length === 0 && (
-                  <p className="py-4 text-center text-sm text-muted-foreground">
-                    {dict.adminStudents.noVocabFound}
-                  </p>
-                )}
-              </div>
+              {selectedVocab.length === 0 ? (
+                <p className="rounded-lg border border-dashed border-border px-3 py-6 text-center text-sm text-muted-foreground">
+                  {dict.adminStudents.randomPickHint}
+                </p>
+              ) : (
+                <div className="flex max-h-72 flex-wrap gap-1.5 overflow-y-auto">
+                  {selectedVocab.map((id) => {
+                    const vocab = vocabularyBank.find((v) => v.id === id);
+                    if (!vocab) return null;
+                    return (
+                      <Badge key={id} variant="secondary" className="gap-1 py-1 pr-1 pl-2.5">
+                        {vocab.vocab}
+                        <button
+                          type="button"
+                          aria-label={dict.common.delete}
+                          onClick={() => toggleVocab(id)}
+                          className="rounded-full p-0.5 hover:bg-foreground/10"
+                        >
+                          <X className="size-3" />
+                        </button>
+                      </Badge>
+                    );
+                  })}
+                </div>
+              )}
 
               <DialogFooter>
                 <Button
@@ -763,28 +765,31 @@ export function AdminStudentsPanel({
             </Button>
           </div>
 
-          <div className="flex max-h-72 flex-col gap-2 overflow-y-auto">
-            {filteredStudentAssignVocab.map((vocab) => (
-              <Label
-                key={vocab.id}
-                className="flex items-center gap-2 rounded-lg border border-border px-3 py-2"
-              >
-                <Checkbox
-                  checked={studentAssignVocab.includes(vocab.id)}
-                  onCheckedChange={() => toggleStudentAssignVocab(vocab.id)}
-                />
-                <span className="flex-1">
-                  <span className="font-medium">{vocab.vocab}</span>{" "}
-                  <span className="text-muted-foreground">— {vocab.meanVI}</span>
-                </span>
-              </Label>
-            ))}
-            {filteredStudentAssignVocab.length === 0 && (
-              <p className="py-4 text-center text-sm text-muted-foreground">
-                {dict.adminStudents.noVocabFound}
-              </p>
-            )}
-          </div>
+          {studentAssignVocab.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-border px-3 py-6 text-center text-sm text-muted-foreground">
+              {dict.adminStudents.randomPickHint}
+            </p>
+          ) : (
+            <div className="flex max-h-72 flex-wrap gap-1.5 overflow-y-auto">
+              {studentAssignVocab.map((id) => {
+                const vocab = vocabularyBank.find((v) => v.id === id);
+                if (!vocab) return null;
+                return (
+                  <Badge key={id} variant="secondary" className="gap-1 py-1 pr-1 pl-2.5">
+                    {vocab.vocab}
+                    <button
+                      type="button"
+                      aria-label={dict.common.delete}
+                      onClick={() => toggleStudentAssignVocab(id)}
+                      className="rounded-full p-0.5 hover:bg-foreground/10"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </Badge>
+                );
+              })}
+            </div>
+          )}
 
           <DialogFooter>
             <Button

@@ -155,6 +155,7 @@ const en: Dictionary = {
     allLevels: "All levels",
     randomCountPlaceholder: "Word count (default {count})",
     randomPickButton: "Fully random",
+    randomPickHint: 'No words picked yet — click "Fully random" to pick words using the filters above.',
     noVocabFound: "No matching vocabulary found.",
     assignButton: "Assign ({count})",
     assigning: "Assigning...",

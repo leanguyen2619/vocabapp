@@ -157,6 +157,7 @@ const vi = {
     allLevels: "Tất cả cấp độ",
     randomCountPlaceholder: "Số từ (mặc định {count})",
     randomPickButton: "Random hoàn toàn",
+    randomPickHint: "Chưa có từ nào được chọn — bấm \"Random hoàn toàn\" để chọn từ theo bộ lọc bên trên.",
     noVocabFound: "Không tìm thấy từ vựng phù hợp.",
     assignButton: "Giao bài ({count})",
     assigning: "Đang giao...",
