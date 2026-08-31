@@ -365,52 +365,58 @@ export function ProfileClient({
           </CardContent>
         </Card>
 
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Card>
-            <CardContent className="flex items-center gap-3 py-4">
-              <div className="flex size-9 items-center justify-center rounded-full bg-orange-500/10">
-                <Flame className="size-4 text-orange-500" />
-              </div>
-              <div>
-                <p className="text-lg font-semibold leading-none">{streak}</p>
-                <p className="text-xs text-muted-foreground">{dict.profile.streakDays}</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="flex items-center gap-3 py-4">
-              <div className="flex size-9 items-center justify-center rounded-full bg-primary/10">
-                <BookOpen className="size-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-lg font-semibold leading-none">
-                  {totalMastered}/{totalVocab}
-                </p>
-                <p className="text-xs text-muted-foreground">{dict.profile.wordsMastered}</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="flex items-center gap-3 py-4">
-              <div className="flex size-9 items-center justify-center rounded-full bg-amber-500/10">
-                <Trophy className="size-4 text-amber-500" />
-              </div>
-              <div>
-                <p className="text-lg font-semibold leading-none">{completedLevels}</p>
-                <p className="text-xs text-muted-foreground">{dict.profile.levelsCompleted}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {account.role === "student" && (
+          <>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Card>
+                <CardContent className="flex items-center gap-3 py-4">
+                  <div className="flex size-9 items-center justify-center rounded-full bg-orange-500/10">
+                    <Flame className="size-4 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-semibold leading-none">{streak}</p>
+                    <p className="text-xs text-muted-foreground">{dict.profile.streakDays}</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex items-center gap-3 py-4">
+                  <div className="flex size-9 items-center justify-center rounded-full bg-primary/10">
+                    <BookOpen className="size-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-semibold leading-none">
+                      {totalMastered}/{totalVocab}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{dict.profile.wordsMastered}</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex items-center gap-3 py-4">
+                  <div className="flex size-9 items-center justify-center rounded-full bg-amber-500/10">
+                    <Trophy className="size-4 text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-semibold leading-none">{completedLevels}</p>
+                    <p className="text-xs text-muted-foreground">{dict.profile.levelsCompleted}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-        <div className="flex flex-col gap-3">
-          <h2 className="font-heading text-lg font-semibold tracking-tight">{dict.profile.levelProgress}</h2>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {levels.map((level) => (
-              <LevelCard key={level.id} level={level} dict={dict} />
-            ))}
-          </div>
-        </div>
+            <div className="flex flex-col gap-3">
+              <h2 className="font-heading text-lg font-semibold tracking-tight">
+                {dict.profile.levelProgress}
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-3">
+                {levels.map((level) => (
+                  <LevelCard key={level.id} level={level} dict={dict} />
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </main>
     </div>
   );

@@ -19,9 +19,10 @@ export default async function ProfilePage() {
   const account = await getCurrentAccount();
   if (!account) redirect("/login");
 
+  const isStudent = account.role === "student";
   const [warmupStatus, levels, classes, dict] = await Promise.all([
     getMyWarmupStatusAction(),
-    getMyLevelsAction(),
+    isStudent ? getMyLevelsAction() : Promise.resolve([]),
     listClassesAction(),
     getDictionary(await getLocale()),
   ]);
