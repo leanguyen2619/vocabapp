@@ -70,6 +70,7 @@ import {
 } from "@/lib/actions/students";
 import { formatMessage } from "@/lib/i18n/format";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { shuffle } from "@/lib/utils";
 import type { Level, Topic, Vocabulary } from "@/types";
 
 const ALL = "all";
@@ -100,6 +101,7 @@ export function AdminStudentsPanel({
   const [vocabSearch, setVocabSearch] = useState("");
   const [vocabTopicFilter, setVocabTopicFilter] = useState(ALL);
   const [vocabLevelFilter, setVocabLevelFilter] = useState(ALL);
+  const [vocabCountInput, setVocabCountInput] = useState("");
   const [assigning, setAssigning] = useState(false);
   const [assignedVocab, setAssignedVocab] = useState(initialAssignedVocab);
   const [cancelingId, setCancelingId] = useState<string | null>(null);
@@ -126,6 +128,7 @@ export function AdminStudentsPanel({
   const [studentAssignSearch, setStudentAssignSearch] = useState("");
   const [studentAssignTopicFilter, setStudentAssignTopicFilter] = useState(ALL);
   const [studentAssignLevelFilter, setStudentAssignLevelFilter] = useState(ALL);
+  const [studentAssignCountInput, setStudentAssignCountInput] = useState("");
   const [studentAssigning, setStudentAssigning] = useState(false);
 
   const studentCount = students.length;
@@ -160,6 +163,19 @@ export function AdminStudentsPanel({
     setStudentAssignVocab((current) =>
       current.includes(vocabId) ? current.filter((id) => id !== vocabId) : [...current, vocabId]
     );
+  };
+
+  const DEFAULT_RANDOM_COUNT = 5;
+
+  /** Randomly picks N words from whatever the search/topic/level filters currently narrow the
+   * pool down to (the full bank if none are set — "random hoàn toàn") and replaces the current
+   * checkbox selection with them, so admin can still review/adjust before hitting Assign. */
+  const handleRandomPick = (pool: Vocabulary[], countInput: string, setSelected: (ids: string[]) => void) => {
+    const parsed = Number(countInput.trim());
+    const count = countInput.trim() && Number.isInteger(parsed) && parsed > 0 ? parsed : DEFAULT_RANDOM_COUNT;
+    const picked = shuffle(pool).slice(0, count).map((v) => v.id);
+    setSelected(picked);
+    if (picked.length === 0) toast.error(dict.adminStudents.noVocabFound);
   };
 
   const handleAssign = async () => {
@@ -368,6 +384,7 @@ export function AdminStudentsPanel({
                 setVocabSearch("");
                 setVocabTopicFilter(ALL);
                 setVocabLevelFilter(ALL);
+                setVocabCountInput("");
               }
             }}
           >
@@ -430,6 +447,28 @@ export function AdminStudentsPanel({
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min={1}
+                  value={vocabCountInput}
+                  onChange={(e) => setVocabCountInput(e.target.value)}
+                  placeholder={formatMessage(dict.adminStudents.randomCountPlaceholder, {
+                    count: DEFAULT_RANDOM_COUNT,
+                  })}
+                  className="w-full sm:w-40"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="shrink-0"
+                  onClick={() => handleRandomPick(filteredVocab, vocabCountInput, setSelectedVocab)}
+                >
+                  <Shuffle className="size-4" />
+                  {dict.adminStudents.randomPickButton}
+                </Button>
               </div>
 
               <div className="flex max-h-72 flex-col gap-2 overflow-y-auto">
@@ -629,6 +668,7 @@ export function AdminStudentsPanel({
             setStudentAssignSearch("");
             setStudentAssignTopicFilter(ALL);
             setStudentAssignLevelFilter(ALL);
+            setStudentAssignCountInput("");
           }
         }}
       >
@@ -697,6 +737,30 @@ export function AdminStudentsPanel({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              min={1}
+              value={studentAssignCountInput}
+              onChange={(e) => setStudentAssignCountInput(e.target.value)}
+              placeholder={formatMessage(dict.adminStudents.randomCountPlaceholder, {
+                count: DEFAULT_RANDOM_COUNT,
+              })}
+              className="w-full sm:w-40"
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              className="shrink-0"
+              onClick={() =>
+                handleRandomPick(filteredStudentAssignVocab, studentAssignCountInput, setStudentAssignVocab)
+              }
+            >
+              <Shuffle className="size-4" />
+              {dict.adminStudents.randomPickButton}
+            </Button>
           </div>
 
           <div className="flex max-h-72 flex-col gap-2 overflow-y-auto">

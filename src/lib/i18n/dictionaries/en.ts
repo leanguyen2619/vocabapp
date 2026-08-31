@@ -153,6 +153,8 @@ const en: Dictionary = {
     searchVocab: "Search vocabulary...",
     allTopics: "All topics",
     allLevels: "All levels",
+    randomCountPlaceholder: "Word count (default {count})",
+    randomPickButton: "Fully random",
     noVocabFound: "No matching vocabulary found.",
     assignButton: "Assign ({count})",
     assigning: "Assigning...",

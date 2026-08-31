@@ -155,6 +155,8 @@ const vi = {
     searchVocab: "Tìm từ vựng...",
     allTopics: "Tất cả chủ đề",
     allLevels: "Tất cả cấp độ",
+    randomCountPlaceholder: "Số từ (mặc định {count})",
+    randomPickButton: "Random hoàn toàn",
     noVocabFound: "Không tìm thấy từ vựng phù hợp.",
     assignButton: "Giao bài ({count})",
     assigning: "Đang giao...",
