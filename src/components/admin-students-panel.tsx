@@ -448,6 +448,10 @@ export function AdminStudentsPanel({
                 </Select>
               </div>
 
+              <p className="text-sm text-muted-foreground">
+                {formatMessage(dict.adminStudents.matchCount, { count: filteredVocab.length })}
+              </p>
+
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
@@ -740,6 +744,10 @@ export function AdminStudentsPanel({
               </SelectContent>
             </Select>
           </div>
+
+          <p className="text-sm text-muted-foreground">
+            {formatMessage(dict.adminStudents.matchCount, { count: filteredStudentAssignVocab.length })}
+          </p>
 
           <div className="flex items-center gap-2">
             <Input
