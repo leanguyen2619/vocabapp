@@ -249,16 +249,17 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
     const unassignedVocab = pinnedTopicVocab.length > 0 ? pinnedTopicVocab : unassignedVocabAll;
     const levelOrder = levels.map((l) => l.id).filter((id) => unlockedLevelIds.has(id));
 
+    // Reserve up to 1 of today's slots for a previously-mastered word to resurface as review —
+    // mixed in alongside new/learning words rather than added on top, so the daily total never
+    // grows past `target`. Skipped entirely once there's nothing left to reserve room for (an
+    // explicit assignment already ate the whole quota) or the student has no mastered words yet.
+    const totalQuota = Math.max(1, target) - assignedWords.length;
+    const masteredPool = unassignedVocab.filter((v) => statusOf(v.id) === "mastered");
+    const reviewQuota = totalQuota > 0 && masteredPool.length > 0 ? Math.min(1, totalQuota) : 0;
+    const newQuota = totalQuota - reviewQuota;
+
     // Tier 1: curriculum-ordered, content-ready words (the normal path).
-    const remainingQuota = Math.max(1, target) - assignedWords.length;
-    let remaining = pickSequentialRemaining(
-      levelOrder,
-      unassignedVocab,
-      readyIds,
-      statusOf,
-      priority,
-      remainingQuota
-    );
+    let remaining = pickSequentialRemaining(levelOrder, unassignedVocab, readyIds, statusOf, priority, newQuota);
     // Tier 2: every ready word has already been introduced somewhere — fall back to any ready,
     // not-yet-mastered word so review still flows once a level/topic's new content runs out.
     if (remaining.length === 0) {
@@ -275,7 +276,11 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
         .sort((a, b) => priority[a.status] - priority[b.status]);
     }
 
-    picked = [...assignedWords, ...remaining].slice(0, Math.max(1, target));
+    const reviewWords = shuffle(masteredPool)
+      .slice(0, reviewQuota)
+      .map((vocab) => ({ vocab, status: "mastered" as LearningStatus }));
+
+    picked = [...assignedWords, ...remaining.slice(0, newQuota), ...reviewWords].slice(0, Math.max(1, target));
   }
 
   const pickedVocabIds = picked.map((p) => p.vocab.id);
@@ -300,10 +305,34 @@ async function computeDailyWords(
     select: { vocabId: true },
   });
 
-  const pickedVocabIds =
-    existingPicks.length > 0
-      ? existingPicks.map((p) => p.vocabId)
-      : await pickTodaysWordIds(account, today);
+  // Fast path: today's picks already exist (the overwhelmingly common case — this function is
+  // called from several places on the same page, e.g. dashboard's Promise.all calls both
+  // getMyDailyAssignmentsAction and getMyWordsForScopeAction("new"), and each independently
+  // reaches this function).
+  let pickedVocabIds: string[];
+  if (existingPicks.length > 0) {
+    pickedVocabIds = existingPicks.map((p) => p.vocabId);
+  } else {
+    // Slow path — nothing picked yet today. Two of those concurrent callers can both see an
+    // empty DailyWordPick table and both proceed to compute+insert their own pick before either
+    // one's write is visible to the other; skipDuplicates only dedupes identical vocabIds, so two
+    // DIFFERENT random picks (pickTodaysWordIds now includes a random mastered-word review slot —
+    // see its own comment) would both survive, inflating the day's word count past `target`. A
+    // Postgres advisory lock scoped to (accountId, date) serializes the decision: whichever call
+    // gets there first computes and writes; every other concurrent call blocks, then re-checks
+    // and finds that first call's already-committed picks instead of computing its own.
+    const lockKey = `daily-word-pick:${account.id_login}:${today.toISOString()}`;
+    pickedVocabIds = await prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
+      const recheck = await tx.dailyWordPick.findMany({
+        where: { accountId: account.id_login, pickedDate: today },
+        orderBy: { id: "asc" },
+        select: { vocabId: true },
+      });
+      if (recheck.length > 0) return recheck.map((p) => p.vocabId);
+      return pickTodaysWordIds(account, today);
+    });
+  }
 
   if (pickedVocabIds.length === 0) return [];
 

@@ -39,6 +39,7 @@ async function computeLevelsWithProgress(accountId: string): Promise<LevelWithPr
       id: level.id,
       level: level.level,
       maxScore: level.maxScore,
+      autoUnlockNextAt: level.autoUnlockNextAt,
       status: entry?.status ?? "locked",
       score: entry?.score ?? computedScore,
       streak: entry?.streak ?? 0,
@@ -157,6 +158,24 @@ export async function listLevelUnlockCandidatesAction(): Promise<LevelUnlockCand
     }
   }
   return candidates;
+}
+
+/** Sets (or clears, with null) the % mastery threshold at which this level silently unlocks the
+ * next one for every student — see the Level.autoUnlockNextAt comment in schema.prisma and the
+ * auto-unlock branch in recordForVocab. Does not touch this level's own maxScore/completion
+ * display; only affects whether/when the FOLLOWING level opens up on its own. */
+export async function setLevelAutoUnlockThresholdAction(
+  levelId: string,
+  threshold: number | null
+): Promise<boolean> {
+  const admin = await requireAdmin();
+  if (!admin) return false;
+  if (threshold !== null && (!Number.isInteger(threshold) || threshold < 1 || threshold > 100)) return false;
+
+  const updated = await prisma.level
+    .update({ where: { id: levelId }, data: { autoUnlockNextAt: threshold } })
+    .catch(() => null);
+  return updated !== null;
 }
 
 export async function setAccountLevelStatusAction(

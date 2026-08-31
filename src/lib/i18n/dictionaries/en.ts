@@ -665,6 +665,16 @@ const en: Dictionary = {
       unlockCandidatesTitle: "Students who finished a level and are awaiting the next unlock",
       unlockCandidateDesc: "finished {completed}, awaiting {next}",
       unlockCandidateView: "View",
+      autoUnlockTitle: "Auto-unlock the next level",
+      autoUnlockDesc:
+        "Once a student masters this % of a level's words, the next level silently opens for them — no admin action, no notice to the student. Leave blank = off (manual unlock only, as before).",
+      autoUnlockPlaceholder: "Off",
+      autoUnlockArrow: "→ {next}",
+      autoUnlockNoNext: "Last level — no next level to unlock.",
+      autoUnlockSave: "Save",
+      autoUnlockSuccess: "Set: {level} reaching {threshold}% will auto-unlock {next}.",
+      autoUnlockClearSuccess: "Turned off auto-unlock for {level}.",
+      autoUnlockError: "Threshold must be a whole number from 1 to 100.",
     },
   },
 };

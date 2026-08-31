@@ -50,14 +50,17 @@ export async function recordForVocab(
   // — masteredCountBefore and totalVocabInLevel are aggregate counts (not full row fetches)
   // specifically so the post-write mastered count can be derived arithmetically instead of
   // re-querying after the write, which is what let the two writes below also run in parallel
-  // instead of one waiting on the other.
-  const [existing, level, totalVocabInLevel, masteredCountBefore, existingAccountLevel] = await Promise.all([
-    prisma.learningHistory.findUnique({ where: { accountId_vocabId: { accountId, vocabId } } }),
-    prisma.level.findUnique({ where: { id: levelId } }),
-    prisma.vocabulary.count({ where: { levelId } }),
-    prisma.learningHistory.count({ where: { accountId, status: "mastered", vocab: { levelId } } }),
-    prisma.accountLevel.findUnique({ where: { accountId_levelId: { accountId, levelId } } }),
-  ]);
+  // instead of one waiting on the other. allLevels (ordered) is only needed to find whichever
+  // level comes right after this one, for the auto-unlock check below.
+  const [existing, level, totalVocabInLevel, masteredCountBefore, existingAccountLevel, allLevels] =
+    await Promise.all([
+      prisma.learningHistory.findUnique({ where: { accountId_vocabId: { accountId, vocabId } } }),
+      prisma.level.findUnique({ where: { id: levelId } }),
+      prisma.vocabulary.count({ where: { levelId } }),
+      prisma.learningHistory.count({ where: { accountId, status: "mastered", vocab: { levelId } } }),
+      prisma.accountLevel.findUnique({ where: { accountId_levelId: { accountId, levelId } } }),
+      prisma.level.findMany({ orderBy: { id: "asc" }, select: { id: true } }),
+    ]);
 
   const previousStatus = existing?.status ?? "new";
   const status = nextStatus(previousStatus, isCorrect);
@@ -97,6 +100,32 @@ export async function recordForVocab(
         create: { accountId, levelId, score, status: levelStatus, streak, lastActivityDate: now },
       })
     );
+
+    // Silent auto-unlock: once this level's own mastery % crosses its configured threshold, the
+    // next level opens up on its own — no admin action, no toast/notice to the student. This is
+    // deliberately independent of levelStatus/naturalStatus above, so THIS level keeps showing
+    // its real, unrounded progress (not a premature "completed" trophy) right up until it
+    // actually reaches 100%. Never downgrades the next level's status if it's already
+    // in_progress/completed by some other means (admin override, or having reached its own
+    // threshold from a previous answer).
+    if (level.autoUnlockNextAt !== null && score >= level.autoUnlockNextAt) {
+      const currentIndex = allLevels.findIndex((l) => l.id === levelId);
+      const nextLevel = currentIndex >= 0 ? allLevels[currentIndex + 1] : undefined;
+      if (nextLevel) {
+        const nextAccountLevel = await prisma.accountLevel.findUnique({
+          where: { accountId_levelId: { accountId, levelId: nextLevel.id } },
+        });
+        if ((nextAccountLevel?.status ?? "locked") === "locked") {
+          writes.push(
+            prisma.accountLevel.upsert({
+              where: { accountId_levelId: { accountId, levelId: nextLevel.id } },
+              update: { status: "in_progress" },
+              create: { accountId, levelId: nextLevel.id, status: "in_progress", score: 0, streak: 0 },
+            })
+          );
+        }
+      }
+    }
   }
 
   await Promise.all(writes);

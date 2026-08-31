@@ -19,6 +19,7 @@ import {
 import {
   getAccountLevelStatusesAction,
   setAccountLevelStatusAction,
+  setLevelAutoUnlockThresholdAction,
   type AccountLevelEntry,
   type LevelUnlockCandidate,
   type StudentSummary,
@@ -62,6 +63,11 @@ export function AdminLevelsClient({
   unlockCandidates: LevelUnlockCandidate[];
   dict: Dictionary;
 }) {
+  const [autoUnlockInputs, setAutoUnlockInputs] = useState<Record<string, string>>(
+    Object.fromEntries(levels.map((l) => [l.id, l.autoUnlockNextAt !== null ? String(l.autoUnlockNextAt) : ""]))
+  );
+  const [savingAutoUnlock, setSavingAutoUnlock] = useState<string | null>(null);
+
   const [selectedId, setSelectedId] = useState<string>(students[0]?.id_login ?? "");
   const [statusMap, setStatusMap] = useState<Record<string, AccountLevelStatus>>(
     statusesFromEntries(initialEntries)
@@ -107,6 +113,33 @@ export function AdminLevelsClient({
     );
   };
 
+  const handleSaveAutoUnlock = async (levelId: string, levelName: string, nextLevelName: string) => {
+    const raw = (autoUnlockInputs[levelId] ?? "").trim();
+    const threshold = raw === "" ? null : Number(raw);
+    if (threshold !== null && (!Number.isInteger(threshold) || threshold < 1 || threshold > 100)) {
+      toast.error(dict.admin.levels.autoUnlockError);
+      return;
+    }
+
+    setSavingAutoUnlock(levelId);
+    const ok = await setLevelAutoUnlockThresholdAction(levelId, threshold);
+    setSavingAutoUnlock(null);
+
+    if (!ok) {
+      toast.error(dict.admin.levels.saveError);
+      return;
+    }
+    toast.success(
+      threshold === null
+        ? formatMessage(dict.admin.levels.autoUnlockClearSuccess, { level: levelName })
+        : formatMessage(dict.admin.levels.autoUnlockSuccess, {
+            level: levelName,
+            threshold,
+            next: nextLevelName,
+          })
+    );
+  };
+
   const handleViewCandidate = (accountId: string) => {
     void handleSelectStudent(accountId);
   };
@@ -138,6 +171,63 @@ export function AdminLevelsClient({
           </h1>
           <p className="text-muted-foreground">{dict.admin.levels.subtitle}</p>
         </div>
+
+        <Card>
+          <CardContent className="flex flex-col gap-4 py-4">
+            <div>
+              <p className="text-sm font-medium">{dict.admin.levels.autoUnlockTitle}</p>
+              <p className="text-sm text-muted-foreground">{dict.admin.levels.autoUnlockDesc}</p>
+            </div>
+
+            {levels.map((level, index) => {
+              const nextLevel = levels[index + 1];
+              return (
+                <div key={level.id}>
+                  {index > 0 && <div className="mb-4 h-px bg-border" />}
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-sm">
+                        {level.level}
+                      </Badge>
+                      {nextLevel && (
+                        <span className="text-sm text-muted-foreground">
+                          {formatMessage(dict.admin.levels.autoUnlockArrow, { next: nextLevel.level })}
+                        </span>
+                      )}
+                    </div>
+
+                    {nextLevel ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min={1}
+                          max={100}
+                          value={autoUnlockInputs[level.id] ?? ""}
+                          onChange={(e) =>
+                            setAutoUnlockInputs((m) => ({ ...m, [level.id]: e.target.value }))
+                          }
+                          placeholder={dict.admin.levels.autoUnlockPlaceholder}
+                          className="w-24"
+                        />
+                        <span className="text-sm text-muted-foreground">%</span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={savingAutoUnlock === level.id}
+                          onClick={() => void handleSaveAutoUnlock(level.id, level.level, nextLevel.level)}
+                        >
+                          {dict.admin.levels.autoUnlockSave}
+                        </Button>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">{dict.admin.levels.autoUnlockNoNext}</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
 
         {candidates.length > 0 && (
           <Card>

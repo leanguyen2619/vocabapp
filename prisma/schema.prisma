@@ -178,6 +178,14 @@ model Level {
   level    String
   maxScore Int    @default(100)
 
+  // Optional auto-unlock: once a student's mastery % of THIS level reaches this threshold, the
+  // next level's AccountLevel is silently promoted to in_progress (visible/practiceable) without
+  // any admin action or student-facing notice — see recordForVocab in progress-core.ts. Null
+  // (the default) means no auto-unlock; the next level stays admin-gated as before. Deliberately
+  // separate from maxScore/"completed" — this level's own status/score/trophy display is
+  // unaffected, so a student never sees this level marked "done" before it's truly 100% mastered.
+  autoUnlockNextAt Int?
+
   vocabulary    Vocabulary[]
   practiceTypes PracticeType[]
   accountLevels AccountLevel[]

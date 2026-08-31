@@ -29,6 +29,9 @@ export interface Level {
   id: string; // PK
   level: string; // e.g. "Beginner", "A1", "Level 1"
   maxScore: number;
+  // Optional auto-unlock threshold (% mastery of THIS level) — see the Level model comment in
+  // schema.prisma. Null means no auto-unlock.
+  autoUnlockNextAt: number | null;
 }
 
 // ---------- Accounts_Level ----------
