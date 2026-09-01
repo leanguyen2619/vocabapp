@@ -190,6 +190,12 @@ export function AdminStudentsPanel({
     if (applied.length === 0) toast.error(dict.adminStudents.noVocabFound);
   };
 
+  /** Adds one specific word (picked from the search-results dropdown) to the current selection,
+   * without disturbing whatever Apply/Random already put there. No-op if it's already selected. */
+  const handlePickOneVocab = (vocabId: string, setSelected: (update: (current: string[]) => string[]) => void) => {
+    setSelected((current) => (current.includes(vocabId) ? current : [...current, vocabId]));
+  };
+
   const handleAssign = async () => {
     setAssigning(true);
     const result = await assignVocabularyToAllStudentsAction(selectedVocab);
@@ -461,24 +467,30 @@ export function AdminStudentsPanel({
                 </Select>
               </div>
 
-              <p className="text-sm text-muted-foreground">
-                {formatMessage(dict.adminStudents.matchCount, { count: filteredVocab.length })}
-              </p>
-
-              <div className="flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border border-border p-2">
-                {filteredVocab.length === 0 ? (
-                  <p className="py-2 text-center text-sm text-muted-foreground">
-                    {dict.adminStudents.noVocabFound}
-                  </p>
-                ) : (
-                  filteredVocab.map((vocab) => (
-                    <p key={vocab.id} className="truncate px-1 text-sm">
-                      <span className="font-medium">{vocab.vocab}</span>{" "}
-                      <span className="text-muted-foreground">— {vocab.meanVI}</span>
+              <Select
+                value=""
+                onValueChange={(id) => id && handlePickOneVocab(id, setSelectedVocab)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue>
+                    {() => formatMessage(dict.adminStudents.matchCount, { count: filteredVocab.length })}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredVocab.length === 0 ? (
+                    <p className="px-2 py-4 text-center text-sm text-muted-foreground">
+                      {dict.adminStudents.noVocabFound}
                     </p>
-                  ))
-                )}
-              </div>
+                  ) : (
+                    filteredVocab.map((vocab) => (
+                      <SelectItem key={vocab.id} value={vocab.id}>
+                        <span className="font-medium">{vocab.vocab}</span>
+                        <span className="text-muted-foreground">— {vocab.meanVI}</span>
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
 
               <div className="flex flex-wrap items-center gap-2">
                 <Input
@@ -782,24 +794,34 @@ export function AdminStudentsPanel({
             </Select>
           </div>
 
-          <p className="text-sm text-muted-foreground">
-            {formatMessage(dict.adminStudents.matchCount, { count: filteredStudentAssignVocab.length })}
-          </p>
-
-          <div className="flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border border-border p-2">
-            {filteredStudentAssignVocab.length === 0 ? (
-              <p className="py-2 text-center text-sm text-muted-foreground">
-                {dict.adminStudents.noVocabFound}
-              </p>
-            ) : (
-              filteredStudentAssignVocab.map((vocab) => (
-                <p key={vocab.id} className="truncate px-1 text-sm">
-                  <span className="font-medium">{vocab.vocab}</span>{" "}
-                  <span className="text-muted-foreground">— {vocab.meanVI}</span>
+          <Select
+            value=""
+            onValueChange={(id) => id && handlePickOneVocab(id, setStudentAssignVocab)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue>
+                {() =>
+                  formatMessage(dict.adminStudents.matchCount, {
+                    count: filteredStudentAssignVocab.length,
+                  })
+                }
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {filteredStudentAssignVocab.length === 0 ? (
+                <p className="px-2 py-4 text-center text-sm text-muted-foreground">
+                  {dict.adminStudents.noVocabFound}
                 </p>
-              ))
-            )}
-          </div>
+              ) : (
+                filteredStudentAssignVocab.map((vocab) => (
+                  <SelectItem key={vocab.id} value={vocab.id}>
+                    <span className="font-medium">{vocab.vocab}</span>
+                    <span className="text-muted-foreground">— {vocab.meanVI}</span>
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
 
           <div className="flex flex-wrap items-center gap-2">
             <Input
