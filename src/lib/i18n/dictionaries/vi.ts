@@ -161,6 +161,7 @@ const vi = {
     randomPickButton: "Random hoàn toàn",
     randomPickHint: "Chưa có từ nào được chọn — bấm \"Random hoàn toàn\" để chọn từ theo bộ lọc bên trên.",
     matchCount: "{count} từ khớp với bộ lọc hiện tại.",
+    narrowSearchHint: "Nhiều kết quả — nhập từ khóa cụ thể hơn để xem danh sách, hoặc dùng Random/Áp dụng bên dưới.",
     noVocabFound: "Không tìm thấy từ vựng phù hợp.",
     assignButton: "Giao bài ({count})",
     assigning: "Đang giao...",

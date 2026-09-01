@@ -159,6 +159,7 @@ const en: Dictionary = {
     randomPickButton: "Fully random",
     randomPickHint: 'No words picked yet — click "Fully random" to pick words using the filters above.',
     matchCount: "{count} words match the current filters.",
+    narrowSearchHint: "Too many results to list — narrow your search to see them, or use Random/Apply below.",
     noVocabFound: "No matching vocabulary found.",
     assignButton: "Assign ({count})",
     assigning: "Assigning...",

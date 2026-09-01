@@ -166,6 +166,11 @@ export function AdminStudentsPanel({
   };
 
   const DEFAULT_RANDOM_COUNT = 5;
+  // Above this many matches, skip rendering the picker dropdown's item list entirely — a student
+  // reported it going blank in their browser specifically with large lists (500+), which never
+  // reproduced in testing but the match-count text, Apply, and Random all keep working either
+  // way, so there's no real loss from just not risking the list at that size.
+  const LIST_DISPLAY_LIMIT = 50;
 
   /** Randomly picks N words from whatever the search/topic/level filters currently narrow the
    * pool down to (the full bank if none are set — "random hoàn toàn") and replaces the current
@@ -467,30 +472,37 @@ export function AdminStudentsPanel({
                 </Select>
               </div>
 
-              <Select
-                value=""
-                onValueChange={(id) => id && handlePickOneVocab(id, setSelectedVocab)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue>
-                    {() => formatMessage(dict.adminStudents.matchCount, { count: filteredVocab.length })}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredVocab.length === 0 ? (
-                    <p className="px-2 py-4 text-center text-sm text-muted-foreground">
-                      {dict.adminStudents.noVocabFound}
-                    </p>
-                  ) : (
-                    filteredVocab.map((vocab) => (
-                      <SelectItem key={vocab.id} value={vocab.id}>
-                        <span className="font-medium">{vocab.vocab}</span>
-                        <span className="text-muted-foreground">— {vocab.meanVI}</span>
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+              {filteredVocab.length > LIST_DISPLAY_LIMIT ? (
+                <p className="rounded-lg border border-dashed border-border px-3 py-2.5 text-sm text-muted-foreground">
+                  {formatMessage(dict.adminStudents.matchCount, { count: filteredVocab.length })}{" "}
+                  {dict.adminStudents.narrowSearchHint}
+                </p>
+              ) : (
+                <Select
+                  value=""
+                  onValueChange={(id) => id && handlePickOneVocab(id, setSelectedVocab)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue>
+                      {() => formatMessage(dict.adminStudents.matchCount, { count: filteredVocab.length })}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredVocab.length === 0 ? (
+                      <p className="px-2 py-4 text-center text-sm text-muted-foreground">
+                        {dict.adminStudents.noVocabFound}
+                      </p>
+                    ) : (
+                      filteredVocab.map((vocab) => (
+                        <SelectItem key={vocab.id} value={vocab.id}>
+                          <span className="font-medium">{vocab.vocab}</span>
+                          <span className="text-muted-foreground">— {vocab.meanVI}</span>
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              )}
 
               <div className="flex flex-wrap items-center gap-2">
                 <Input
@@ -794,34 +806,41 @@ export function AdminStudentsPanel({
             </Select>
           </div>
 
-          <Select
-            value=""
-            onValueChange={(id) => id && handlePickOneVocab(id, setStudentAssignVocab)}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue>
-                {() =>
-                  formatMessage(dict.adminStudents.matchCount, {
-                    count: filteredStudentAssignVocab.length,
-                  })
-                }
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {filteredStudentAssignVocab.length === 0 ? (
-                <p className="px-2 py-4 text-center text-sm text-muted-foreground">
-                  {dict.adminStudents.noVocabFound}
-                </p>
-              ) : (
-                filteredStudentAssignVocab.map((vocab) => (
-                  <SelectItem key={vocab.id} value={vocab.id}>
-                    <span className="font-medium">{vocab.vocab}</span>
-                    <span className="text-muted-foreground">— {vocab.meanVI}</span>
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
+          {filteredStudentAssignVocab.length > LIST_DISPLAY_LIMIT ? (
+            <p className="rounded-lg border border-dashed border-border px-3 py-2.5 text-sm text-muted-foreground">
+              {formatMessage(dict.adminStudents.matchCount, { count: filteredStudentAssignVocab.length })}{" "}
+              {dict.adminStudents.narrowSearchHint}
+            </p>
+          ) : (
+            <Select
+              value=""
+              onValueChange={(id) => id && handlePickOneVocab(id, setStudentAssignVocab)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  {() =>
+                    formatMessage(dict.adminStudents.matchCount, {
+                      count: filteredStudentAssignVocab.length,
+                    })
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {filteredStudentAssignVocab.length === 0 ? (
+                  <p className="px-2 py-4 text-center text-sm text-muted-foreground">
+                    {dict.adminStudents.noVocabFound}
+                  </p>
+                ) : (
+                  filteredStudentAssignVocab.map((vocab) => (
+                    <SelectItem key={vocab.id} value={vocab.id}>
+                      <span className="font-medium">{vocab.vocab}</span>
+                      <span className="text-muted-foreground">— {vocab.meanVI}</span>
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          )}
 
           <div className="flex flex-wrap items-center gap-2">
             <Input
