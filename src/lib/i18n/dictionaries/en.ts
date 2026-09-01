@@ -154,6 +154,7 @@ const en: Dictionary = {
     allTopics: "All topics",
     allLevels: "All levels",
     randomCountPlaceholder: "Word count (default {count})",
+    applyFilterButton: "Apply",
     randomPickButton: "Fully random",
     randomPickHint: 'No words picked yet — click "Fully random" to pick words using the filters above.',
     matchCount: "{count} words match the current filters.",

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import {
   AlertCircle,
+  Check,
   CheckCircle2,
   Circle,
   ClipboardList,
@@ -175,6 +176,18 @@ export function AdminStudentsPanel({
     const picked = shuffle(pool).slice(0, count).map((v) => v.id);
     setSelected(picked);
     if (picked.length === 0) toast.error(dict.adminStudents.noVocabFound);
+  };
+
+  /** Takes every word the search/topic/level filters currently match — in filter order, not
+   * shuffled — for deliberately picking specific word(s) by name rather than a random sample.
+   * "Số từ" only caps this when the admin actually typed a number; left blank, Apply takes
+   * everything that matched (that's the point of narrowing the search down first). */
+  const handleApplyFilter = (pool: Vocabulary[], countInput: string, setSelected: (ids: string[]) => void) => {
+    const parsed = Number(countInput.trim());
+    const cap = countInput.trim() && Number.isInteger(parsed) && parsed > 0 ? parsed : pool.length;
+    const applied = pool.slice(0, cap).map((v) => v.id);
+    setSelected(applied);
+    if (applied.length === 0) toast.error(dict.adminStudents.noVocabFound);
   };
 
   const handleAssign = async () => {
@@ -452,7 +465,22 @@ export function AdminStudentsPanel({
                 {formatMessage(dict.adminStudents.matchCount, { count: filteredVocab.length })}
               </p>
 
-              <div className="flex items-center gap-2">
+              <div className="flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border border-border p-2">
+                {filteredVocab.length === 0 ? (
+                  <p className="py-2 text-center text-sm text-muted-foreground">
+                    {dict.adminStudents.noVocabFound}
+                  </p>
+                ) : (
+                  filteredVocab.map((vocab) => (
+                    <p key={vocab.id} className="truncate px-1 text-sm">
+                      <span className="font-medium">{vocab.vocab}</span>{" "}
+                      <span className="text-muted-foreground">— {vocab.meanVI}</span>
+                    </p>
+                  ))
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
                 <Input
                   type="number"
                   min={1}
@@ -463,6 +491,15 @@ export function AdminStudentsPanel({
                   })}
                   className="w-full sm:w-40"
                 />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="shrink-0"
+                  onClick={() => handleApplyFilter(filteredVocab, vocabCountInput, setSelectedVocab)}
+                >
+                  <Check className="size-4" />
+                  {dict.adminStudents.applyFilterButton}
+                </Button>
                 <Button
                   type="button"
                   variant="secondary"
@@ -749,7 +786,22 @@ export function AdminStudentsPanel({
             {formatMessage(dict.adminStudents.matchCount, { count: filteredStudentAssignVocab.length })}
           </p>
 
-          <div className="flex items-center gap-2">
+          <div className="flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border border-border p-2">
+            {filteredStudentAssignVocab.length === 0 ? (
+              <p className="py-2 text-center text-sm text-muted-foreground">
+                {dict.adminStudents.noVocabFound}
+              </p>
+            ) : (
+              filteredStudentAssignVocab.map((vocab) => (
+                <p key={vocab.id} className="truncate px-1 text-sm">
+                  <span className="font-medium">{vocab.vocab}</span>{" "}
+                  <span className="text-muted-foreground">— {vocab.meanVI}</span>
+                </p>
+              ))
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
             <Input
               type="number"
               min={1}
@@ -760,6 +812,17 @@ export function AdminStudentsPanel({
               })}
               className="w-full sm:w-40"
             />
+            <Button
+              type="button"
+              variant="outline"
+              className="shrink-0"
+              onClick={() =>
+                handleApplyFilter(filteredStudentAssignVocab, studentAssignCountInput, setStudentAssignVocab)
+              }
+            >
+              <Check className="size-4" />
+              {dict.adminStudents.applyFilterButton}
+            </Button>
             <Button
               type="button"
               variant="secondary"

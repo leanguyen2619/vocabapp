@@ -156,6 +156,7 @@ const vi = {
     allTopics: "Tất cả chủ đề",
     allLevels: "Tất cả cấp độ",
     randomCountPlaceholder: "Số từ (mặc định {count})",
+    applyFilterButton: "Áp dụng",
     randomPickButton: "Random hoàn toàn",
     randomPickHint: "Chưa có từ nào được chọn — bấm \"Random hoàn toàn\" để chọn từ theo bộ lọc bên trên.",
     matchCount: "{count} từ khớp với bộ lọc hiện tại.",
