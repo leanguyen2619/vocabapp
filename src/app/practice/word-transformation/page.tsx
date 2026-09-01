@@ -31,9 +31,10 @@ export default async function WordTransformationPage() {
   ]);
   redirectIfWarmupIncomplete(warmupStatus);
 
-  // Shuffled here (once, server-side) rather than in the client component — see FillBlankGame
-  // for why shuffling client-side causes a hydration mismatch.
-  const prompts = shuffle(rawPrompts);
+  // Each attempt is a single randomly drawn sentence out of the full bank, not the whole bank —
+  // shuffled server-side (see FillBlankGame for why client-side shuffling causes a hydration
+  // mismatch) and cut down to 1 before it ever reaches the client.
+  const prompts = shuffle(rawPrompts).slice(0, 1);
 
   return (
     <div className="flex flex-1 flex-col bg-background">
