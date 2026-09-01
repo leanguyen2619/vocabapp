@@ -5,6 +5,7 @@ import { listVisibleExerciseTypesAction } from "@/lib/actions/exercise-types";
 import {
   getFillBlankQuestionsAction,
   getListeningComprehensionQuestionsAction,
+  getMyReadingPassageAction,
   getSentenceWritingPromptsAction,
   getSynonymAntonymQuestionsAction,
   getWordFormationPromptsAction,
@@ -46,6 +47,8 @@ async function typeHasContent(code: PracticeTypeCode): Promise<boolean> {
       return (await getSentenceWritingPromptsAction()).length > 0;
     case "listening_comprehension":
       return (await getListeningComprehensionQuestionsAction()).length > 0;
+    case "reading_comprehension":
+      return (await getMyReadingPassageAction()) !== null;
     case "flashcard":
       return false;
   }

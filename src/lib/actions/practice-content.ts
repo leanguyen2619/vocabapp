@@ -323,3 +323,91 @@ export async function getExampleSentenceMapAction(): Promise<Record<string, stri
   }
   return map;
 }
+
+export interface ReadingBlankItem {
+  id: string;
+  blankNumber: number;
+  word: string;
+  meanVI: string;
+  definition: string;
+  options: { id: string; text: string }[];
+}
+
+export interface ReadingPassageData {
+  id: string;
+  title: string;
+  /** Raw story text with literal "___1___", "___2___", ... markers — one per blank, matching
+   * blanks[].blankNumber. The client splits on these to interleave real paragraph text with each
+   * blank's position; the blanks themselves are answered via the separate options list below,
+   * same as a printed Cambridge-style gapped passage. */
+  body: string;
+  blanks: ReadingBlankItem[];
+}
+
+/** The earliest approved reading passage for a level the student has unlocked — reading
+ * comprehension is a single shared story with several vocabulary blanks (Cambridge-style gapped
+ * passage) rather than the usual one-question-per-word shape every other practice type uses, so
+ * unlike those there's no daily pool to draw from yet: just the passages an admin has approved,
+ * oldest first. Returns null if none exist for an unlocked level. */
+export async function getMyReadingPassageAction(): Promise<ReadingPassageData | null> {
+  const account = await getCurrentAccount();
+  if (!account) return null;
+
+  const unlockedLevelIds = await computeUnlockedLevelIds(account.id_login);
+  if (unlockedLevelIds.size === 0) return null;
+
+  const passage = await prisma.readingPassage.findFirst({
+    where: { status: "approved", levelId: { in: [...unlockedLevelIds] } },
+    orderBy: { createdAt: "asc" },
+    include: {
+      questions: {
+        where: { status: "approved" },
+        orderBy: { blankNumber: "asc" },
+        include: { answers: true, vocab: true },
+      },
+    },
+  });
+  if (!passage) return null;
+
+  const blanks = passage.questions
+    .filter((q): q is typeof q & { blankNumber: number } => q.blankNumber !== null && q.answers.length >= 2)
+    .map((q) => ({
+      id: q.id,
+      blankNumber: q.blankNumber,
+      word: q.vocab.vocab,
+      meanVI: q.vocab.meanVI,
+      definition: q.vocab.definition,
+      options: q.answers.map((a) => ({ id: a.id, text: a.ansText })),
+    }));
+  if (blanks.length === 0) return null;
+
+  return { id: passage.id, title: passage.title, body: passage.body, blanks };
+}
+
+/** Grades one reading-comprehension blank server-side; same shape/reasoning as
+ * submitFillBlankAnswerAction. Also records progress against the blank's target vocabulary word,
+ * same as every other practice type — a reading passage is how that word gets introduced, so
+ * answering it correctly counts toward mastering it exactly like any other exercise. */
+export async function submitReadingAnswerAction(
+  questionId: string,
+  selectedAnswerId: string
+): Promise<{ isCorrect: boolean; correctOptionId: string; status: LearningStatus } | { error: string }> {
+  const account = await getCurrentAccount();
+  if (!account) return { error: "Bạn cần đăng nhập." };
+
+  const [question, unlockedLevelIds] = await Promise.all([
+    prisma.question.findUnique({ where: { id: questionId }, include: { vocab: true, answers: true } }),
+    computeUnlockedLevelIds(account.id_login),
+  ]);
+  if (!question || question.status !== "approved") return { error: "Không tìm thấy câu hỏi này." };
+  if (!unlockedLevelIds.has(question.vocab.levelId)) {
+    return { error: "Từ vựng này chưa được mở khóa." };
+  }
+
+  const correctAnswer = question.answers.find((a) => a.isCorrect);
+  if (!correctAnswer) return { error: "Câu hỏi này chưa có đáp án đúng." };
+
+  const isCorrect = selectedAnswerId === correctAnswer.id;
+  const status = await recordForVocab(account.id_login, question.vocabId, question.vocab.levelId, isCorrect);
+  return { isCorrect, correctOptionId: correctAnswer.id, status };
+}

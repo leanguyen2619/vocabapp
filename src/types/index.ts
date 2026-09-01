@@ -96,7 +96,8 @@ export type PracticeTypeCode =
   | "synonym_antonym"
   | "fill_blank"
   | "word_formation"
-  | "listening_comprehension";
+  | "listening_comprehension"
+  | "reading_comprehension";
 
 export interface PracticeType {
   id: string; // PK
