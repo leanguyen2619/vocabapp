@@ -63,6 +63,7 @@ enum PracticeTypeCode {
   word_formation
   listening_comprehension
   reading_comprehension
+  word_transformation
 }
 
 enum QuestionStatus {

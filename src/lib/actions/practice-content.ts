@@ -174,6 +174,52 @@ export async function getWordFormationPromptsAction(): Promise<WordFormationItem
     }));
 }
 
+export interface WordTransformationItem {
+  id: string;
+  vocabId: string;
+  /** Contains a literal "___" blank marker, e.g. "The sunset was absolutely ___." */
+  sentence: string;
+  /** The base/root word shown in parentheses next to the blank, e.g. "beauty". */
+  rootWord: string;
+  /** The correctly transformed word (== vocab.vocab) — shipped up front since this is
+   * self-assessed like typing/word_formation, not server-graded: the student must produce it
+   * themselves, there's no multiple-choice option list to protect. */
+  answer: string;
+  meanVI: string;
+  definition: string;
+}
+
+/** Approved word_transformation Question rows (explanation = the given root word) — a sentence
+ * with a blank plus a root word the student must grammatically transform and type, e.g.
+ * "She is very ___ (care)." -> "careful". Filtered to the caller's unlocked levels. Deliberately
+ * NOT part of READY_GATE_TYPES in vocabulary.ts — only ~50 words have this content so far. */
+export async function getWordTransformationPromptsAction(): Promise<WordTransformationItem[]> {
+  const account = await getCurrentAccount();
+  if (!account) return [];
+
+  const pracTypeIdValue = await practiceTypeId("word_transformation");
+  if (!pracTypeIdValue) return [];
+
+  const unlockedLevelIds = await computeUnlockedLevelIds(account.id_login, account.role);
+  const rows = await prisma.question.findMany({
+    where: { pracTypeId: pracTypeIdValue, status: "approved" },
+    include: { vocab: true },
+  });
+
+  return rows
+    .filter((q): q is typeof q & { explanation: string } => Boolean(q.explanation))
+    .filter((q) => unlockedLevelIds.has(q.vocab.levelId))
+    .map((q) => ({
+      id: q.id,
+      vocabId: q.vocabId,
+      sentence: q.questionText,
+      rootWord: q.explanation,
+      answer: q.vocab.vocab,
+      meanVI: q.vocab.meanVI,
+      definition: q.vocab.definition,
+    }));
+}
+
 export interface ListeningComprehensionItem {
   id: string;
   vocabId: string;

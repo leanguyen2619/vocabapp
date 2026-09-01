@@ -13,6 +13,7 @@ import { SentenceWritingExercise } from "@/components/sentence-writing-exercise"
 import { SynonymAntonymGame } from "@/components/synonym-antonym-game";
 import { TypingGame } from "@/components/typing-game";
 import { WordFormationGame } from "@/components/word-formation-game";
+import { WordTransformationGame } from "@/components/word-transformation-game";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import {
   getFillBlankQuestionsAction,
@@ -21,6 +22,7 @@ import {
   getSentenceWritingPromptsAction,
   getSynonymAntonymQuestionsAction,
   getWordFormationPromptsAction,
+  getWordTransformationPromptsAction,
 } from "@/lib/actions/practice-content";
 import {
   getMyQuizQuestionsAction,
@@ -89,6 +91,10 @@ async function renderGameFor(code: PracticeTypeCode, dict: Dictionary) {
     case "word_formation": {
       const rawPrompts = await getWordFormationPromptsAction();
       return <WordFormationGame prompts={prepareWordFormation(rawPrompts)} dict={dict} warmupCode={code} />;
+    }
+    case "word_transformation": {
+      const rawPrompts = await getWordTransformationPromptsAction();
+      return <WordTransformationGame prompts={shuffle(rawPrompts)} dict={dict} warmupCode={code} />;
     }
     case "sentence_writing": {
       const prompts = await getSentenceWritingPromptsAction();

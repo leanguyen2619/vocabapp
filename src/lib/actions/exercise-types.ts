@@ -21,6 +21,7 @@ const HREF_BY_CODE: Record<PracticeTypeCode, string | null> = {
   synonym_antonym: "/practice/synonym-antonym",
   fill_blank: "/practice/fill-blank",
   word_formation: "/practice/word-formation",
+  word_transformation: "/practice/word-transformation",
   typing: "/practice/typing",
   listening: "/practice/listening",
   listening_comprehension: "/practice/listening-comprehension",
