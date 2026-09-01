@@ -22,6 +22,12 @@ function splitBody(body: string): { text: string; blankNumber: number | null }[]
   return parts.map((part, i) => (i % 2 === 1 ? { text: "", blankNumber: Number(part) } : { text: part, blankNumber: null }));
 }
 
+interface BlankResult {
+  selectedId: string;
+  isCorrect: boolean;
+  correctOptionId: string;
+}
+
 export function ReadingComprehensionGame({
   passage,
   dict,
@@ -32,13 +38,16 @@ export function ReadingComprehensionGame({
   warmupCode?: PracticeTypeCode;
 }) {
   const [index, setIndex] = useState(0);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [result, setResult] = useState<{ isCorrect: boolean; correctOptionId: string } | null>(null);
-  const [score, setScore] = useState(0);
+  // Keyed by blank id — graded server-side the moment each blank is picked (so progress still
+  // records in real time), but deliberately not SHOWN until every blank has been answered, per
+  // the real exam flow this mirrors: work through the whole passage first, see results after.
+  const [results, setResults] = useState<Record<string, BlankResult>>({});
+  const [submitting, setSubmitting] = useState(false);
   const [finished, setFinished] = useState(false);
 
   const blanks = passage?.blanks ?? [];
   const total = blanks.length;
+  const score = Object.values(results).filter((r) => r.isCorrect).length;
 
   useEffect(() => {
     if (finished && warmupCode) {
@@ -58,38 +67,11 @@ export function ReadingComprehensionGame({
     );
   }
 
-  const blank = blanks[index];
-  const isAnswered = selectedId !== null;
-  const isCorrect = result?.isCorrect ?? false;
   const segments = splitBody(passage.body);
-
-  const handleSelect = async (optionId: string) => {
-    if (isAnswered) return;
-    setSelectedId(optionId);
-    const outcome = await submitReadingAnswerAction(blank.id, optionId);
-    if ("error" in outcome) {
-      setSelectedId(null);
-      return;
-    }
-    setResult(outcome);
-    if (outcome.isCorrect) setScore((s) => s + 1);
-  };
-
-  const handleNext = () => {
-    if (index + 1 >= total) {
-      setFinished(true);
-      return;
-    }
-    setIndex((i) => i + 1);
-    setSelectedId(null);
-    setResult(null);
-  };
 
   const handleRestart = () => {
     setIndex(0);
-    setSelectedId(null);
-    setResult(null);
-    setScore(0);
+    setResults({});
     setFinished(false);
   };
 
@@ -107,6 +89,32 @@ export function ReadingComprehensionGame({
             {formatMessage(dict.readingComprehensionGame.finishedSubtitle, { score, total })}
           </p>
         </div>
+
+        <div className="flex w-full max-w-md flex-col gap-2 text-left">
+          {blanks.map((b) => {
+            const r = results[b.id];
+            return (
+              <div
+                key={b.id}
+                className={cn(
+                  "flex items-start gap-2 rounded-xl border px-3 py-2 text-sm",
+                  r?.isCorrect ? "border-emerald-200 bg-emerald-50" : "border-red-200 bg-red-50"
+                )}
+              >
+                {r?.isCorrect ? (
+                  <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+                ) : (
+                  <X className="mt-0.5 size-4 shrink-0 text-red-500" />
+                )}
+                <p>
+                  {formatMessage(dict.readingComprehensionGame.blankLabel, { number: b.blankNumber })}:{" "}
+                  <span className="font-medium text-foreground">{b.word}</span> — {b.definition}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+
         <div className="flex items-center gap-3">
           <Button variant="outline" onClick={handleRestart}>
             <RotateCcw className="size-4" />
@@ -119,6 +127,27 @@ export function ReadingComprehensionGame({
       </div>
     );
   }
+
+  const blank = blanks[index];
+  const picked = results[blank.id];
+  const isAnswered = picked !== undefined;
+
+  const handleSelect = async (optionId: string) => {
+    if (isAnswered || submitting) return;
+    setSubmitting(true);
+    const outcome = await submitReadingAnswerAction(blank.id, optionId);
+    setSubmitting(false);
+    if ("error" in outcome) return;
+    setResults((r) => ({ ...r, [blank.id]: { selectedId: optionId, ...outcome } }));
+  };
+
+  const handleNext = () => {
+    if (index + 1 >= total) {
+      setFinished(true);
+      return;
+    }
+    setIndex((i) => i + 1);
+  };
 
   return (
     <div className="flex flex-col gap-8">
@@ -159,45 +188,29 @@ export function ReadingComprehensionGame({
 
       <div className="grid grid-cols-2 gap-3">
         {blank.options.map((option) => {
-          const isThisCorrect = option.id === result?.correctOptionId;
-          const isSelected = option.id === selectedId;
+          const isSelected = option.id === picked?.selectedId;
 
           return (
             <button
               key={option.id}
               type="button"
               onClick={() => void handleSelect(option.id)}
-              disabled={isAnswered}
+              disabled={isAnswered || submitting}
               className={cn(
                 "flex items-center justify-between rounded-2xl border-2 border-border bg-card px-4 py-3 text-left text-base font-medium transition-colors disabled:cursor-default",
                 !isAnswered && "hover:border-primary/50",
-                result !== null && isThisCorrect && "border-emerald-500 bg-emerald-50 text-emerald-700",
-                result !== null &&
-                  isSelected &&
-                  !isThisCorrect &&
-                  "border-red-400 bg-red-50 text-red-700"
+                isSelected && "border-primary bg-primary/5"
               )}
             >
               {option.text}
-              {result !== null && isThisCorrect && <Check className="size-5 shrink-0 text-emerald-600" />}
-              {result !== null && isSelected && !isThisCorrect && (
-                <X className="size-5 shrink-0 text-red-500" />
-              )}
+              {isSelected && <Check className="size-5 shrink-0 text-primary" />}
             </button>
           );
         })}
       </div>
 
-      {result !== null && (
-        <div className="flex flex-col items-center gap-4 text-center">
-          <p className="text-sm text-muted-foreground">
-            {isCorrect
-              ? dict.readingComprehensionGame.feedbackCorrect
-              : dict.readingComprehensionGame.feedbackWrong}
-            <span className="block">
-              <span className="font-medium text-foreground">{blank.word}</span>: {blank.definition}
-            </span>
-          </p>
+      {isAnswered && (
+        <div className="flex justify-center">
           <Button onClick={handleNext}>
             {index + 1 >= total
               ? dict.readingComprehensionGame.viewResults
