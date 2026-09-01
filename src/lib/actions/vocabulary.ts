@@ -213,7 +213,7 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
       select: { vocabId: true },
       distinct: ["vocabId"],
     }),
-    computeUnlockedLevelIds(account.id_login),
+    computeUnlockedLevelIds(account.id_login, account.role),
     computeReadyVocabIds(),
     prisma.level.findMany({ orderBy: { id: "asc" }, select: { id: true } }),
   ]);
@@ -488,7 +488,7 @@ export async function submitQuizAnswerAction(
   // three sequential ones — this action is on the hot path (fires on every answer).
   const [vocab, unlockedLevelIds, assignment, pracType] = await Promise.all([
     prisma.vocabulary.findUnique({ where: { id: vocabId } }),
-    computeUnlockedLevelIds(account.id_login),
+    computeUnlockedLevelIds(account.id_login, account.role),
     prisma.dailyAssignment.findFirst({ where: { accountId: account.id_login, vocabId } }),
     prisma.practiceType.findUnique({ where: { type: "multiple_choice" } }),
   ]);
@@ -533,7 +533,7 @@ export async function getPosClassificationItemsAction(): Promise<PosClassificati
   const account = await getCurrentAccount();
   if (!account) return [];
 
-  const unlockedLevelIds = await computeUnlockedLevelIds(account.id_login);
+  const unlockedLevelIds = await computeUnlockedLevelIds(account.id_login, account.role);
   const rows = await prisma.vocabulary.findMany({
     where: { levelId: { in: [...unlockedLevelIds] } },
   });
@@ -553,7 +553,7 @@ export async function submitPosAnswerAction(
 
   const [vocab, unlockedLevelIds] = await Promise.all([
     prisma.vocabulary.findUnique({ where: { id: vocabId } }),
-    computeUnlockedLevelIds(account.id_login),
+    computeUnlockedLevelIds(account.id_login, account.role),
   ]);
   if (!vocab) return { error: "Không tìm thấy từ vựng này." };
   if (!unlockedLevelIds.has(vocab.levelId)) {

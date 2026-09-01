@@ -31,7 +31,7 @@ export async function getSynonymAntonymQuestionsAction(): Promise<SynonymAntonym
   const pracTypeIdValue = await practiceTypeId("synonym_antonym");
   if (!pracTypeIdValue) return [];
 
-  const unlockedLevelIds = await computeUnlockedLevelIds(account.id_login);
+  const unlockedLevelIds = await computeUnlockedLevelIds(account.id_login, account.role);
   const rows = await prisma.question.findMany({
     where: { pracTypeId: pracTypeIdValue, status: "approved" },
     include: { vocab: true, answers: true },
@@ -62,7 +62,7 @@ export async function submitSynonymAntonymAnswerAction(
 
   const [question, unlockedLevelIds] = await Promise.all([
     prisma.question.findUnique({ where: { id: questionId }, include: { vocab: true, answers: true } }),
-    computeUnlockedLevelIds(account.id_login),
+    computeUnlockedLevelIds(account.id_login, account.role),
   ]);
   if (!question || question.status !== "approved") return { error: "Không tìm thấy câu hỏi này." };
   if (!unlockedLevelIds.has(question.vocab.levelId)) {
@@ -96,7 +96,7 @@ export async function getFillBlankQuestionsAction(): Promise<FillBlankItem[]> {
   const pracTypeIdValue = await practiceTypeId("fill_blank");
   if (!pracTypeIdValue) return [];
 
-  const unlockedLevelIds = await computeUnlockedLevelIds(account.id_login);
+  const unlockedLevelIds = await computeUnlockedLevelIds(account.id_login, account.role);
   const rows = await prisma.question.findMany({
     where: { pracTypeId: pracTypeIdValue, status: "approved" },
     include: { vocab: true, answers: true },
@@ -125,7 +125,7 @@ export async function submitFillBlankAnswerAction(
 
   const [question, unlockedLevelIds] = await Promise.all([
     prisma.question.findUnique({ where: { id: questionId }, include: { vocab: true, answers: true } }),
-    computeUnlockedLevelIds(account.id_login),
+    computeUnlockedLevelIds(account.id_login, account.role),
   ]);
   if (!question || question.status !== "approved") return { error: "Không tìm thấy câu hỏi này." };
   if (!unlockedLevelIds.has(question.vocab.levelId)) {
@@ -157,7 +157,7 @@ export async function getWordFormationPromptsAction(): Promise<WordFormationItem
   const pracTypeIdValue = await practiceTypeId("word_formation");
   if (!pracTypeIdValue) return [];
 
-  const unlockedLevelIds = await computeUnlockedLevelIds(account.id_login);
+  const unlockedLevelIds = await computeUnlockedLevelIds(account.id_login, account.role);
   const rows = await prisma.question.findMany({
     where: { pracTypeId: pracTypeIdValue, status: "approved" },
     include: { vocab: true },
@@ -198,7 +198,7 @@ export async function getListeningComprehensionQuestionsAction(): Promise<Listen
   const pracTypeIdValue = await practiceTypeId("listening_comprehension");
   if (!pracTypeIdValue) return [];
 
-  const unlockedLevelIds = await computeUnlockedLevelIds(account.id_login);
+  const unlockedLevelIds = await computeUnlockedLevelIds(account.id_login, account.role);
   const rows = await prisma.question.findMany({
     where: { pracTypeId: pracTypeIdValue, status: "approved" },
     include: { vocab: true, answers: true },
@@ -226,7 +226,7 @@ export async function getListeningSentenceAudioAction(
 
   const [question, unlockedLevelIds] = await Promise.all([
     prisma.question.findUnique({ where: { id: questionId }, include: { vocab: true, answers: true } }),
-    computeUnlockedLevelIds(account.id_login),
+    computeUnlockedLevelIds(account.id_login, account.role),
   ]);
   if (!question || question.status !== "approved") return { error: "Không tìm thấy câu hỏi này." };
   if (!unlockedLevelIds.has(question.vocab.levelId)) {
@@ -251,7 +251,7 @@ export async function submitListeningComprehensionAnswerAction(
 
   const [question, unlockedLevelIds] = await Promise.all([
     prisma.question.findUnique({ where: { id: questionId }, include: { vocab: true, answers: true } }),
-    computeUnlockedLevelIds(account.id_login),
+    computeUnlockedLevelIds(account.id_login, account.role),
   ]);
   if (!question || question.status !== "approved") return { error: "Không tìm thấy câu hỏi này." };
   if (!unlockedLevelIds.has(question.vocab.levelId)) {
@@ -283,7 +283,7 @@ export async function getSentenceWritingPromptsAction(): Promise<SentencePromptI
   const pracTypeIdValue = await practiceTypeId("sentence_writing");
   if (!pracTypeIdValue) return [];
 
-  const unlockedLevelIds = await computeUnlockedLevelIds(account.id_login);
+  const unlockedLevelIds = await computeUnlockedLevelIds(account.id_login, account.role);
   const rows = await prisma.question.findMany({
     where: { pracTypeId: pracTypeIdValue, status: "approved" },
     include: { vocab: true },
@@ -353,7 +353,7 @@ export async function getMyReadingPassageAction(): Promise<ReadingPassageData | 
   const account = await getCurrentAccount();
   if (!account) return null;
 
-  const unlockedLevelIds = await computeUnlockedLevelIds(account.id_login);
+  const unlockedLevelIds = await computeUnlockedLevelIds(account.id_login, account.role);
   if (unlockedLevelIds.size === 0) return null;
 
   const passage = await prisma.readingPassage.findFirst({
@@ -397,7 +397,7 @@ export async function submitReadingAnswerAction(
 
   const [question, unlockedLevelIds] = await Promise.all([
     prisma.question.findUnique({ where: { id: questionId }, include: { vocab: true, answers: true } }),
-    computeUnlockedLevelIds(account.id_login),
+    computeUnlockedLevelIds(account.id_login, account.role),
   ]);
   if (!question || question.status !== "approved") return { error: "Không tìm thấy câu hỏi này." };
   if (!unlockedLevelIds.has(question.vocab.levelId)) {
