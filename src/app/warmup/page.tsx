@@ -9,6 +9,7 @@ import { MatchingGame } from "@/components/matching-game";
 import { PosClassificationGame } from "@/components/pos-classification-game";
 import { QuizSession } from "@/components/quiz-session";
 import { ReadingComprehensionGame } from "@/components/reading-comprehension-game";
+import { ReadingPracticeGame } from "@/components/reading-practice-game";
 import { SentenceWritingExercise } from "@/components/sentence-writing-exercise";
 import { SynonymAntonymGame } from "@/components/synonym-antonym-game";
 import { TypingGame } from "@/components/typing-game";
@@ -19,6 +20,7 @@ import {
   getFillBlankQuestionsAction,
   getListeningComprehensionQuestionsAction,
   getMyReadingPassageAction,
+  getMyReadingTextAction,
   getSentenceWritingPromptsAction,
   getSynonymAntonymQuestionsAction,
   getWordFormationPromptsAction,
@@ -113,6 +115,14 @@ async function renderGameFor(code: PracticeTypeCode, dict: Dictionary) {
         blanks: rawPassage.blanks.map((b) => ({ ...b, options: shuffle(b.options) })),
       };
       return <ReadingComprehensionGame passage={passage} dict={dict} warmupCode={code} />;
+    }
+    case "reading_practice": {
+      const rawText = await getMyReadingTextAction();
+      const text = rawText && {
+        ...rawText,
+        questions: rawText.questions.map((q) => ({ ...q, options: shuffle(q.options) })),
+      };
+      return <ReadingPracticeGame text={text} dict={dict} warmupCode={code} />;
     }
     case "flashcard":
       // Never actually assigned (excluded from selectWarmupTypes), but the switch must stay

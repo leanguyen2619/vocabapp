@@ -6,6 +6,7 @@ import {
   getFillBlankQuestionsAction,
   getListeningComprehensionQuestionsAction,
   getMyReadingPassageAction,
+  getMyReadingTextAction,
   getSentenceWritingPromptsAction,
   getSynonymAntonymQuestionsAction,
   getWordFormationPromptsAction,
@@ -52,6 +53,8 @@ async function typeHasContent(code: PracticeTypeCode): Promise<boolean> {
       return (await getListeningComprehensionQuestionsAction()).length > 0;
     case "reading_comprehension":
       return (await getMyReadingPassageAction()) !== null;
+    case "reading_practice":
+      return (await getMyReadingTextAction()) !== null;
     case "flashcard":
       return false;
   }

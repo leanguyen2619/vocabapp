@@ -64,6 +64,7 @@ enum PracticeTypeCode {
   listening_comprehension
   reading_comprehension
   word_transformation
+  reading_practice
 }
 
 enum QuestionStatus {
@@ -192,6 +193,7 @@ model Level {
   practiceTypes   PracticeType[]
   accountLevels   AccountLevel[]
   readingPassages ReadingPassage[]
+  readingTexts    ReadingText[]
 }
 
 // ---------- Accounts_Level ----------
@@ -221,6 +223,7 @@ model Topic {
   vocabulary       Vocabulary[]
   pinnedByAccounts Account[]
   readingPassages  ReadingPassage[]
+  readingTexts     ReadingText[]
 }
 
 // ---------- Vocabulations ----------
@@ -298,9 +301,15 @@ model Question {
   passageId   String?
   blankNumber Int?
 
-  vocab    Vocabulary      @relation(fields: [vocabId], references: [id])
-  pracType PracticeType    @relation(fields: [pracTypeId], references: [id])
-  passage  ReadingPassage? @relation(fields: [passageId], references: [id])
+  // Only set for reading_practice: which plain-text passage this is a comprehension question
+  // about (see ReadingText's comment). blankNumber is unused here — a comprehension question
+  // isn't tied to one numbered gap, just to the passage as a whole.
+  readingTextId String?
+
+  vocab       Vocabulary      @relation(fields: [vocabId], references: [id])
+  pracType    PracticeType    @relation(fields: [pracTypeId], references: [id])
+  passage     ReadingPassage? @relation(fields: [passageId], references: [id])
+  readingText ReadingText?    @relation(fields: [readingTextId], references: [id])
 
   answers          Answer[]
   exerciseAttempts ExerciseAttempt[]
@@ -308,6 +317,7 @@ model Question {
   @@index([pracTypeId, status])
   @@index([vocabId])
   @@index([passageId])
+  @@index([readingTextId])
 }
 
 // A single reading-comprehension exercise: one short story shared by several vocabulary blanks
@@ -316,6 +326,30 @@ model Question {
 // placeholders — the client splits on these to interleave the real paragraph text with each
 // blank's multiple-choice options (via the linked Question rows, ordered by blankNumber).
 model ReadingPassage {
+  id        String         @id @default(cuid())
+  title     String
+  body      String
+  levelId   String
+  topicId   Int
+  status    QuestionStatus @default(pending)
+  createdAt DateTime       @default(now())
+
+  level     Level      @relation(fields: [levelId], references: [id])
+  topic     Topic      @relation(fields: [topicId], references: [id])
+  questions Question[]
+
+  @@index([levelId, status])
+}
+
+// A plain reading passage for reading_practice ("Đọc hiểu") — ordinary prose, no blank markers,
+// unlike ReadingPassage above. Several approved passages typically exist per level (a pool); which
+// one a given student is shown is picked at read time by scoring word overlap between the
+// passage's own text and that student's already-learned vocabulary (see
+// getMyReadingTextAction/scorePassageForAccount in practice-content.ts) rather than by a fixed
+// order, so words a student already knows are more likely to show up in context. The linked
+// Question rows (readingTextId set, blankNumber null) are comprehension-check questions about the
+// passage's content, answered after reading — not per-word blanks.
+model ReadingText {
   id        String         @id @default(cuid())
   title     String
   body      String

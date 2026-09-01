@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { computeUnlockedLevelIds } from "@/lib/level-unlock";
 import { recordForVocab } from "@/lib/progress-core";
 import { getCurrentAccount } from "@/lib/session";
+import { shuffle } from "@/lib/utils";
 import type { LearningStatus, PracticeTypeCode } from "@/types";
 
 async function practiceTypeId(code: PracticeTypeCode): Promise<string | null> {
@@ -435,6 +436,103 @@ export async function getMyReadingPassageAction(): Promise<ReadingPassageData | 
  * same as every other practice type — a reading passage is how that word gets introduced, so
  * answering it correctly counts toward mastering it exactly like any other exercise. */
 export async function submitReadingAnswerAction(
+  questionId: string,
+  selectedAnswerId: string
+): Promise<{ isCorrect: boolean; correctOptionId: string; status: LearningStatus } | { error: string }> {
+  const account = await getCurrentAccount();
+  if (!account) return { error: "Bạn cần đăng nhập." };
+
+  const [question, unlockedLevelIds] = await Promise.all([
+    prisma.question.findUnique({ where: { id: questionId }, include: { vocab: true, answers: true } }),
+    computeUnlockedLevelIds(account.id_login, account.role),
+  ]);
+  if (!question || question.status !== "approved") return { error: "Không tìm thấy câu hỏi này." };
+  if (!unlockedLevelIds.has(question.vocab.levelId)) {
+    return { error: "Từ vựng này chưa được mở khóa." };
+  }
+
+  const correctAnswer = question.answers.find((a) => a.isCorrect);
+  if (!correctAnswer) return { error: "Câu hỏi này chưa có đáp án đúng." };
+
+  const isCorrect = selectedAnswerId === correctAnswer.id;
+  const status = await recordForVocab(account.id_login, question.vocabId, question.vocab.levelId, isCorrect);
+  return { isCorrect, correctOptionId: correctAnswer.id, status };
+}
+
+export interface ReadingPracticeQuestionItem {
+  id: string;
+  questionText: string;
+  options: { id: string; text: string }[];
+}
+
+export interface ReadingTextData {
+  id: string;
+  title: string;
+  body: string;
+  questions: ReadingPracticeQuestionItem[];
+}
+
+/** Word-overlap score between a passage's body and a student's already-learned vocabulary —
+ * higher means more of the passage's words are ones the student already knows. Used only to RANK
+ * candidate passages for a level, never to filter: a passage's own difficulty is controlled by
+ * its levelId, same as every other content type. */
+function scoreReadingTextOverlap(body: string, learnedWordsLower: Set<string>): number {
+  const tokens = new Set(body.toLowerCase().match(/[a-z']+/g) ?? []);
+  let score = 0;
+  for (const token of tokens) {
+    if (learnedWordsLower.has(token)) score++;
+  }
+  return score;
+}
+
+/** The reading_practice passage that best matches a student's own vocabulary, out of the pool of
+ * approved passages for their unlocked levels — several passages typically exist per level, and
+ * the one whose text overlaps most with words the student has already learned (LearningHistory
+ * status learning/mastered) is preferred, so familiar words are more likely to show up in
+ * context ("Đọc hiểu"). Ties broken randomly so a whole cohort doesn't always land on the same
+ * passage. Unlike reading_comprehension, there's no fixed "oldest first" order — the point of
+ * this type is per-student selection. Returns null if no approved passage (with at least 1
+ * approved comprehension question) exists for an unlocked level. */
+export async function getMyReadingTextAction(): Promise<ReadingTextData | null> {
+  const account = await getCurrentAccount();
+  if (!account) return null;
+
+  const unlockedLevelIds = await computeUnlockedLevelIds(account.id_login, account.role);
+  if (unlockedLevelIds.size === 0) return null;
+
+  const [passages, learnedRows] = await Promise.all([
+    prisma.readingText.findMany({
+      where: { status: "approved", levelId: { in: [...unlockedLevelIds] } },
+      include: { questions: { where: { status: "approved" }, include: { answers: true } } },
+    }),
+    prisma.learningHistory.findMany({
+      where: { accountId: account.id_login, status: { in: ["learning", "mastered"] } },
+      include: { vocab: { select: { vocab: true } } },
+    }),
+  ]);
+
+  const candidates = passages.filter((p) => p.questions.some((q) => q.answers.length >= 2));
+  if (candidates.length === 0) return null;
+
+  const learnedWordsLower = new Set(learnedRows.map((r) => r.vocab.vocab.toLowerCase()));
+  const best = shuffle(candidates)
+    .map((p) => ({ passage: p, score: scoreReadingTextOverlap(p.body, learnedWordsLower) }))
+    .sort((a, b) => b.score - a.score)[0].passage;
+
+  return {
+    id: best.id,
+    title: best.title,
+    body: best.body,
+    questions: best.questions
+      .filter((q) => q.answers.length >= 2)
+      .map((q) => ({ id: q.id, questionText: q.questionText, options: q.answers.map((a) => ({ id: a.id, text: a.ansText })) })),
+  };
+}
+
+/** Grades one reading_practice comprehension-check answer server-side; same shape/reasoning as
+ * submitReadingAnswerAction. Progress is recorded against the question's linked vocabulary word
+ * (the word the question centers on), same convention as every other type. */
+export async function submitReadingTextAnswerAction(
   questionId: string,
   selectedAnswerId: string
 ): Promise<{ isCorrect: boolean; correctOptionId: string; status: LearningStatus } | { error: string }> {

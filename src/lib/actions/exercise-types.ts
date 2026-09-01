@@ -26,6 +26,7 @@ const HREF_BY_CODE: Record<PracticeTypeCode, string | null> = {
   listening: "/practice/listening",
   listening_comprehension: "/practice/listening-comprehension",
   reading_comprehension: "/practice/reading-comprehension",
+  reading_practice: "/practice/reading",
 };
 
 export interface ExerciseTypeSummary {

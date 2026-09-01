@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import {
   ArrowLeft,
   ArrowLeftRight,
+  BookMarked,
   BookOpen,
   BookOpenText,
   Clock,
@@ -46,6 +47,7 @@ const iconByCode: Record<PracticeTypeCode, LucideIcon> = {
   listening: TextCursorInput,
   listening_comprehension: Headphones,
   reading_comprehension: BookOpenText,
+  reading_practice: BookMarked,
 };
 
 export async function generateMetadata(): Promise<Metadata> {

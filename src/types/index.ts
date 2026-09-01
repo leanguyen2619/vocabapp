@@ -98,7 +98,8 @@ export type PracticeTypeCode =
   | "word_formation"
   | "listening_comprehension"
   | "reading_comprehension"
-  | "word_transformation";
+  | "word_transformation"
+  | "reading_practice";
 
 export interface PracticeType {
   id: string; // PK
