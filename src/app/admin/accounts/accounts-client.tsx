@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import {
   AlertCircle,
   ArrowLeft,
-  BookOpen,
   Copy,
   GraduationCap,
   IdCard,
@@ -46,6 +45,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { LogoMark } from "@/components/logo-mark";
 import {
   createAccountByAdminAction,
   listAccountsAction,
@@ -324,9 +324,7 @@ export function AdminAccountsClient({
             {dict.common.backToDashboard}
           </Link>
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <BookOpen className="size-3.5" />
-            </div>
+            <LogoMark size="sm" />
             <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
           </div>
         </div>

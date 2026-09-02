@@ -3,13 +3,14 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BookOpen, Flame, LogOut, UserRound } from "lucide-react";
+import { Flame, LogOut, UserRound } from "lucide-react";
 
 import { useLocale } from "@/components/locale-provider";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { LogoMark } from "@/components/logo-mark";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,9 +46,7 @@ export function DashboardShell({
       <header className="border-b border-border">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <BookOpen className="size-4" />
-            </div>
+            <LogoMark size="md" />
             <span className="font-heading text-lg font-semibold">{dict.common.brand}</span>
           </Link>
           <div className="flex items-center gap-3">

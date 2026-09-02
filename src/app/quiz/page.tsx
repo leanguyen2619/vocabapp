@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { ArrowLeft, BookOpen } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { QuizSession } from "@/components/quiz-session";
 import { RandomExerciseButton } from "@/components/random-exercise-button";
+import { LogoMark } from "@/components/logo-mark";
 import { listVisibleExerciseTypesAction } from "@/lib/actions/exercise-types";
 import { getMyQuizQuestionsAction, listTopicsAction } from "@/lib/actions/vocabulary";
 import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
@@ -52,9 +53,7 @@ export default async function QuizPage({
             <RandomExerciseButton currentCode="multiple_choice" types={exerciseTypes} dict={dict} />
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <BookOpen className="size-3.5" />
-            </div>
+            <LogoMark size="sm" />
             <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
           </div>
         </div>

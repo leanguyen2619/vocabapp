@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, BookOpen, TrendingDown } from "lucide-react";
+import { ArrowLeft, TrendingDown } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { LogoMark } from "@/components/logo-mark";
 import type { WeakWordItem } from "@/lib/actions/class-report";
 import { formatMessage } from "@/lib/i18n/format";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
@@ -31,9 +32,7 @@ export function ClassReportClient({ weakWords, dict }: { weakWords: WeakWordItem
             {dict.common.backToDashboard}
           </Link>
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <BookOpen className="size-3.5" />
-            </div>
+            <LogoMark size="sm" />
             <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
           </div>
         </div>

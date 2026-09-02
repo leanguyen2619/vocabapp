@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { ArrowLeft, BookOpen } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { PracticeSession } from "@/components/practice-session";
 import { RandomExerciseButton } from "@/components/random-exercise-button";
+import { LogoMark } from "@/components/logo-mark";
 import { listVisibleExerciseTypesAction } from "@/lib/actions/exercise-types";
 import { getExampleSentenceMapAction } from "@/lib/actions/practice-content";
 import { getMyWordsForScopeAction, listTopicsAction } from "@/lib/actions/vocabulary";
@@ -54,9 +55,7 @@ export default async function PracticePage({
             <RandomExerciseButton currentCode="flashcard" types={exerciseTypes} dict={dict} />
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <BookOpen className="size-3.5" />
-            </div>
+            <LogoMark size="sm" />
             <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
           </div>
         </div>

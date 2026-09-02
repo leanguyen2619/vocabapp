@@ -3,12 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { ArrowLeft, BookOpen } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { LogoMark } from "@/components/logo-mark";
 import {
   Select,
   SelectContent,
@@ -156,9 +157,7 @@ export function AdminLevelsClient({
             {dict.common.backToDashboard}
           </Link>
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <BookOpen className="size-3.5" />
-            </div>
+            <LogoMark size="sm" />
             <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
           </div>
         </div>

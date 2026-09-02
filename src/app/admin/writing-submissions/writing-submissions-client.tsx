@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { ArrowLeft, BookOpen, CheckCircle2, Clock, PenLine } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, PenLine } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { LogoMark } from "@/components/logo-mark";
 import {
   gradeWritingSubmissionAction,
   type GradedSubmissionItem,
@@ -96,9 +97,7 @@ export function AdminWritingSubmissionsClient({
             {dict.common.backToDashboard}
           </Link>
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <BookOpen className="size-3.5" />
-            </div>
+            <LogoMark size="sm" />
             <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
           </div>
         </div>

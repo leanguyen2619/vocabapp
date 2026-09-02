@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { BookOpen, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { AdminOnlyDenied } from "@/components/admin-only-denied";
+import { LogoMark } from "@/components/logo-mark";
 import { listExerciseTypesAction } from "@/lib/actions/exercise-types";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
@@ -35,9 +36,7 @@ export default async function ExerciseTypesSettingsPage() {
             {dict.common.backToDashboard}
           </Link>
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <BookOpen className="size-3.5" />
-            </div>
+            <LogoMark size="sm" />
             <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
           </div>
         </div>

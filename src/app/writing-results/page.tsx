@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { ArrowLeft, BookOpen } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { WritingResultsClient } from "./writing-results-client";
+import { LogoMark } from "@/components/logo-mark";
 import { listMyWritingSubmissionsAction } from "@/lib/actions/writing-submissions";
 import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -39,9 +40,7 @@ export default async function WritingResultsPage() {
             {dict.common.backToExercises}
           </Link>
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <BookOpen className="size-3.5" />
-            </div>
+            <LogoMark size="sm" />
             <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
           </div>
         </div>

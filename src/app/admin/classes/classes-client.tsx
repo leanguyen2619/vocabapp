@@ -3,7 +3,7 @@
 import { useState, type SubmitEvent } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { AlertCircle, ArrowLeft, BookOpen, Plus, Trash2, Users } from "lucide-react";
+import { AlertCircle, ArrowLeft, Plus, Trash2, Users } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PaginationControls } from "@/components/pagination-controls";
+import { LogoMark } from "@/components/logo-mark";
 import {
   createClassAction,
   deleteClassAction,
@@ -140,9 +141,7 @@ export function AdminClassesClient({
             {dict.common.backToDashboard}
           </Link>
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <BookOpen className="size-3.5" />
-            </div>
+            <LogoMark size="sm" />
             <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
           </div>
         </div>

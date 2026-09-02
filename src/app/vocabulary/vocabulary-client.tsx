@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LogoMark } from "@/components/logo-mark";
 import { formatMessage } from "@/lib/i18n/format";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { getLevelName, getTopicName } from "@/lib/labels";
@@ -91,9 +92,7 @@ export function VocabularyClient({
             {dict.common.backToDashboard}
           </Link>
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <BookOpen className="size-3.5" />
-            </div>
+            <LogoMark size="sm" />
             <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
           </div>
         </div>

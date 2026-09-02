@@ -1,4 +1,4 @@
-import { BookOpen } from "lucide-react";
+import {} from "lucide-react";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
@@ -17,6 +17,7 @@ import { TypingGame } from "@/components/typing-game";
 import { WordFormationGame } from "@/components/word-formation-game";
 import { WordTransformationGame } from "@/components/word-transformation-game";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
+import { LogoMark } from "@/components/logo-mark";
 import {
   getFillBlankQuestionsAction,
   getListeningComprehensionQuestionsAction,
@@ -160,9 +161,7 @@ export default async function WarmupPage() {
       <header className="border-b border-border">
         <div className="mx-auto flex w-full max-w-2xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <BookOpen className="size-3.5" />
-            </div>
+            <LogoMark size="sm" />
             <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
           </div>
           <LogoutWithPasswordButton dict={dict} />
