@@ -84,4 +84,42 @@ describe("normalizePartOfSpeech", () => {
     expect(normalizePartOfSpeech(undefined)).toBeNull();
     expect(normalizePartOfSpeech("")).toBeNull();
   });
+
+  // Real tag variants seen in a Cambridge-style B1 vocabulary file — previously all of these
+  // returned null and silently skipped the row.
+  it("maps single-word compound tags via the noun/verb/adjective/etc. they name", () => {
+    expect(normalizePartOfSpeech("noun phrase")).toBe("noun");
+    expect(normalizePartOfSpeech("verb phrase")).toBe("verb");
+    expect(normalizePartOfSpeech("adjective phrase")).toBe("adjective");
+    expect(normalizePartOfSpeech("prepositional phrase")).toBe("preposition");
+    expect(normalizePartOfSpeech("phrasal verb")).toBe("verb");
+    expect(normalizePartOfSpeech("plural noun")).toBe("noun");
+    expect(normalizePartOfSpeech("prep phr")).toBe("preposition");
+  });
+
+  it("resolves abbreviated dual-type tags by picking whichever type is listed first", () => {
+    expect(normalizePartOfSpeech("n & v")).toBe("noun");
+    expect(normalizePartOfSpeech("v & n")).toBe("verb");
+    expect(normalizePartOfSpeech("adj & n")).toBe("adjective");
+    expect(normalizePartOfSpeech("n & adj")).toBe("noun");
+    expect(normalizePartOfSpeech("adj & adv")).toBe("adjective");
+    expect(normalizePartOfSpeech("adj & exclam")).toBe("adjective");
+    expect(normalizePartOfSpeech("adj & v & n")).toBe("adjective");
+    expect(normalizePartOfSpeech("noun/adjective")).toBe("noun");
+    expect(normalizePartOfSpeech("verb/noun")).toBe("verb");
+    expect(normalizePartOfSpeech("noun/verb")).toBe("noun");
+  });
+
+  it("still returns null for a bare 'phrase' tag with no type signal to go on", () => {
+    expect(normalizePartOfSpeech("phrase")).toBeNull();
+  });
+
+  it("doesn't false-positive on a POS word that merely contains another one as a substring", () => {
+    // "adverb" contains "verb"; "pronoun" contains "noun" — a plain substring check would
+    // misclassify both.
+    expect(normalizePartOfSpeech("adverb")).toBe("adverb");
+    expect(normalizePartOfSpeech("pronoun")).toBe("pronoun");
+    expect(normalizePartOfSpeech("adverb; adjective")).toBe("adverb");
+    expect(normalizePartOfSpeech("pronoun & adjective")).toBe("pronoun");
+  });
 });

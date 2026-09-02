@@ -65,14 +65,47 @@ export function normalizeImportRow(raw: Record<string, unknown>): ImportRow {
   return row;
 }
 
-/** Cambridge-style files sometimes give a compound part of speech ("noun; verb") for a word used
- * as more than one type — take the first, since Vocabulary.partOfSpeech is single-valued. Returns
- * null (not a fallback) so an unrecognized value still causes the row to be skipped, not silently
- * miscategorized. */
+/** Segment -> PartOfSpeech classifiers, checked in this order — the first pattern that matches a
+ * segment wins. Short forms are anchored to the WHOLE segment ("^n$") rather than matched as a
+ * substring, since a bare single/double letter is too easy to false-positive on. The full words
+ * require a word boundary immediately BEFORE them (but not after), so "verb" matches "phrasal
+ * verb" and "preposition" matches the prefix "prepositional", while neither wrongly matches inside
+ * an unrelated word that merely contains the same letters — "verb" inside "adVERB", or "noun"
+ * inside "proNOUN" (a real regression a plain substring check like /verb/ hits immediately). */
+const POS_PATTERNS: [pattern: RegExp, pos: PartOfSpeech][] = [
+  [/^n$|\bnoun/, "noun"],
+  [/^v$|\bverb/, "verb"],
+  [/^adj$|\badjective/, "adjective"],
+  [/^adv$|\badverb/, "adverb"],
+  [/^prep$|\bpreposition/, "preposition"],
+  [/^pron$|\bpronoun/, "pronoun"],
+  [/^conj$|\bconjunction/, "conjunction"],
+  [/^interj$|^excl$|\bexclam|\binterjection/, "interjection"],
+];
+
+/** Vocabulary files "in the wild" rarely stick to the app's 8 exact PartOfSpeech values — Cambridge-
+ * style lists in particular mix in compound tags ("n & v", "noun phrase", "phrasal verb", "prep
+ * phr", "noun/adjective"...) for words used as more than one type or as a multi-word unit.
+ * Vocabulary.partOfSpeech is single-valued, so this picks ONE: split the raw tag on common
+ * separators (; , & / and the words "phrase"/"phr"), then classify each resulting segment against
+ * POS_PATTERNS and return the FIRST one that resolves — this preserves whichever type the file
+ * itself listed first as the "primary" sense (e.g. "n & v" -> noun, but "v & n" -> verb).
+ * Still returns null (never a guessed fallback) when nothing matches, so a genuinely unrecognized
+ * value causes the row to be skipped rather than silently miscategorized. */
 export function normalizePartOfSpeech(raw: string | undefined): PartOfSpeech | null {
-  const first = raw
-    ?.split(";")[0]
-    ?.trim()
-    .toLowerCase();
-  return POS_VALUES.find((p) => p === first) ?? null;
+  if (!raw) return null;
+  const lower = raw.trim().toLowerCase();
+
+  const exact = POS_VALUES.find((p) => p === lower);
+  if (exact) return exact;
+
+  const segments = lower
+    .split(/[;,&/]| phrase| phr/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  for (const segment of segments) {
+    const match = POS_PATTERNS.find(([pattern]) => pattern.test(segment));
+    if (match) return match[1];
+  }
+  return null;
 }
