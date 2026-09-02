@@ -174,6 +174,13 @@ async function main() {
   for (const t of topics) {
     await prisma.topic.upsert({ where: { id: t.id }, update: t, create: t });
   }
+  // Topic.id is autoincrement, but the upserts above set it explicitly — Postgres doesn't advance
+  // an autoincrement sequence for explicit-id inserts, so without this the sequence stays at 1 and
+  // the next *unspecified*-id insert (e.g. ensureTopicsAction, used by the admin's Import Excel
+  // flow) collides with an existing row and fails with a unique-constraint error.
+  await prisma.$executeRawUnsafe(
+    `SELECT setval(pg_get_serial_sequence('"Topic"', 'id'), (SELECT MAX(id) FROM "Topic"))`
+  );
 
   for (const l of levels) {
     await prisma.level.upsert({ where: { id: l.id }, update: l, create: l });

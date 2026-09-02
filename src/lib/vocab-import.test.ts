@@ -122,4 +122,24 @@ describe("normalizePartOfSpeech", () => {
     expect(normalizePartOfSpeech("adverb; adjective")).toBe("adverb");
     expect(normalizePartOfSpeech("pronoun & adjective")).toBe("pronoun");
   });
+
+  // Real tag variants seen in A1 and B2 Cambridge-style vocabulary files.
+  it("maps grammatical categories outside the 8-value enum to their closest fit", () => {
+    expect(normalizePartOfSpeech("idiom")).toBe("verb");
+    expect(normalizePartOfSpeech("determiner")).toBe("adjective");
+    expect(normalizePartOfSpeech("discourse marker")).toBe("adverb");
+    expect(normalizePartOfSpeech("interrogative")).toBe("pronoun");
+    expect(normalizePartOfSpeech("possessive")).toBe("pronoun");
+    expect(normalizePartOfSpeech("exclamation")).toBe("interjection");
+    expect(normalizePartOfSpeech("uncountable noun")).toBe("noun");
+  });
+
+  it("splits on '+' the same way as the other separators, preserving first-mentioned-wins", () => {
+    expect(normalizePartOfSpeech("noun + verb")).toBe("noun");
+    expect(normalizePartOfSpeech("adjective + noun")).toBe("adjective");
+    expect(normalizePartOfSpeech("noun + adjective")).toBe("noun");
+    expect(normalizePartOfSpeech("determiner + pronoun")).toBe("adjective");
+    expect(normalizePartOfSpeech("adverb + interrogative")).toBe("adverb");
+    expect(normalizePartOfSpeech("interrogative + adverb")).toBe("pronoun");
+  });
 });

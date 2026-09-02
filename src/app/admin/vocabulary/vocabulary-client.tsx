@@ -56,6 +56,12 @@ import { normalizeImportRow, normalizePartOfSpeech, POS_VALUES } from "@/lib/voc
 import { speakWord } from "@/lib/speech";
 import type { Level, PartOfSpeech, Topic, Vocabulary } from "@/types";
 
+// Used by handleImportFile below when a row's own topic/part-of-speech can't be determined, so a
+// source file that's incomplete in those two respects (real ones are — see the comment at its
+// call site) still gets every row imported instead of silently dropping some.
+const FALLBACK_TOPIC_NAME = "General Vocabulary";
+const FALLBACK_POS: PartOfSpeech = "noun";
+
 export function AdminVocabularyClient({
   initialWords,
   levels,
@@ -230,16 +236,26 @@ export function AdminVocabularyClient({
       // Any topic name the file uses that doesn't exist yet gets created on the fly — a file
       // naming a new CEFR level's own categories (e.g. the Cambridge-style "primaryTopic" column)
       // shouldn't require an admin to hand-create every topic first just to get past matching.
+      // FALLBACK_TOPIC_NAME/FALLBACK_POS below cover the two things that otherwise cause a row to
+      // be silently dropped even though it has perfectly good vocab/definition/meaning data: some
+      // real source files (e.g. a general B2 wordlist) don't tag every row's topic at all, and
+      // some part-of-speech tags ("phrase", "idiom", "determiner"...) don't map onto the app's 8
+      // exact values. Only vocab/definition/meanVI/level stay hard requirements — there's no
+      // sensible default for a missing word, meaning, or which CEFR level it belongs to.
       const existingTopicNames = new Set(topics.map((t) => t.topic.toLowerCase()));
       const topicNamesInFile = rows
         .map((r) => r.topic?.toString().trim())
         .filter((name): name is string => Boolean(name) && !existingTopicNames.has(name!.toLowerCase()));
+      const needsFallbackTopic =
+        rows.some((r) => !r.topic?.toString().trim()) && !existingTopicNames.has(FALLBACK_TOPIC_NAME.toLowerCase());
+      const namesToEnsure = needsFallbackTopic ? [...topicNamesInFile, FALLBACK_TOPIC_NAME] : topicNamesInFile;
       let currentTopics = topics;
-      if (topicNamesInFile.length > 0) {
+      if (namesToEnsure.length > 0) {
         setImportStage(dict.admin.vocabulary.importStageTopics);
-        currentTopics = await ensureTopicsAction(topicNamesInFile);
+        currentTopics = await ensureTopicsAction(namesToEnsure);
         setTopics(currentTopics);
       }
+      const fallbackTopic = currentTopics.find((t) => t.topic.toLowerCase() === FALLBACK_TOPIC_NAME.toLowerCase());
 
       const existingWords = new Set(words.map((w) => w.vocab.toLowerCase()));
       const seenInFile = new Set<string>();
@@ -255,11 +271,11 @@ export function AdminVocabularyClient({
         const topicRaw = row.topic?.toString().trim().toLowerCase();
         const levelRaw = row.level?.toString().trim().toLowerCase();
 
-        const pos = normalizePartOfSpeech(row.partOfSpeech);
-        const topic = currentTopics.find((t) => t.topic.toLowerCase() === topicRaw);
+        const pos = normalizePartOfSpeech(row.partOfSpeech) ?? FALLBACK_POS;
+        const topic = currentTopics.find((t) => t.topic.toLowerCase() === topicRaw) ?? (!topicRaw ? fallbackTopic : undefined);
         const level = levels.find((l) => l.level.toLowerCase() === levelRaw);
 
-        if (!vocab || !definition || !meanVI || !pos || !topic || !level) {
+        if (!vocab || !definition || !meanVI || !topic || !level) {
           skipped += 1;
           continue;
         }

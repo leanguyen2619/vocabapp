@@ -71,27 +71,37 @@ export function normalizeImportRow(raw: Record<string, unknown>): ImportRow {
  * require a word boundary immediately BEFORE them (but not after), so "verb" matches "phrasal
  * verb" and "preposition" matches the prefix "prepositional", while neither wrongly matches inside
  * an unrelated word that merely contains the same letters — "verb" inside "adVERB", or "noun"
- * inside "proNOUN" (a real regression a plain substring check like /verb/ hits immediately). */
+ * inside "proNOUN" (a real regression a plain substring check like /verb/ hits immediately).
+ * The extra alternatives (idiom, determiner, discourse marker, interrogative, possessive) are
+ * grammatical categories outside the app's 8-value enum that a Cambridge-style list still tags
+ * words with — each mapped to whichever of the 8 values fits its typical usage closely enough for
+ * a language-learning app (idiom -> verb: sampled a real B2 file's "idiom"-tagged rows and most
+ * were verb phrases like "draw the line", "hand in your notice"; determiner -> adjective: both
+ * modify a following noun; discourse marker -> adverb: "well"/"actually"/"anyway"-type words are
+ * conventionally classed as adverbs in simplified ESL grammar; interrogative/possessive -> pronoun:
+ * "what/who/which" and "mine/yours" function as pronouns). */
 const POS_PATTERNS: [pattern: RegExp, pos: PartOfSpeech][] = [
   [/^n$|\bnoun/, "noun"],
-  [/^v$|\bverb/, "verb"],
-  [/^adj$|\badjective/, "adjective"],
-  [/^adv$|\badverb/, "adverb"],
+  [/^v$|\bverb|\bidiom/, "verb"],
+  [/^adj$|\badjective|\bdeterminer/, "adjective"],
+  [/^adv$|\badverb|\bdiscourse marker/, "adverb"],
   [/^prep$|\bpreposition/, "preposition"],
-  [/^pron$|\bpronoun/, "pronoun"],
+  [/^pron$|\bpronoun|\binterrogative|\bpossessive/, "pronoun"],
   [/^conj$|\bconjunction/, "conjunction"],
   [/^interj$|^excl$|\bexclam|\binterjection/, "interjection"],
 ];
 
 /** Vocabulary files "in the wild" rarely stick to the app's 8 exact PartOfSpeech values — Cambridge-
  * style lists in particular mix in compound tags ("n & v", "noun phrase", "phrasal verb", "prep
- * phr", "noun/adjective"...) for words used as more than one type or as a multi-word unit.
- * Vocabulary.partOfSpeech is single-valued, so this picks ONE: split the raw tag on common
- * separators (; , & / and the words "phrase"/"phr"), then classify each resulting segment against
- * POS_PATTERNS and return the FIRST one that resolves — this preserves whichever type the file
- * itself listed first as the "primary" sense (e.g. "n & v" -> noun, but "v & n" -> verb).
- * Still returns null (never a guessed fallback) when nothing matches, so a genuinely unrecognized
- * value causes the row to be skipped rather than silently miscategorized. */
+ * phr", "noun/adjective", "adjective + noun"...) for words used as more than one type or as a
+ * multi-word unit. Vocabulary.partOfSpeech is single-valued, so this picks ONE: split the raw tag
+ * on common separators (; , & / + and the words "phrase"/"phr"), then classify each resulting
+ * segment against POS_PATTERNS and return the FIRST one that resolves — this preserves whichever
+ * type the file itself listed first as the "primary" sense (e.g. "n & v" -> noun, but "v & n" ->
+ * verb; "adjective + noun" -> adjective, but "noun + adjective" -> noun). Still returns null
+ * (never a guessed fallback) when nothing matches — e.g. a bare "phrase" tag with no other
+ * grammatical signal — so a genuinely unrecognized value causes the row to be skipped rather than
+ * silently miscategorized. */
 export function normalizePartOfSpeech(raw: string | undefined): PartOfSpeech | null {
   if (!raw) return null;
   const lower = raw.trim().toLowerCase();
@@ -100,7 +110,7 @@ export function normalizePartOfSpeech(raw: string | undefined): PartOfSpeech | n
   if (exact) return exact;
 
   const segments = lower
-    .split(/[;,&/]| phrase| phr/)
+    .split(/[;,&/+]| phrase| phr/)
     .map((s) => s.trim())
     .filter(Boolean);
   for (const segment of segments) {
