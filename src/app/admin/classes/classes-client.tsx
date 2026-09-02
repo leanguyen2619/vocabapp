@@ -256,7 +256,7 @@ export function AdminClassesClient({
           </CardContent>
         </Card>
 
-        <PaginationControls page={currentPage} totalPages={totalPages} onPageChange={setPage} />
+        <PaginationControls page={currentPage} totalPages={totalPages} onPageChange={setPage} dict={dict} />
       </main>
 
       <Dialog

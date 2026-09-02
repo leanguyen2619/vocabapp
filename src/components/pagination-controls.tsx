@@ -3,15 +3,19 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { formatMessage } from "@/lib/i18n/format";
 
 export function PaginationControls({
   page,
   totalPages,
   onPageChange,
+  dict,
 }: {
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  dict: Dictionary;
 }) {
   if (totalPages <= 1) return null;
 
@@ -20,19 +24,19 @@ export function PaginationControls({
       <Button
         variant="outline"
         size="icon-sm"
-        aria-label="Trang trước"
+        aria-label={dict.pagination.previousPage}
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
       >
         <ChevronLeft className="size-4" />
       </Button>
       <span className="text-sm text-muted-foreground">
-        Trang {page}/{totalPages}
+        {formatMessage(dict.pagination.pageLabel, { page, total: totalPages })}
       </span>
       <Button
         variant="outline"
         size="icon-sm"
-        aria-label="Trang sau"
+        aria-label={dict.pagination.nextPage}
         disabled={page >= totalPages}
         onClick={() => onPageChange(page + 1)}
       >

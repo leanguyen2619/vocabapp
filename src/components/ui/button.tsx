@@ -8,7 +8,12 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/80",
+        // The base `disabled:opacity-50` (below) blends both bg and text toward the page
+        // background — fine in light mode, but in dark mode --primary and --primary-foreground
+        // both drift toward near-black, collapsing contrast to ~2.5:1 (unreadable). Flat muted
+        // colors at full opacity instead, same as a disabled state elsewhere in the app.
+        default:
+          "bg-primary text-primary-foreground hover:bg-primary/80 disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:

@@ -50,6 +50,11 @@ const vi = {
     switchToLightMode: "Chuyển sang giao diện sáng",
     switchToDarkMode: "Chuyển sang giao diện tối",
   },
+  pagination: {
+    pageLabel: "Trang {page}/{total}",
+    previousPage: "Trang trước",
+    nextPage: "Trang sau",
+  },
   warmup: {
     title: "Khởi động trước khi học",
     subtitle: "Hoàn thành {total} bài tập ngẫu nhiên dưới đây để bắt đầu ngày học hôm nay.",

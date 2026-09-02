@@ -11,7 +11,7 @@ import { submitPosAnswerAction } from "@/lib/actions/vocabulary";
 import { markWarmupTypeCompleteAction } from "@/lib/actions/warmup";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
-import { getTopicName, posLabel } from "@/lib/labels";
+import { getTopicName } from "@/lib/labels";
 import type { PosQuestion } from "@/lib/practice-prep";
 import { speakWord } from "@/lib/speech";
 import { cn } from "@/lib/utils";
@@ -171,7 +171,7 @@ export function PosClassificationGame({
                   "border-red-400 bg-red-50 text-red-700"
               )}
             >
-              {posLabel[option]}
+              {dict.partOfSpeech[option]}
               {isThisCorrect && <Check className="size-5 shrink-0 text-emerald-600" />}
               {result !== null && isSelected && !isThisCorrect && (
                 <X className="size-5 shrink-0 text-red-500" />
@@ -186,7 +186,7 @@ export function PosClassificationGame({
           <p className="text-sm text-muted-foreground">
             {isCorrect ? dict.posGame.feedbackCorrect : dict.posGame.feedbackWrong}{" "}
             {formatMessage(dict.posGame.resultPrefix, { word: question.item.vocab })}{" "}
-            <span className="font-medium text-foreground">{posLabel[result.correctPos]}</span>.
+            <span className="font-medium text-foreground">{dict.partOfSpeech[result.correctPos]}</span>.
           </p>
           <Button onClick={handleNext}>
             {index + 1 >= total ? dict.posGame.viewResults : dict.posGame.nextQuestion}

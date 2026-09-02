@@ -48,6 +48,11 @@ const en: Dictionary = {
     switchToLightMode: "Switch to light mode",
     switchToDarkMode: "Switch to dark mode",
   },
+  pagination: {
+    pageLabel: "Page {page}/{total}",
+    previousPage: "Previous page",
+    nextPage: "Next page",
+  },
   warmup: {
     title: "Warm up before you start",
     subtitle: "Complete the {total} random exercises below to start today's learning.",

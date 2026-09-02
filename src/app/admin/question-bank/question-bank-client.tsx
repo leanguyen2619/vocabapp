@@ -377,7 +377,7 @@ export function AdminQuestionBankClient({
           )}
         </div>
 
-        <PaginationControls page={currentPage} totalPages={totalPages} onPageChange={setPage} />
+        <PaginationControls page={currentPage} totalPages={totalPages} onPageChange={setPage} dict={dict} />
       </main>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
