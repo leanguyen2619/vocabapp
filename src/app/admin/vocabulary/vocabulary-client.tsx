@@ -8,6 +8,8 @@ import {
   ArrowLeft,
   BookOpen,
   Download,
+  FileSpreadsheet,
+  Loader2,
   Pencil,
   Plus,
   Search,
@@ -84,6 +86,12 @@ export function AdminVocabularyClient({
   const [deleteTarget, setDeleteTarget] = useState<Vocabulary | null>(null);
   const [deleting, setDeleting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Import can take a few seconds for a large file (parsing + topic lookup + bulk insert), so the
+  // stage text keeps the admin oriented instead of the button just silently doing nothing.
+  const [importFileName, setImportFileName] = useState<string | null>(null);
+  const [importStage, setImportStage] = useState<string | null>(null);
+  const importing = importFileName !== null;
 
   const [search, setSearch] = useState("");
   const [topicFilter, setTopicFilter] = useState("all");
@@ -209,7 +217,9 @@ export function AdminVocabularyClient({
   };
 
   const handleImportFile = async (file: File) => {
+    setImportFileName(file.name);
     try {
+      setImportStage(formatMessage(dict.admin.vocabulary.importStageReading, { fileName: file.name }));
       const XLSX = await import("xlsx");
       const buffer = await file.arrayBuffer();
       const workbook = XLSX.read(buffer, { type: "array" });
@@ -226,6 +236,7 @@ export function AdminVocabularyClient({
         .filter((name): name is string => Boolean(name) && !existingTopicNames.has(name!.toLowerCase()));
       let currentTopics = topics;
       if (topicNamesInFile.length > 0) {
+        setImportStage(dict.admin.vocabulary.importStageTopics);
         currentTopics = await ensureTopicsAction(topicNamesInFile);
         setTopics(currentTopics);
       }
@@ -271,7 +282,10 @@ export function AdminVocabularyClient({
         });
       }
 
+      setImportStage(dict.admin.vocabulary.importStageInserting);
       const imported = await bulkCreateVocabularyAction(validRows);
+
+      setImportStage(dict.admin.vocabulary.importStageRefreshing);
       setWords(await listVocabularyAction());
 
       if (imported > 0)
@@ -283,6 +297,9 @@ export function AdminVocabularyClient({
       if (imported === 0 && skipped === 0 && duplicates === 0) toast.error(dict.admin.vocabulary.importEmpty);
     } catch {
       toast.error(dict.admin.vocabulary.importError);
+    } finally {
+      setImportFileName(null);
+      setImportStage(null);
     }
   };
 
@@ -318,12 +335,22 @@ export function AdminVocabularyClient({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => void handleDownloadTemplate()}>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={importing}
+              onClick={() => void handleDownloadTemplate()}
+            >
               <Download className="size-4" />
               {dict.admin.vocabulary.downloadTemplate}
             </Button>
-            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-              <Upload className="size-4" />
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={importing}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {importing ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
               {dict.admin.vocabulary.importExcel}
             </Button>
             <input
@@ -632,6 +659,24 @@ export function AdminVocabularyClient({
               {dict.common.delete}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={importing}>
+        <DialogContent showCloseButton={false} className="sm:max-w-xs">
+          <div className="flex flex-col items-center gap-4 py-4 text-center">
+            <div className="relative flex size-16 items-center justify-center rounded-full bg-primary/10">
+              <FileSpreadsheet className="size-7 text-primary" />
+              <Loader2 className="absolute -right-1 -bottom-1 size-6 animate-spin rounded-full bg-background text-primary" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <p className="font-heading text-base font-semibold tracking-tight">
+                {dict.admin.vocabulary.importingTitle}
+              </p>
+              <p className="text-sm text-muted-foreground">{importStage}</p>
+            </div>
+            <p className="text-xs text-muted-foreground">{dict.admin.vocabulary.importingDesc}</p>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

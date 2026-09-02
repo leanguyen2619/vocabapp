@@ -16,10 +16,17 @@ import type { Role } from "@/types";
  * correctly omits it since that's checking what the STUDENT can access, not the admin.
  */
 export async function computeUnlockedLevelIds(accountId: string, role?: Role): Promise<Set<string>> {
-  const levels = await prisma.level.findMany({ orderBy: { id: "asc" } });
-  if (role === "admin") return new Set(levels.map((l) => l.id));
+  if (role === "admin") {
+    const levels = await prisma.level.findMany({ orderBy: { id: "asc" } });
+    return new Set(levels.map((l) => l.id));
+  }
 
-  const accountLevels = await prisma.accountLevel.findMany({ where: { accountId } });
+  // Independent of each other — fetched in parallel rather than as two sequential round trips,
+  // since this runs on nearly every "get my content" action (~20 call sites).
+  const [levels, accountLevels] = await Promise.all([
+    prisma.level.findMany({ orderBy: { id: "asc" } }),
+    prisma.accountLevel.findMany({ where: { accountId } }),
+  ]);
 
   let unlockedIndex = 1;
   levels.forEach((level, index) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, BookOpen, Search, Volume2 } from "lucide-react";
 
@@ -48,20 +48,32 @@ export function VocabularyClient({
 
   const PAGE_SIZE = 12;
 
-  const masteredCount = myVocabulary.filter((v) => v.learningStatus === "mastered").length;
-  const learningCount = myVocabulary.filter((v) => v.learningStatus === "learning").length;
-  const newCount = myVocabulary.filter((v) => v.learningStatus === "new").length;
+  const { masteredCount, learningCount, newCount } = useMemo(() => {
+    let mastered = 0;
+    let learning = 0;
+    let fresh = 0;
+    for (const v of myVocabulary) {
+      if (v.learningStatus === "mastered") mastered++;
+      else if (v.learningStatus === "learning") learning++;
+      else fresh++;
+    }
+    return { masteredCount: mastered, learningCount: learning, newCount: fresh };
+  }, [myVocabulary]);
 
   const query = search.trim().toLowerCase();
-  const filtered = myVocabulary.filter((v) => {
-    if (levelFilter !== "all" && v.levelId !== levelFilter) return false;
-    if (topicFilter !== "all" && v.topicId !== Number(topicFilter)) return false;
-    if (statusFilter !== "all" && v.learningStatus !== statusFilter) return false;
-    if (query && !v.vocab.toLowerCase().includes(query) && !v.meanVI.toLowerCase().includes(query)) {
-      return false;
-    }
-    return true;
-  });
+  const filtered = useMemo(
+    () =>
+      myVocabulary.filter((v) => {
+        if (levelFilter !== "all" && v.levelId !== levelFilter) return false;
+        if (topicFilter !== "all" && v.topicId !== Number(topicFilter)) return false;
+        if (statusFilter !== "all" && v.learningStatus !== statusFilter) return false;
+        if (query && !v.vocab.toLowerCase().includes(query) && !v.meanVI.toLowerCase().includes(query)) {
+          return false;
+        }
+        return true;
+      }),
+    [myVocabulary, levelFilter, topicFilter, statusFilter, query]
+  );
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
