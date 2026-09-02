@@ -248,13 +248,19 @@ export function AdminQuestionBankClient({
         <div className="flex flex-col gap-1.5">
           <Label className="text-sm text-muted-foreground">{dict.admin.questionBank.typeLabel}</Label>
           <Tabs value={activeType} onValueChange={(value) => void switchType(value as PracticeTypeCode)}>
-            <TabsList>
-              {practiceTypes.map((t) => (
-                <TabsTrigger key={t.code} value={t.code}>
-                  {t.name}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+            {/* This list has one tab per practice type (currently a dozen+) — wide enough to
+             * overflow a phone screen. Without its own scroll container, TabsList's fixed
+             * `w-fit` width drags the WHOLE PAGE into horizontal scroll on mobile instead of
+             * just this row, so it scrolls on its own here. */}
+            <div className="overflow-x-auto">
+              <TabsList>
+                {practiceTypes.map((t) => (
+                  <TabsTrigger key={t.code} value={t.code}>
+                    {t.name}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
           </Tabs>
         </div>
 

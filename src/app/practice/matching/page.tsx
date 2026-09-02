@@ -1,10 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { ArrowLeft, BookOpen } from "lucide-react";
 
+import { PracticeHeader } from "@/components/practice-header";
 import { MatchingGame } from "@/components/matching-game";
-import { RandomExerciseButton } from "@/components/random-exercise-button";
 import { listVisibleExerciseTypesAction } from "@/lib/actions/exercise-types";
 import { getMyWordsForScopeAction } from "@/lib/actions/vocabulary";
 import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
@@ -44,26 +42,7 @@ export default async function MatchingPage({
 
   return (
     <div className="flex flex-1 flex-col bg-background">
-      <header className="border-b border-border">
-        <div className="mx-auto flex w-full max-w-2xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/exercises"
-              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="size-4" />
-              {dict.common.backToExercises}
-            </Link>
-            <RandomExerciseButton currentCode="matching" types={exerciseTypes} dict={dict} />
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <BookOpen className="size-3.5" />
-            </div>
-            <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
-          </div>
-        </div>
-      </header>
+      <PracticeHeader currentCode="matching" types={exerciseTypes} dict={dict} />
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-10 sm:py-16">
         <MatchingGame leftItems={leftItems} rightItems={rightItems} dict={dict} />
