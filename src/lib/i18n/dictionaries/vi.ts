@@ -60,6 +60,11 @@ const vi = {
     subtitle: "Hoàn thành {total} bài tập ngẫu nhiên dưới đây để bắt đầu ngày học hôm nay.",
     stepCounter: "Bài {current}/{total}",
     continueButton: "Tiếp tục",
+    logoutDialogTitle: "Xác nhận đăng xuất",
+    logoutDialogDesc: "Nhập mật khẩu để đăng xuất khỏi tài khoản này.",
+    logoutSubmit: "Đăng xuất",
+    logoutCancel: "Hủy",
+    logoutErrorEmpty: "Vui lòng nhập mật khẩu.",
   },
   language: {
     label: "Ngôn ngữ",

@@ -32,6 +32,27 @@ export async function logoutAction(): Promise<void> {
   await destroySession();
 }
 
+/** Logout gated behind re-entering the current password — used on the mandatory warmup flow,
+ * where there's otherwise no way to leave/switch accounts mid-session, so this exists as an
+ * escape hatch that still confirms it's really the account owner acting (not, say, a sibling at
+ * a shared computer casually signing the student out). Re-derives identity from the session
+ * cookie, same as changePasswordAction, never from a client-supplied id. */
+export async function logoutWithPasswordAction(
+  password: string
+): Promise<{ error: string } | { error?: undefined }> {
+  const session = await getCurrentAccount();
+  if (!session) return { error: "Bạn chưa đăng nhập." };
+
+  const account = await prisma.account.findUnique({ where: { id_login: session.id_login } });
+  if (!account) return { error: "Bạn chưa đăng nhập." };
+
+  const passwordMatches = await bcrypt.compare(password, account.passwordHash);
+  if (!passwordMatches) return { error: "Mật khẩu không đúng." };
+
+  await destroySession();
+  return {};
+}
+
 /** Re-derives identity from the session cookie, not from any client-supplied id. */
 export async function updateFullNameAction(
   fullName: string

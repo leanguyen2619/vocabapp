@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { FillBlankGame } from "@/components/fill-blank-game";
 import { ListeningGame } from "@/components/listening-game";
 import { ListeningComprehensionGame } from "@/components/listening-comprehension-game";
+import { LogoutWithPasswordButton } from "@/components/logout-with-password-button";
 import { MatchingGame } from "@/components/matching-game";
 import { PosClassificationGame } from "@/components/pos-classification-game";
 import { QuizSession } from "@/components/quiz-session";
@@ -164,6 +165,7 @@ export default async function WarmupPage() {
             </div>
             <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
           </div>
+          <LogoutWithPasswordButton dict={dict} />
         </div>
       </header>
 
