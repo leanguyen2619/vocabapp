@@ -40,6 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
   bulkCreateVocabularyAction,
@@ -100,6 +101,7 @@ export function AdminVocabularyClient({
   const importing = importFileName !== null;
 
   const [search, setSearch] = useState("");
+  const [levelFilter, setLevelFilter] = useState("all");
   const [topicFilter, setTopicFilter] = useState("all");
   const [sortMode, setSortMode] = useState<"default" | "level">("default");
   const [page, setPage] = useState(1);
@@ -111,9 +113,10 @@ export function AdminVocabularyClient({
       words.filter(
         (w) =>
           (w.vocab.toLowerCase().includes(query) || w.meanVI.toLowerCase().includes(query)) &&
+          (levelFilter === "all" || w.levelId === levelFilter) &&
           (topicFilter === "all" || w.topicId === Number(topicFilter))
       ),
-    [words, query, topicFilter]
+    [words, query, levelFilter, topicFilter]
   );
 
   const sortedWords = useMemo(() => {
@@ -386,6 +389,23 @@ export function AdminVocabularyClient({
             </Button>
           </div>
         </div>
+
+        <Tabs
+          value={levelFilter}
+          onValueChange={(value) => {
+            setLevelFilter(value ?? "all");
+            setPage(1);
+          }}
+        >
+          <TabsList>
+            <TabsTrigger value="all">{dict.admin.vocabulary.allLevels}</TabsTrigger>
+            {levels.map((level) => (
+              <TabsTrigger key={level.id} value={level.id}>
+                {level.level}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">

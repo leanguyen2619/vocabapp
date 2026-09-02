@@ -657,6 +657,7 @@ const en: Dictionary = {
       sortByLevel: "By level",
       allTopics: "All topics",
       topicFilterPlaceholder: "Topic",
+      allLevels: "All levels",
     },
     questionBank: {
       title: "Question Bank",

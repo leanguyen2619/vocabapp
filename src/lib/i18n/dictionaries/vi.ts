@@ -659,6 +659,7 @@ const vi = {
       sortByLevel: "Theo level",
       allTopics: "Tất cả chủ đề",
       topicFilterPlaceholder: "Chủ đề",
+      allLevels: "Tất cả cấp độ",
     },
     questionBank: {
       title: "Kho câu hỏi",
