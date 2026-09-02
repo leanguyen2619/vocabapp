@@ -71,6 +71,7 @@ export default async function DashboardPage() {
           assignedVocab={assignedVocab}
           topics={topics}
           levels={levels}
+          locale={locale}
           dict={dict}
         />
       </DashboardShell>

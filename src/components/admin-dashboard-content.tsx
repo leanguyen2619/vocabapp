@@ -11,12 +11,12 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { AdminOverviewCard } from "@/components/admin-overview-card";
 import { AdminStudentsPanel } from "@/components/admin-students-panel";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatMessage } from "@/lib/i18n/format";
 import type { AssignedVocabSummary, StudentSummary } from "@/lib/actions/students";
-import type { Dictionary } from "@/lib/i18n/dictionaries";
+import type { Dictionary, Locale } from "@/lib/i18n/dictionaries";
 import type { Account, Level, Topic, Vocabulary } from "@/types";
 
 interface AdminFunction {
@@ -39,6 +39,7 @@ export function AdminDashboardContent({
   assignedVocab,
   topics,
   levels,
+  locale,
   dict,
 }: {
   account: Account;
@@ -52,6 +53,7 @@ export function AdminDashboardContent({
   assignedVocab: AssignedVocabSummary[];
   topics: Topic[];
   levels: Level[];
+  locale: Locale;
   dict: Dictionary;
 }) {
   const adminFunctions: AdminFunction[] = [
@@ -109,48 +111,15 @@ export function AdminDashboardContent({
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-1">
-        <h1 className="font-heading text-2xl font-semibold tracking-tight">
-          {formatMessage(dict.adminDashboard.greeting, { name: account.fullName })}
-        </h1>
-        <p className="text-muted-foreground">{dict.adminDashboard.subtitle}</p>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardContent className="flex items-center gap-3 py-4">
-            <div className="flex size-9 items-center justify-center rounded-full bg-primary/10">
-              <Users className="size-4 text-primary" />
-            </div>
-            <div>
-              <p className="text-lg font-semibold leading-none">{studentCount}</p>
-              <p className="text-xs text-muted-foreground">{dict.adminDashboard.students}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 py-4">
-            <div className="flex size-9 items-center justify-center rounded-full bg-primary/10">
-              <Building2 className="size-4 text-primary" />
-            </div>
-            <div>
-              <p className="text-lg font-semibold leading-none">{classCount}</p>
-              <p className="text-xs text-muted-foreground">{dict.adminDashboard.classes}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 py-4">
-            <div className="flex size-9 items-center justify-center rounded-full bg-primary/10">
-              <Library className="size-4 text-primary" />
-            </div>
-            <div>
-              <p className="text-lg font-semibold leading-none">{vocabCount}</p>
-              <p className="text-xs text-muted-foreground">{dict.adminDashboard.vocabulary}</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <AdminOverviewCard
+        fullName={account.fullName}
+        studentCount={studentCount}
+        classCount={classCount}
+        vocabCount={vocabCount}
+        pendingWritingCount={pendingWritingCount}
+        locale={locale}
+        dict={dict}
+      />
 
       <div className="flex flex-col gap-3">
         <h2 className="font-heading text-lg font-semibold tracking-tight">

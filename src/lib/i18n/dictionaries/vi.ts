@@ -260,6 +260,12 @@ const vi = {
     fnClassReportTitle: "Báo cáo lớp học",
     fnClassReportDesc: "Xem từ nào cả lớp còn yếu để dạy lại.",
     comingSoon: "Sắp có",
+    heroLabel: "Hôm nay",
+    statusPending: "Có bài cần chấm",
+    statusPendingDesc: "{count} bài viết đang chờ bạn chấm điểm.",
+    statusClear: "Không có việc gấp",
+    statusClearDesc: "Mọi thứ đang ổn, chưa có bài nào chờ chấm.",
+    overviewTitle: "Tổng quan hệ thống",
   },
   profile: {
     editName: "Sửa họ tên",

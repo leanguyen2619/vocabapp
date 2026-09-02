@@ -258,6 +258,12 @@ const en: Dictionary = {
     fnClassReportTitle: "Class report",
     fnClassReportDesc: "See which words the whole class is weak on.",
     comingSoon: "Coming soon",
+    heroLabel: "Today",
+    statusPending: "Grading needed",
+    statusPendingDesc: "{count} submissions are waiting for you to grade.",
+    statusClear: "Nothing urgent",
+    statusClearDesc: "Everything looks good, no submissions waiting.",
+    overviewTitle: "System Overview",
   },
   profile: {
     editName: "Edit name",
