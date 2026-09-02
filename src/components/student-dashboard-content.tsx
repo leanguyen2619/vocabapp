@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, BookOpen, CheckCircle2, Circle, Library, PenLine, Sparkles } from "lucide-react";
 
+import { DashboardOverviewCard } from "@/components/dashboard-overview-card";
 import { LevelCard } from "@/components/level-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { formatMessage } from "@/lib/i18n/format";
-import type { Dictionary } from "@/lib/i18n/dictionaries";
+import type { Dictionary, Locale } from "@/lib/i18n/dictionaries";
 import { getTopicName } from "@/lib/labels";
 import type {
   Account,
@@ -29,6 +30,7 @@ export function StudentDashboardContent({
   levels,
   topics,
   newWordsCount,
+  locale,
   dict,
 }: {
   account: Account;
@@ -36,35 +38,36 @@ export function StudentDashboardContent({
   levels: LevelWithProgress[];
   topics: Topic[];
   newWordsCount: number;
+  locale: Locale;
   dict: Dictionary;
 }) {
   const completedCount = dailyAssignments.filter((a) => a.status === "done").length;
   const assignmentStatusLabel: Record<AssignmentStatus, string> = dict.assignmentStatus;
+  const streak = Math.max(0, ...levels.map((l) => l.streak));
+  const activeLevel = levels.find((l) => l.status === "in_progress") ?? levels[0] ?? null;
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">
-            {formatMessage(dict.studentDashboard.greeting, { name: account.fullName })}
-          </h1>
-          <p className="text-muted-foreground">
-            {formatMessage(dict.studentDashboard.progressToday, {
-              done: completedCount,
-              total: dailyAssignments.length,
-            })}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/vocabulary" />}>
-            <Library className="size-4" />
-            {dict.studentDashboard.myVocabulary}
-          </Button>
-          <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/writing-results" />}>
-            <PenLine className="size-4" />
-            {dict.studentDashboard.writingResults}
-          </Button>
-        </div>
+      <DashboardOverviewCard
+        fullName={account.fullName}
+        wordsCompletedToday={completedCount}
+        wordsTotalToday={dailyAssignments.length}
+        streak={streak}
+        currentLevelLabel={activeLevel?.level ?? null}
+        currentLevelScore={activeLevel?.score ?? 0}
+        locale={locale}
+        dict={dict}
+      />
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/vocabulary" />}>
+          <Library className="size-4" />
+          {dict.studentDashboard.myVocabulary}
+        </Button>
+        <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/writing-results" />}>
+          <PenLine className="size-4" />
+          {dict.studentDashboard.writingResults}
+        </Button>
       </div>
 
       <Card>
@@ -116,10 +119,10 @@ export function StudentDashboardContent({
       </Card>
 
       {newWordsCount > 0 && (
-        <Card className="border-sky-300 bg-sky-50/50">
+        <Card className="border-sky-300 bg-sky-50/50 dark:border-sky-800/60 dark:bg-sky-950/20">
           <CardContent className="flex items-center justify-between gap-4 py-4">
             <div className="flex items-center gap-3">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-700">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-400">
                 <Sparkles className="size-4" />
               </div>
               <div>

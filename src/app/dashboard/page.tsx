@@ -30,7 +30,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function DashboardPage() {
   const account = await getCurrentAccount();
   if (!account) redirect("/login");
-  const dict = getDictionary(await getLocale());
+  const locale = await getLocale();
+  const dict = getDictionary(locale);
 
   if (account.role === "admin") {
     const [
@@ -95,6 +96,7 @@ export default async function DashboardPage() {
         levels={levels}
         topics={topics}
         newWordsCount={newWords.length}
+        locale={locale}
         dict={dict}
       />
     </DashboardShell>
