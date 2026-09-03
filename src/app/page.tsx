@@ -36,23 +36,26 @@ export default async function Home() {
 
       <main className="flex flex-1 flex-col">
         <section className="relative overflow-hidden">
-          {/* Soft gradient wash behind the hero, colored to match the reindeer mascot (amber sky,
-              moss ground, coral nose) rather than the site's pink brand tone, so the two feel like
-              one scene instead of a mascot dropped onto a plain white background. Two versions
-              (swapped via dark:) since the light one's pastel intensity would look wrong on a dark
-              page — Tailwind's dark: variant can't reach into an inline gradient, hence two divs.
-              Deliberately no negative z-index: body has `bg-background`, which CSS promotes to the
-              *canvas* background — painted beneath literally everything, including negative-z-index
-              elements anywhere in the document, not just this section's own stacking context. DOM
-              order (both divs come before the z-10 content) is enough to keep them behind the text. */}
+          {/* Colorful gradient wash filling the whole hero, matching the reindeer mascot's own
+              palette (amber sky, moss ground, coral nose, a warm gold accent) rather than the
+              site's pink brand tone, so the two feel like one scene. Four overlapping radial
+              glows spread top/left/right/bottom-right so color reaches the whole section, not
+              just a thin band near the illustration. Two versions (swapped via dark:) since the
+              light one's intensity would look wrong on a dark page — Tailwind's dark: variant
+              can't reach into an inline gradient, hence two divs. Deliberately no negative
+              z-index: body has `bg-background`, which CSS promotes to the *canvas* background —
+              painted beneath literally everything, including negative-z-index elements anywhere
+              in the document, not just this section's own stacking context. DOM order (both divs
+              come before the z-10 content) is enough to keep them behind the text. */}
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 dark:hidden"
             style={{
               background:
-                "radial-gradient(50% 45% at 50% 0%, #fdedcf 0%, rgba(253,237,207,0) 70%)," +
-                "radial-gradient(28% 24% at 8% 42%, rgba(220,239,200,0.55) 0%, rgba(220,239,200,0) 75%)," +
-                "radial-gradient(26% 22% at 94% 6%, rgba(249,214,207,0.5) 0%, rgba(249,214,207,0) 75%)",
+                "radial-gradient(70% 60% at 50% 0%, #fdecc7 0%, rgba(253,236,199,0.45) 42%, rgba(253,236,199,0) 85%)," +
+                "radial-gradient(58% 55% at 0% 62%, #d9ecc0 0%, rgba(217,236,192,0.4) 45%, rgba(217,236,192,0) 85%)," +
+                "radial-gradient(58% 55% at 100% 30%, #f8d2c9 0%, rgba(248,210,201,0.4) 45%, rgba(248,210,201,0) 85%)," +
+                "radial-gradient(48% 48% at 78% 92%, #f6e2ae 0%, rgba(246,226,174,0.35) 45%, rgba(246,226,174,0) 85%)",
             }}
           />
           <div
@@ -60,9 +63,10 @@ export default async function Home() {
             className="pointer-events-none absolute inset-0 hidden dark:block"
             style={{
               background:
-                "radial-gradient(50% 45% at 50% 0%, rgba(217,163,63,0.22) 0%, rgba(217,163,63,0) 70%)," +
-                "radial-gradient(28% 24% at 8% 42%, rgba(122,159,94,0.14) 0%, rgba(122,159,94,0) 75%)," +
-                "radial-gradient(26% 22% at 94% 6%, rgba(196,103,90,0.14) 0%, rgba(196,103,90,0) 75%)",
+                "radial-gradient(70% 60% at 50% 0%, rgba(217,163,63,0.32) 0%, rgba(217,163,63,0) 80%)," +
+                "radial-gradient(58% 55% at 0% 62%, rgba(122,159,94,0.24) 0%, rgba(122,159,94,0) 80%)," +
+                "radial-gradient(58% 55% at 100% 30%, rgba(196,103,90,0.24) 0%, rgba(196,103,90,0) 80%)," +
+                "radial-gradient(48% 48% at 78% 92%, rgba(196,150,63,0.2) 0%, rgba(196,150,63,0) 80%)",
             }}
           />
 
