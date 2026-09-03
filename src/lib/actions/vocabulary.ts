@@ -257,6 +257,25 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
     const sortedRulePool = rulePool
       .map((vocab) => ({ vocab, status: statusOf(vocab.id) }))
       .sort((a, b) => priority[a.status] - priority[b.status]);
+    const continuationBatch = sortedRulePool.slice(0, totalQuota);
+
+    // Persist the auto-picked batch as real DailyAssignment rows (assignedDate = today) — not just
+    // an internal pool pick — so it shows up in the admin's "Đã giao gần đây" list exactly like a
+    // manual assignment would, updates there day by day as the topic+level keeps being repeated,
+    // and (via deriveLastAssignmentRule reading it back tomorrow) keeps the rule going even if its
+    // size has to shrink because the topic is running low. skipDuplicates is a no-op safety net —
+    // rulePool already excludes anything already assigned to this student.
+    if (continuationBatch.length > 0) {
+      await prisma.dailyAssignment.createMany({
+        data: continuationBatch.map(({ vocab }) => ({
+          accountId: account.id_login,
+          vocabId: vocab.id,
+          assignedDate: today,
+          status: "pending" as const,
+        })),
+        skipDuplicates: true,
+      });
+    }
 
     // The topic+level ran out of enough words to fill another full batch — flag it once so the
     // admin sees a "cần giao thủ công" badge (see StudentSummary.assignRuleExhausted) and, once an
@@ -281,7 +300,7 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
       }
     }
 
-    picked = [...assignedWords, ...sortedRulePool.slice(0, totalQuota)].slice(0, Math.max(1, target));
+    picked = [...assignedWords, ...continuationBatch].slice(0, Math.max(1, target));
   } else {
     const unassignedVocabAll = vocabulary.filter(
       (v) => (!assignedIds.has(v.id) || statusOf(v.id) === "mastered") && unlockedLevelIds.has(v.levelId)
