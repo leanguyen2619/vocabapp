@@ -8,6 +8,7 @@ import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { LogoMark } from "@/components/logo-mark";
+import { WelcomeReindeerIllustration } from "@/components/welcome-reindeer-illustration";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
@@ -36,14 +37,11 @@ export default async function Home() {
 
       <main className="flex flex-1 flex-col">
         <section className="relative overflow-hidden">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 -top-40 -z-10 flex justify-center"
-          >
-            <div className="h-96 w-3xl rounded-full bg-linear-to-r from-sky-200 via-violet-200 to-rose-200 opacity-50 blur-3xl dark:opacity-20" />
-          </div>
+          <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center gap-6 px-6 pt-14 pb-24 text-center sm:pt-16 sm:pb-28">
+            <div className="w-full max-w-md overflow-hidden rounded-3xl shadow-sm">
+              <WelcomeReindeerIllustration className="h-56 w-full sm:h-64" />
+            </div>
 
-          <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center gap-6 px-6 py-24 text-center sm:py-28">
             <h1 className="font-heading text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
               {dict.landing.heroTitle}
             </h1>
