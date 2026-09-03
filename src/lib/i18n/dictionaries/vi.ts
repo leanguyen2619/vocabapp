@@ -228,6 +228,7 @@ const vi = {
     randomTopicSuccess: 'Đã ghim ngẫu nhiên chủ đề "{topic}" cho {name}.',
     autoModeSuccess: "Đã chuyển {name} về chế độ giao từ tự động.",
     pinTopicError: "Không thể ghim chủ đề này, vui lòng thử lại.",
+    assignRuleExhaustedBadge: "Hết từ, cần giao thủ công",
     dailyTargetTitle: "Số từ giao mỗi ngày",
     dailyTargetDesc: "Mặc định của lớp: {count} từ/ngày. Để trống để dùng mặc định của lớp.",
     dailyTargetPlaceholder: "Mặc định lớp ({count})",

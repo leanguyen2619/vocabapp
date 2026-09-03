@@ -1,10 +1,12 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { deriveLastAssignmentRule } from "@/lib/assign-rule";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { getLocale } from "@/lib/i18n/locale";
 import { computeUnlockedLevelIds } from "@/lib/level-unlock";
+import { notifyAdminAssignmentExhausted } from "@/lib/notifications/email";
 import { recordForVocab } from "@/lib/progress-core";
 import { getCurrentAccount, type SessionAccount } from "@/lib/session";
 import { shuffle } from "@/lib/utils";
@@ -204,21 +206,27 @@ function pickSequentialRemaining(
 }
 
 async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<string[]> {
-  const [cls, vocabulary, history, assignments, unlockedLevelIds, readyIds, levels] = await Promise.all([
-    account.classId ? prisma.schoolClass.findUnique({ where: { id: account.classId } }) : null,
-    prisma.vocabulary.findMany({ orderBy: { id: "asc" } }),
-    prisma.learningHistory.findMany({ where: { accountId: account.id_login } }),
-    prisma.dailyAssignment.findMany({
-      where: { accountId: account.id_login },
-      select: { vocabId: true },
-      distinct: ["vocabId"],
-    }),
-    computeUnlockedLevelIds(account.id_login, account.role),
-    computeReadyVocabIds(),
-    prisma.level.findMany({ orderBy: { id: "asc" }, select: { id: true } }),
-  ]);
+  const [cls, vocabulary, history, assignments, unlockedLevelIds, readyIds, levels, derivedRule] =
+    await Promise.all([
+      account.classId ? prisma.schoolClass.findUnique({ where: { id: account.classId } }) : null,
+      prisma.vocabulary.findMany({ orderBy: { id: "asc" } }),
+      prisma.learningHistory.findMany({ where: { accountId: account.id_login } }),
+      prisma.dailyAssignment.findMany({
+        where: { accountId: account.id_login },
+        select: { vocabId: true },
+        distinct: ["vocabId"],
+      }),
+      computeUnlockedLevelIds(account.id_login, account.role),
+      computeReadyVocabIds(),
+      prisma.level.findMany({ orderBy: { id: "asc" }, select: { id: true } }),
+      // A manual topic pin (below) is a deliberate standing choice — it takes priority over this
+      // inferred-from-history one, so don't bother deriving it at all when a pin is set.
+      account.pinnedTopicId === null ? deriveLastAssignmentRule(account.id_login) : null,
+    ]);
 
-  const target = account.dailyWordTargetOverride ?? cls?.dailyWordTarget ?? 5;
+  // The count from the student's last explicit assignment batch repeats on later days too (see
+  // deriveLastAssignmentRule) — but an admin's standing per-student override always wins if set.
+  const target = account.dailyWordTargetOverride ?? derivedRule?.count ?? cls?.dailyWordTarget ?? 5;
   const priority: Record<LearningStatus, number> = { new: 0, learning: 1, mastered: 2 };
   const statusOf = (vocabId: string): LearningStatus =>
     history.find((h) => h.vocabId === vocabId)?.status ?? "new";
@@ -234,6 +242,46 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
   let picked: { vocab: Vocabulary; status: LearningStatus }[];
   if (assignedWords.length >= target) {
     picked = assignedWords.slice(0, Math.max(1, target));
+  } else if (derivedRule) {
+    // Repeat the topic+level of the student's last explicit assignment batch (see
+    // deriveLastAssignmentRule) — not gated by unlocked levels or content-readiness, same as an
+    // explicit assignment itself isn't, since this is just that same admin decision continuing.
+    const totalQuota = Math.max(1, target) - assignedWords.length;
+    const rulePool = vocabulary.filter(
+      (v) =>
+        v.topicId === derivedRule.topicId &&
+        v.levelId === derivedRule.levelId &&
+        (!assignedIds.has(v.id) || statusOf(v.id) === "mastered") &&
+        statusOf(v.id) !== "mastered"
+    );
+    const sortedRulePool = rulePool
+      .map((vocab) => ({ vocab, status: statusOf(vocab.id) }))
+      .sort((a, b) => priority[a.status] - priority[b.status]);
+
+    // The topic+level ran out of enough words to fill another full batch — flag it once so the
+    // admin sees a "cần giao thủ công" badge (see StudentSummary.assignRuleExhausted) and, once an
+    // email provider is configured, gets notified there too. Cleared the next time this student
+    // receives a fresh explicit assignment (see the matching update in students.ts). The `where`
+    // clause's own assignRuleExhaustedAt: null check makes this atomic — when a 0-word day means
+    // pickTodaysWordIds reruns on every request (nothing gets cached — see computeDailyWords),
+    // several near-simultaneous calls could otherwise all read the same stale account.
+    // assignRuleExhaustedAt === null and each fire its own notification.
+    if (sortedRulePool.length < totalQuota && !account.assignRuleExhaustedAt) {
+      const flagged = await prisma.account.updateMany({
+        where: { id_login: account.id_login, assignRuleExhaustedAt: null },
+        data: { assignRuleExhaustedAt: new Date() },
+      });
+      if (flagged.count > 0) {
+        await notifyAdminAssignmentExhausted({
+          studentId: account.id_login,
+          studentName: account.fullName,
+          topicId: derivedRule.topicId,
+          levelId: derivedRule.levelId,
+        });
+      }
+    }
+
+    picked = [...assignedWords, ...sortedRulePool.slice(0, totalQuota)].slice(0, Math.max(1, target));
   } else {
     const unassignedVocabAll = vocabulary.filter(
       (v) => (!assignedIds.has(v.id) || statusOf(v.id) === "mastered") && unlockedLevelIds.has(v.levelId)

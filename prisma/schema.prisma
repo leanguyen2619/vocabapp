@@ -116,6 +116,14 @@ model Account {
   pinnedTopicId           Int?
   dailyWordTargetOverride Int?
 
+  // Set the moment auto-assignment (see deriveLastAssignmentRule/pickTodaysWordIds) finds it can no
+  // longer fill a fresh batch from the topic+level of the student's last explicit assignment — i.e.
+  // that combination has run out of new words. Non-null means "already flagged, don't notify
+  // again"; cleared back to null the next time this student receives a fresh explicit assignment,
+  // so a newly-exhausted topic can notify again later. Surfaced to the admin as a badge (see
+  // StudentSummary.assignRuleExhausted) and, once an email provider is configured, as an email.
+  assignRuleExhaustedAt DateTime?
+
   class       SchoolClass? @relation(fields: [classId], references: [id])
   pinnedTopic Topic?       @relation(fields: [pinnedTopicId], references: [id], onDelete: SetNull)
 

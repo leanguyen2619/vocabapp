@@ -226,6 +226,7 @@ const en: Dictionary = {
     randomTopicSuccess: 'Pinned a random topic ("{topic}") for {name}.',
     autoModeSuccess: "Switched {name} back to automatic assignment.",
     pinTopicError: "Could not pin this topic, please try again.",
+    assignRuleExhaustedBadge: "Out of words, needs manual assignment",
     dailyTargetTitle: "Words assigned per day",
     dailyTargetDesc: "Class default: {count} words/day. Leave blank to use the class default.",
     dailyTargetPlaceholder: "Class default ({count})",

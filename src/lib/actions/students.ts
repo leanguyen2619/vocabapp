@@ -43,6 +43,10 @@ export interface StudentSummary {
   masteredVocab: number;
   todayStatus: AssignmentStatus;
   pinnedTopicName: string | null;
+  /** True once auto-continued assignment has run out of new words in the student's last-assigned
+   * topic+level (see deriveLastAssignmentRule / Account.assignRuleExhaustedAt) — the admin needs
+   * to manually assign from a different topic. Cleared by the next explicit assignment. */
+  assignRuleExhausted: boolean;
 }
 
 /** Every student account, with real progress from Postgres — the admin manages the whole school,
@@ -93,6 +97,7 @@ export async function listAllStudentsAction(): Promise<StudentSummary[]> {
       masteredVocab,
       todayStatus,
       pinnedTopicName: s.pinnedTopic?.topic ?? null,
+      assignRuleExhausted: s.assignRuleExhaustedAt !== null,
     };
   });
 }
@@ -126,6 +131,14 @@ export async function assignVocabularyToAllStudentsAction(
   const result = await prisma.dailyAssignment.createMany({ data, skipDuplicates: true }).catch(() => null);
   if (!result) return { error: "Một hoặc nhiều từ vựng đã chọn không còn hợp lệ. Vui lòng thử lại." };
 
+  // A fresh explicit assignment gives every affected student's auto-continuation a new topic+level
+  // to work from (see deriveLastAssignmentRule) — clear the exhausted flag so it can notify again
+  // if this new batch also eventually runs out.
+  await prisma.account.updateMany({
+    where: { id_login: { in: students.map((s) => s.id_login) } },
+    data: { assignRuleExhaustedAt: null },
+  });
+
   return { studentCount: students.length };
 }
 
@@ -153,6 +166,9 @@ export async function assignVocabularyToStudentAction(
 
   const result = await prisma.dailyAssignment.createMany({ data, skipDuplicates: true }).catch(() => null);
   if (!result) return { error: "Một hoặc nhiều từ vựng đã chọn không còn hợp lệ. Vui lòng thử lại." };
+
+  // See the matching comment in assignVocabularyToAllStudentsAction.
+  await prisma.account.update({ where: { id_login: studentId }, data: { assignRuleExhaustedAt: null } });
 
   return { count: result.count };
 }

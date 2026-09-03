@@ -5,6 +5,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import {
   AlertCircle,
+  AlertTriangle,
   Check,
   CheckCircle2,
   Circle,
@@ -689,6 +690,12 @@ export function AdminStudentsPanel({
                     <Badge variant="secondary" className="max-w-32 gap-1 shrink-0 truncate">
                       <Pin className="size-3" />
                       {student.pinnedTopicName}
+                    </Badge>
+                  )}
+                  {student.assignRuleExhausted && (
+                    <Badge variant="destructive" className="gap-1 shrink-0">
+                      <AlertTriangle className="size-3" />
+                      {dict.adminStudents.assignRuleExhaustedBadge}
                     </Badge>
                   )}
                   <Badge variant="outline" className="gap-1 shrink-0">
