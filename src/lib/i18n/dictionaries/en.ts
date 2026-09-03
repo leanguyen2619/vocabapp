@@ -104,9 +104,9 @@ const en: Dictionary = {
     interjection: "interjection",
   },
   landing: {
-    heroTitle: "How do you want to learn vocabulary?",
+    heroTitle: "Say hi to Reindeer the Vocab Builder!",
     heroSubtitle:
-      "Remember vocabulary longer with interactive flashcards, practice quizzes, and VocabApp's matching game.",
+      "Your moment has come. Follow the call. Build your vocab. Build the plot twist you would die to see.",
     ctaLogin: "Log in",
     goToDashboard: "Go to Dashboard",
     featuresTitle: "Choose the way you learn best",

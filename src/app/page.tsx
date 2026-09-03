@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {} from "lucide-react";
 
-import { FeatureCarousel } from "@/components/feature-carousel";
 import { HeaderAuthActions } from "@/components/header-auth-actions";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -87,13 +86,6 @@ export default async function Home() {
               {dict.landing.ctaLogin}
             </Button>
           </div>
-        </section>
-
-        <section className="mx-auto w-full max-w-6xl px-6 pt-4 pb-24">
-          <h2 className="mb-6 text-center font-heading text-2xl font-semibold tracking-tight sm:text-left">
-            {dict.landing.featuresTitle}
-          </h2>
-          <FeatureCarousel dict={dict} />
         </section>
       </main>
 

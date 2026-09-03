@@ -106,9 +106,9 @@ const vi = {
     interjection: "thán từ",
   },
   landing: {
-    heroTitle: "Bạn muốn học từ vựng như thế nào?",
+    heroTitle: "Say hi to Reindeer the Vocab Builder!",
     heroSubtitle:
-      "Ghi nhớ từ vựng lâu hơn với thẻ ghi nhớ tương tác, bài kiểm tra thử và trò chơi ghép thẻ của VocabApp.",
+      "Your moment has come. Follow the call. Build your vocab. Build the plot twist you would die to see.",
     ctaLogin: "Đăng nhập",
     goToDashboard: "Vào Dashboard",
     featuresTitle: "Chọn cách học phù hợp với bạn",
