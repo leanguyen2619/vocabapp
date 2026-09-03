@@ -37,6 +37,36 @@ export default async function Home() {
 
       <main className="flex flex-1 flex-col">
         <section className="relative overflow-hidden">
+          {/* Soft gradient wash behind the hero, colored to match the reindeer mascot (amber sky,
+              moss ground, coral nose) rather than the site's pink brand tone, so the two feel like
+              one scene instead of a mascot dropped onto a plain white background. Two versions
+              (swapped via dark:) since the light one's pastel intensity would look wrong on a dark
+              page — Tailwind's dark: variant can't reach into an inline gradient, hence two divs.
+              Deliberately no negative z-index: body has `bg-background`, which CSS promotes to the
+              *canvas* background — painted beneath literally everything, including negative-z-index
+              elements anywhere in the document, not just this section's own stacking context. DOM
+              order (both divs come before the z-10 content) is enough to keep them behind the text. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 dark:hidden"
+            style={{
+              background:
+                "radial-gradient(50% 45% at 50% 0%, #fdedcf 0%, rgba(253,237,207,0) 70%)," +
+                "radial-gradient(28% 24% at 8% 42%, rgba(220,239,200,0.55) 0%, rgba(220,239,200,0) 75%)," +
+                "radial-gradient(26% 22% at 94% 6%, rgba(249,214,207,0.5) 0%, rgba(249,214,207,0) 75%)",
+            }}
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 hidden dark:block"
+            style={{
+              background:
+                "radial-gradient(50% 45% at 50% 0%, rgba(217,163,63,0.22) 0%, rgba(217,163,63,0) 70%)," +
+                "radial-gradient(28% 24% at 8% 42%, rgba(122,159,94,0.14) 0%, rgba(122,159,94,0) 75%)," +
+                "radial-gradient(26% 22% at 94% 6%, rgba(196,103,90,0.14) 0%, rgba(196,103,90,0) 75%)",
+            }}
+          />
+
           <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center gap-6 px-6 pt-14 pb-24 text-center sm:pt-16 sm:pb-28">
             <div className="w-full max-w-md overflow-hidden rounded-3xl shadow-sm">
               <WelcomeReindeerIllustration className="h-56 w-full sm:h-64" />
