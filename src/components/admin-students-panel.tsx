@@ -398,7 +398,7 @@ export function AdminStudentsPanel({
             }}
           >
             <DialogTrigger
-              render={<Button size="sm" className="bg-[#42FFA4] text-[#0a3d26] hover:bg-[#42FFA4]/85" />}
+              render={<Button size="sm" className="bg-[#9ca678] text-[#0a3d26] hover:bg-[#9ca678]/85" />}
             >
               <ClipboardList className="size-4" />
               {dict.adminStudents.assignVocab}
@@ -567,7 +567,7 @@ export function AdminStudentsPanel({
       <div className="grid gap-4 sm:grid-cols-3">
         <Card className="bg-card/85 backdrop-blur-sm">
           <CardContent className="flex items-center gap-3 py-4">
-            <div className="flex size-9 items-center justify-center rounded-full bg-[#42FFA4]/20">
+            <div className="flex size-9 items-center justify-center rounded-full bg-[#9ca678]/20">
               <IdCard className="size-4 text-[#0a8a52]" />
             </div>
             <div>
@@ -639,7 +639,7 @@ export function AdminStudentsPanel({
                             variant={w.mastered ? "default" : "outline"}
                             className={
                               w.mastered
-                                ? "border-transparent bg-[#42FFA4] font-semibold text-[#0a3d26]"
+                                ? "border-transparent bg-[#9ca678] font-semibold text-[#0a3d26]"
                                 : "text-muted-foreground"
                             }
                           >
@@ -655,7 +655,7 @@ export function AdminStudentsPanel({
                   <Progress
                     value={student.score}
                     className="flex-1 sm:w-32"
-                    indicatorClassName="bg-[#42FFA4]"
+                    indicatorClassName="bg-[#9ca678]"
                   />
                   {student.pinnedTopicName && (
                     <Badge variant="secondary" className="max-w-32 gap-1 shrink-0 truncate">
