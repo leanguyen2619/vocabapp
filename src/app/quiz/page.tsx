@@ -1,11 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { ArrowLeft } from "lucide-react";
 
+import { PracticeHeader } from "@/components/practice-header";
 import { QuizSession } from "@/components/quiz-session";
-import { RandomExerciseButton } from "@/components/random-exercise-button";
-import { BrandWordmark } from "@/components/brand-wordmark";
 import { listVisibleExerciseTypesAction } from "@/lib/actions/exercise-types";
 import { getMyQuizQuestionsAction, listTopicsAction } from "@/lib/actions/vocabulary";
 import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
@@ -40,23 +37,7 @@ export default async function QuizPage({
 
   return (
     <div className="flex flex-1 flex-col bg-background bg-forest">
-      <header>
-        <div className="mx-auto flex w-full max-w-2xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="size-4" />
-              {dict.common.backToDashboard}
-            </Link>
-            <RandomExerciseButton currentCode="multiple_choice" types={exerciseTypes} dict={dict} />
-          </div>
-          <div className="flex items-center gap-2">
-            <BrandWordmark size="sm" />
-          </div>
-        </div>
-      </header>
+      <PracticeHeader currentCode="multiple_choice" types={exerciseTypes} dict={dict} />
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-10 sm:py-16">
         <QuizSession questions={questions} topics={topics} dict={dict} />
