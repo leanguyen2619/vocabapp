@@ -18,6 +18,7 @@ import {
   Trophy,
 } from "lucide-react";
 
+import { BrandWordmark } from "@/components/brand-wordmark";
 import { LevelCard } from "@/components/level-card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -187,10 +188,7 @@ export function ProfileClient({
             {dict.common.backToDashboard}
           </Link>
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <BookOpen className="size-3.5" />
-            </div>
-            <span className="font-heading text-base font-semibold">VocabApp</span>
+            <BrandWordmark size="sm" />
           </div>
         </div>
       </header>
