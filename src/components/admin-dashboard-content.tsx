@@ -1,15 +1,6 @@
 import Link from "next/link";
-import {
-  BarChart3,
-  Building2,
-  Clock,
-  Library,
-  PenLine,
-  Settings2,
-  TrendingDown,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import Image from "next/image";
+import { Clock } from "lucide-react";
 
 import { AdminOverviewCard } from "@/components/admin-overview-card";
 import { AdminStudentsPanel } from "@/components/admin-students-panel";
@@ -22,7 +13,13 @@ import type { Account, Level, Topic, Vocabulary } from "@/types";
 interface AdminFunction {
   title: string;
   description: string;
-  icon: LucideIcon;
+  /** Hand-picked reindeer-themed illustration (see public/admin-icons/) — width/height are the
+   * source file's real pixel size so next/image can size the box without distorting the icon's own
+   * aspect ratio (they vary since each was cropped to just above where its original caption text
+   * started, not a single template). */
+  iconSrc: string;
+  iconWidth: number;
+  iconHeight: number;
   href: string | null;
   count?: number;
 }
@@ -60,50 +57,66 @@ export function AdminDashboardContent({
     {
       title: dict.adminDashboard.fnAccountsTitle,
       description: dict.adminDashboard.fnAccountsDesc,
-      icon: Users,
+      iconSrc: "/admin-icons/accounts.png",
+      iconWidth: 232,
+      iconHeight: 232,
       href: "/admin/accounts",
     },
     {
       title: dict.adminDashboard.fnClassesTitle,
       description: dict.adminDashboard.fnClassesDesc,
-      icon: Building2,
+      iconSrc: "/admin-icons/classes.png",
+      iconWidth: 120,
+      iconHeight: 120,
       href: "/admin/classes",
     },
     {
       title: dict.adminDashboard.fnVocabTitle,
       description: dict.adminDashboard.fnVocabDesc,
-      icon: Library,
+      iconSrc: "/admin-icons/vocabulary.png",
+      iconWidth: 122,
+      iconHeight: 104,
       href: "/admin/vocabulary",
     },
     {
       title: dict.adminDashboard.fnExerciseTypesTitle,
       description: dict.adminDashboard.fnExerciseTypesDesc,
-      icon: Settings2,
+      iconSrc: "/admin-icons/exercise-types.png",
+      iconWidth: 122,
+      iconHeight: 104,
       href: "/admin/exercise-types",
     },
     {
       title: dict.adminDashboard.fnQuestionBankTitle,
       description: dict.adminDashboard.fnQuestionBankDesc,
-      icon: BarChart3,
+      iconSrc: "/admin-icons/question-bank.png",
+      iconWidth: 135,
+      iconHeight: 115,
       href: "/admin/question-bank",
     },
     {
       title: dict.adminDashboard.fnLevelsTitle,
       description: dict.adminDashboard.fnLevelsDesc,
-      icon: Users,
+      iconSrc: "/admin-icons/levels.png",
+      iconWidth: 125,
+      iconHeight: 106,
       href: "/admin/levels",
     },
     {
       title: dict.adminDashboard.fnWritingTitle,
       description: dict.adminDashboard.fnWritingDesc,
-      icon: PenLine,
+      iconSrc: "/admin-icons/writing.png",
+      iconWidth: 140,
+      iconHeight: 119,
       href: "/admin/writing-submissions",
       count: pendingWritingCount,
     },
     {
       title: dict.adminDashboard.fnClassReportTitle,
       description: dict.adminDashboard.fnClassReportDesc,
-      icon: TrendingDown,
+      iconSrc: "/admin-icons/class-report.png",
+      iconWidth: 127,
+      iconHeight: 108,
       href: "/admin/class-report",
       count: weakWordsCount,
     },
@@ -127,15 +140,18 @@ export function AdminDashboardContent({
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {adminFunctions.map((fn) => {
-            const Icon = fn.icon;
             const isReady = Boolean(fn.href);
 
             const cardBody = (
               <CardContent className="flex flex-col gap-3 py-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
-                    <Icon className="size-5 text-primary" />
-                  </div>
+                  <Image
+                    src={fn.iconSrc}
+                    alt=""
+                    width={fn.iconWidth}
+                    height={fn.iconHeight}
+                    className="h-14 w-auto"
+                  />
                   {Boolean(fn.count) && <Badge>{fn.count}</Badge>}
                 </div>
                 <div>
