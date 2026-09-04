@@ -153,8 +153,10 @@ export function MatchingGame({
           "w-full rounded-xl border-2 border-border bg-card px-4 py-3 text-left text-sm font-medium transition-colors disabled:cursor-default",
           !isMatched && !isSelected && "hover:border-primary/50",
           isSelected && "border-primary bg-primary/5",
-          isMatched && "border-emerald-500 bg-emerald-50 text-emerald-700",
-          wrongIds.includes(item.id) && "border-red-400 bg-red-50 text-red-700"
+          isMatched &&
+            "border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/30 dark:text-emerald-400",
+          wrongIds.includes(item.id) &&
+            "border-red-400 bg-red-50 text-red-700 dark:border-red-800/60 dark:bg-red-950/30 dark:text-red-400"
         )}
       >
         {label}

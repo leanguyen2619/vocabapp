@@ -98,13 +98,15 @@ export function ReadingComprehensionGame({
                 key={b.id}
                 className={cn(
                   "flex items-start gap-2 rounded-xl border px-3 py-2 text-sm",
-                  r?.isCorrect ? "border-emerald-200 bg-emerald-50" : "border-red-200 bg-red-50"
+                  r?.isCorrect
+                    ? "border-emerald-200 bg-emerald-50 dark:border-emerald-800/40 dark:bg-emerald-950/20"
+                    : "border-red-200 bg-red-50 dark:border-red-800/40 dark:bg-red-950/20"
                 )}
               >
                 {r?.isCorrect ? (
-                  <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+                  <Check className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
                 ) : (
-                  <X className="mt-0.5 size-4 shrink-0 text-red-500" />
+                  <X className="mt-0.5 size-4 shrink-0 text-red-500 dark:text-red-400" />
                 )}
                 <p>
                   {formatMessage(dict.readingComprehensionGame.blankLabel, { number: b.blankNumber })}:{" "}

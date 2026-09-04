@@ -153,8 +153,8 @@ export function WordFormationGame({
       <div
         className={cn(
           "flex min-h-14 flex-wrap items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-border px-4 py-3",
-          wrongFlash && "border-red-400 bg-red-50",
-          solved && "border-emerald-500 bg-emerald-50"
+          wrongFlash && "border-red-400 bg-red-50 dark:border-red-800/60 dark:bg-red-950/30",
+          solved && "border-emerald-500 bg-emerald-50 dark:border-emerald-800/60 dark:bg-emerald-950/30"
         )}
       >
         {placedIds.length === 0 && (
@@ -167,7 +167,7 @@ export function WordFormationGame({
             key={id}
             className={cn(
               "flex size-9 items-center justify-center rounded-lg bg-card text-lg font-semibold uppercase ring-1 ring-foreground/10",
-              solved && "bg-emerald-100 text-emerald-700"
+              solved && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400"
             )}
           >
             {prompt.tiles.find((t) => t.id === id)!.char}
@@ -202,7 +202,7 @@ export function WordFormationGame({
       {solved && (
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="flex items-center gap-1.5">
-            <p className="flex items-center gap-1.5 text-sm font-medium text-emerald-700">
+            <p className="flex items-center gap-1.5 text-sm font-medium text-emerald-700 dark:text-emerald-400">
               <Check className="size-4" />
               {formatMessage(dict.wordFormationGame.successMessage, {
                 answer,

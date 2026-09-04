@@ -135,7 +135,10 @@ export function TypingGame({
           placeholder={dict.typingGame.inputPlaceholder}
           className={cn(
             "max-w-xs text-center text-lg",
-            checked && (isCorrect ? "border-emerald-500 bg-emerald-50" : "border-red-400 bg-red-50")
+            checked &&
+              (isCorrect
+                ? "border-emerald-500 bg-emerald-50 dark:border-emerald-800/60 dark:bg-emerald-950/30"
+                : "border-red-400 bg-red-50 dark:border-red-800/60 dark:bg-red-950/30")
           )}
         />
 

@@ -164,17 +164,18 @@ export function PosClassificationGame({
               className={cn(
                 "flex items-center justify-between rounded-2xl border-2 border-border bg-card px-4 py-3 text-left text-base font-medium capitalize transition-colors disabled:cursor-default",
                 !isAnswered && "hover:border-primary/50",
-                isThisCorrect && "border-emerald-500 bg-emerald-50 text-emerald-700",
+                isThisCorrect &&
+                  "border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/30 dark:text-emerald-400",
                 result !== null &&
                   isSelected &&
                   !isThisCorrect &&
-                  "border-red-400 bg-red-50 text-red-700"
+                  "border-red-400 bg-red-50 text-red-700 dark:border-red-800/60 dark:bg-red-950/30 dark:text-red-400"
               )}
             >
               {dict.partOfSpeech[option]}
-              {isThisCorrect && <Check className="size-5 shrink-0 text-emerald-600" />}
+              {isThisCorrect && <Check className="size-5 shrink-0 text-emerald-600 dark:text-emerald-400" />}
               {result !== null && isSelected && !isThisCorrect && (
-                <X className="size-5 shrink-0 text-red-500" />
+                <X className="size-5 shrink-0 text-red-500 dark:text-red-400" />
               )}
             </button>
           );
