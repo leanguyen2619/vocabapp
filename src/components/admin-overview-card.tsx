@@ -1,4 +1,4 @@
-import { AlertCircle, Building2, CheckCircle2, Library, Users } from "lucide-react";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
 
 import { formatMessage } from "@/lib/i18n/format";
@@ -88,9 +88,7 @@ export function AdminOverviewCard({
         <div className="flex flex-col divide-y divide-emerald-100 rounded-2xl bg-white/70 dark:divide-emerald-900/40 dark:bg-emerald-950/20">
           <div className="flex items-center justify-between gap-3 px-4 py-3">
             <div className="flex items-center gap-3">
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400">
-                <Users className="size-4" />
-              </div>
+              <Image src="/admin-icons/accounts.png" alt="" width={232} height={232} className="h-8 w-8 shrink-0 object-contain" />
               <span className="text-sm text-foreground">{dict.adminDashboard.students}</span>
             </div>
             <span className="text-sm font-semibold text-foreground tabular-nums">{studentCount}</span>
@@ -98,9 +96,7 @@ export function AdminOverviewCard({
 
           <div className="flex items-center justify-between gap-3 px-4 py-3">
             <div className="flex items-center gap-3">
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-600 dark:bg-sky-900/40 dark:text-sky-400">
-                <Building2 className="size-4" />
-              </div>
+              <Image src="/admin-icons/classes.png" alt="" width={120} height={120} className="h-8 w-8 shrink-0 object-contain" />
               <span className="text-sm text-foreground">{dict.adminDashboard.classes}</span>
             </div>
             <span className="text-sm font-semibold text-foreground tabular-nums">{classCount}</span>
@@ -108,9 +104,7 @@ export function AdminOverviewCard({
 
           <div className="flex items-center justify-between gap-3 px-4 py-3">
             <div className="flex items-center gap-3">
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400">
-                <Library className="size-4" />
-              </div>
+              <Image src="/admin-icons/vocabulary.png" alt="" width={122} height={104} className="h-8 w-8 shrink-0 object-contain" />
               <span className="text-sm text-foreground">{dict.adminDashboard.vocabulary}</span>
             </div>
             <span className="text-sm font-semibold text-foreground tabular-nums">{vocabCount}</span>
