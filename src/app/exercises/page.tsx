@@ -22,7 +22,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { LogoMark } from "@/components/logo-mark";
+import { BrandWordmark } from "@/components/brand-wordmark";
 import { listExerciseTypesAction } from "@/lib/actions/exercise-types";
 import { getMyStudentLevelIndexAction, listLevelsAction } from "@/lib/actions/levels";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -101,8 +101,7 @@ export default async function ExercisesPage({
             {dict.common.backToDashboard}
           </Link>
           <div className="flex items-center gap-2">
-            <LogoMark size="sm" />
-            <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
+            <BrandWordmark size="sm" />
           </div>
         </div>
       </header>

@@ -6,7 +6,7 @@ import { LanguageToggle } from "@/components/language-toggle";
 import { LoginForm } from "@/components/login-form";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogoMark } from "@/components/logo-mark";
+import { BrandWordmark } from "@/components/brand-wordmark";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 
@@ -22,8 +22,7 @@ export default async function LoginPage() {
     <div className="flex flex-1 flex-col items-center justify-center gap-8 bg-background px-6 py-16">
       <div className="flex w-full max-w-sm items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <LogoMark size="md" />
-          <span className="font-heading text-lg font-semibold">{dict.common.brand}</span>
+          <BrandWordmark size="md" />
         </Link>
         <div className="flex items-center gap-1">
           <ThemeToggle />

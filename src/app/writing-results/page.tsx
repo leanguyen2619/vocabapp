@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { ArrowLeft } from "lucide-react";
 
 import { WritingResultsClient } from "./writing-results-client";
-import { LogoMark } from "@/components/logo-mark";
+import { BrandWordmark } from "@/components/brand-wordmark";
 import { listMyWritingSubmissionsAction } from "@/lib/actions/writing-submissions";
 import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -40,8 +40,7 @@ export default async function WritingResultsPage() {
             {dict.common.backToExercises}
           </Link>
           <div className="flex items-center gap-2">
-            <LogoMark size="sm" />
-            <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
+            <BrandWordmark size="sm" />
           </div>
         </div>
       </header>

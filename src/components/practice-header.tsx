@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import { RandomExerciseButton } from "@/components/random-exercise-button";
-import { LogoMark } from "@/components/logo-mark";
+import { BrandWordmark } from "@/components/brand-wordmark";
 import type { ExerciseTypeSummary } from "@/lib/actions/exercise-types";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { PracticeTypeCode } from "@/types";
@@ -36,8 +36,7 @@ export function PracticeHeader({
           <RandomExerciseButton currentCode={currentCode} types={types} dict={dict} />
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <LogoMark size="sm" />
-          <span className="hidden font-heading text-base font-semibold sm:inline">{dict.common.brand}</span>
+          <BrandWordmark size="sm" />
         </div>
       </div>
     </header>

@@ -10,7 +10,7 @@ import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { LogoMark } from "@/components/logo-mark";
+import { BrandWordmark } from "@/components/brand-wordmark";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,8 +46,7 @@ export function DashboardShell({
       <header className="border-b border-border">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
-            <LogoMark size="md" />
-            <span className="font-heading text-lg font-semibold">{dict.common.brand}</span>
+            <BrandWordmark size="md" />
           </Link>
           <div className="flex items-center gap-3">
             {account.role === "student" && (

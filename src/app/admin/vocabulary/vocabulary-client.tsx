@@ -41,7 +41,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { LogoMark } from "@/components/logo-mark";
+import { BrandWordmark } from "@/components/brand-wordmark";
 import {
   bulkCreateVocabularyAction,
   createVocabularyAction,
@@ -334,8 +334,7 @@ export function AdminVocabularyClient({
             {dict.common.backToDashboard}
           </Link>
           <div className="flex items-center gap-2">
-            <LogoMark size="sm" />
-            <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
+            <BrandWordmark size="sm" />
           </div>
         </div>
       </header>

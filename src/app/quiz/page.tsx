@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 
 import { QuizSession } from "@/components/quiz-session";
 import { RandomExerciseButton } from "@/components/random-exercise-button";
-import { LogoMark } from "@/components/logo-mark";
+import { BrandWordmark } from "@/components/brand-wordmark";
 import { listVisibleExerciseTypesAction } from "@/lib/actions/exercise-types";
 import { getMyQuizQuestionsAction, listTopicsAction } from "@/lib/actions/vocabulary";
 import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
@@ -53,8 +53,7 @@ export default async function QuizPage({
             <RandomExerciseButton currentCode="multiple_choice" types={exerciseTypes} dict={dict} />
           </div>
           <div className="flex items-center gap-2">
-            <LogoMark size="sm" />
-            <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
+            <BrandWordmark size="sm" />
           </div>
         </div>
       </header>

@@ -7,8 +7,8 @@ import { HeaderAuthActions } from "@/components/header-auth-actions";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { LogoMark } from "@/components/logo-mark";
 import { WelcomeReindeerIllustration } from "@/components/welcome-reindeer-illustration";
+import { BrandWordmark } from "@/components/brand-wordmark";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
@@ -37,8 +37,7 @@ export default async function Home() {
       <header className="relative border-b border-border">
         <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-6 py-4 sm:gap-6">
           <Link href="/" className="flex shrink-0 items-center gap-2">
-            <LogoMark size="md" />
-            <span className="font-heading text-lg font-semibold">{dict.common.brand}</span>
+            <BrandWordmark size="md" />
           </Link>
 
           <div className="ml-auto flex items-center gap-2">

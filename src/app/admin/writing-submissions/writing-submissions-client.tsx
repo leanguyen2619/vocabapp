@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { LogoMark } from "@/components/logo-mark";
+import { BrandWordmark } from "@/components/brand-wordmark";
 import {
   gradeWritingSubmissionAction,
   type GradedSubmissionItem,
@@ -97,8 +97,7 @@ export function AdminWritingSubmissionsClient({
             {dict.common.backToDashboard}
           </Link>
           <div className="flex items-center gap-2">
-            <LogoMark size="sm" />
-            <span className="font-heading text-base font-semibold">{dict.common.brand}</span>
+            <BrandWordmark size="sm" />
           </div>
         </div>
       </header>
