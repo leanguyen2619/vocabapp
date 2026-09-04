@@ -39,7 +39,7 @@ export default async function QuizPage({
   redirectIfWarmupIncomplete(warmupStatus);
 
   return (
-    <div className="flex flex-1 flex-col bg-background">
+    <div className="flex flex-1 flex-col bg-background bg-forest">
       <header className="border-b border-border">
         <div className="mx-auto flex w-full max-w-2xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">

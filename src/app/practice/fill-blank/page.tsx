@@ -34,7 +34,7 @@ export default async function FillBlankPage() {
   const questions = shuffle(rawQuestions).map((q) => ({ ...q, options: shuffle(q.options) }));
 
   return (
-    <div className="flex flex-1 flex-col bg-background">
+    <div className="flex flex-1 flex-col bg-background bg-forest">
       <PracticeHeader currentCode="fill_blank" types={exerciseTypes} dict={dict} />
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-10 sm:py-16">

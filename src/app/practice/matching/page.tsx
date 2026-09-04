@@ -41,7 +41,7 @@ export default async function MatchingPage({
   const rightItems = shuffle(dailyWords);
 
   return (
-    <div className="flex flex-1 flex-col bg-background">
+    <div className="flex flex-1 flex-col bg-background bg-forest">
       <PracticeHeader currentCode="matching" types={exerciseTypes} dict={dict} />
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-10 sm:py-16">

@@ -19,7 +19,7 @@ function SkeletonHeader({ maxWidth }: { maxWidth: string }) {
  * card of stacked rows, matching the shared list layout every admin page uses. */
 export function AdminListSkeleton({ maxWidth = "max-w-4xl", rows = 6 }: { maxWidth?: string; rows?: number }) {
   return (
-    <div className="flex flex-1 flex-col bg-background">
+    <div className="flex flex-1 flex-col bg-background bg-forest">
       <SkeletonHeader maxWidth={maxWidth} />
       <main className={cn("mx-auto flex w-full flex-1 flex-col gap-6 px-6 py-10", maxWidth)}>
         <div className="flex flex-col gap-2">
@@ -50,7 +50,7 @@ export function AdminListSkeleton({ maxWidth = "max-w-4xl", rows = 6 }: { maxWid
 /** Student "My Vocabulary" — a grid of word cards. */
 export function CardGridSkeleton({ maxWidth = "max-w-5xl", count = 9 }: { maxWidth?: string; count?: number }) {
   return (
-    <div className="flex flex-1 flex-col bg-background">
+    <div className="flex flex-1 flex-col bg-background bg-forest">
       <SkeletonHeader maxWidth={maxWidth} />
       <main className={cn("mx-auto flex w-full flex-1 flex-col gap-6 px-6 py-10", maxWidth)}>
         <div className="flex flex-col gap-2">
@@ -82,7 +82,7 @@ export function CardGridSkeleton({ maxWidth = "max-w-5xl", count = 9 }: { maxWid
 /** Quiz + every /practice/* game page — progress bar, then one centered question card. */
 export function GameSkeleton() {
   return (
-    <div className="flex flex-1 flex-col bg-background">
+    <div className="flex flex-1 flex-col bg-background bg-forest">
       <SkeletonHeader maxWidth="max-w-2xl" />
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-6 py-10 sm:py-16">
         <Skeleton className="h-2 w-full rounded-full" />
@@ -106,7 +106,7 @@ export function GameSkeleton() {
  * fit both roles (student/admin), since each renders quite different real content. */
 export function DashboardSkeleton() {
   return (
-    <div className="flex flex-1 flex-col bg-background">
+    <div className="flex flex-1 flex-col bg-background bg-forest">
       <SkeletonHeader maxWidth="max-w-5xl" />
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-10">
         <div className="flex flex-col gap-2">
@@ -144,7 +144,7 @@ export function DashboardSkeleton() {
 /** Profile — avatar/name card, stat cards, then per-level progress cards. */
 export function ProfileSkeleton() {
   return (
-    <div className="flex flex-1 flex-col bg-background">
+    <div className="flex flex-1 flex-col bg-background bg-forest">
       <SkeletonHeader maxWidth="max-w-3xl" />
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-10">
         <Card>
@@ -182,7 +182,7 @@ export function ProfileSkeleton() {
 /** /exercises — the exercise-type picker grid. */
 export function ExercisesSkeleton() {
   return (
-    <div className="flex flex-1 flex-col bg-background">
+    <div className="flex flex-1 flex-col bg-background bg-forest">
       <SkeletonHeader maxWidth="max-w-5xl" />
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-10">
         <div className="flex flex-col gap-2">

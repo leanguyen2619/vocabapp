@@ -137,4 +137,25 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
+  /* The fairy-tale forest background used on every page after login (see the landing page for
+   * the same image). A plain CSS background-image — not an absolutely-positioned sibling element
+   * like the landing page originally used — specifically so it can be dropped into ~30 existing
+   * page wrapper divs with a single className each, with zero risk of the stacking-order trap
+   * documented on the landing page (a positioned sibling needs every element that should appear
+   * above it to also be explicitly positioned, or it silently paints over plain content).
+   * background-image always paints behind an element's own children, no such coordination needed.
+   * `fixed` attachment keeps the leafy frame anchored to the viewport rather than scrolling away
+   * on the tall list/table pages. Dark mode swaps in a scrim (via next-themes' `.dark` class,
+   * matching this app's class-based dark mode rather than prefers-color-scheme) since the image is
+   * pale enough to look like a bright rectangle on the dark theme without one. */
+  .bg-forest {
+    background-image: url("/forest-bg.jpg");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+  .dark .bg-forest {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url("/forest-bg.jpg");
+  }
 }
