@@ -476,6 +476,10 @@ const en: Dictionary = {
     subtitle: "Your teacher's scores and feedback for each sentence you submitted.",
     pendingBadge: "Awaiting grading",
     empty: "You haven't submitted any sentences yet.",
+    noResults: "No submissions match this filter.",
+    allFilter: "All",
+    gradedFilter: "Graded",
+    pendingFilter: "Pending",
   },
   classReport: {
     title: "Class report",

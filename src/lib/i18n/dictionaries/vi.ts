@@ -478,6 +478,10 @@ const vi = {
     subtitle: "Điểm và nhận xét của giáo viên cho từng câu bạn đã nộp.",
     pendingBadge: "Đang chờ chấm điểm",
     empty: "Bạn chưa nộp câu viết nào.",
+    noResults: "Không có bài viết nào khớp với bộ lọc.",
+    allFilter: "Tất cả",
+    gradedFilter: "Đã chấm",
+    pendingFilter: "Chờ chấm",
   },
   classReport: {
     title: "Báo cáo lớp học",

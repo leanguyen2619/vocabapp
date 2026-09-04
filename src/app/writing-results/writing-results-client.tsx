@@ -1,13 +1,18 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { Clock, MessageSquare } from "lucide-react";
 
+import { PaginationControls } from "@/components/pagination-controls";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { cn } from "@/lib/utils";
 import type { MySubmissionItem } from "@/lib/actions/writing-submissions";
+
+const PAGE_SIZE = 10;
 
 function scoreColorClasses(score: number): string {
   if (score >= 80) return "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/30 dark:text-emerald-400";
@@ -22,6 +27,18 @@ export function WritingResultsClient({
   submissions: MySubmissionItem[];
   dict: Dictionary;
 }) {
+  const [statusFilter, setStatusFilter] = useState<"all" | "graded" | "pending">("all");
+  const [page, setPage] = useState(1);
+
+  const filtered = useMemo(
+    () => (statusFilter === "all" ? submissions : submissions.filter((s) => s.status === statusFilter)),
+    [submissions, statusFilter]
+  );
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
@@ -29,12 +46,31 @@ export function WritingResultsClient({
         <p className="text-muted-foreground">{dict.writingResults.subtitle}</p>
       </div>
 
+      {submissions.length > 0 && (
+        <Tabs
+          value={statusFilter}
+          onValueChange={(value) => {
+            setStatusFilter(value as "all" | "graded" | "pending");
+            setPage(1);
+          }}
+        >
+          <TabsList>
+            <TabsTrigger value="all">{dict.writingResults.allFilter}</TabsTrigger>
+            <TabsTrigger value="graded">{dict.writingResults.gradedFilter}</TabsTrigger>
+            <TabsTrigger value="pending">{dict.writingResults.pendingFilter}</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )}
+
       <Card>
         <CardContent className="flex flex-col gap-1 py-4">
           {submissions.length === 0 && (
             <p className="py-8 text-center text-sm text-muted-foreground">{dict.writingResults.empty}</p>
           )}
-          {submissions.map((s, index) => (
+          {submissions.length > 0 && filtered.length === 0 && (
+            <p className="py-8 text-center text-sm text-muted-foreground">{dict.writingResults.noResults}</p>
+          )}
+          {paged.map((s, index) => (
             <div key={s.id}>
               {index > 0 && <Separator className="my-3" />}
               <div className="flex flex-col gap-2">
@@ -66,6 +102,8 @@ export function WritingResultsClient({
           ))}
         </CardContent>
       </Card>
+
+      <PaginationControls page={currentPage} totalPages={totalPages} onPageChange={setPage} dict={dict} />
     </div>
   );
 }
