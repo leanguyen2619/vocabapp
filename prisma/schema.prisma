@@ -503,6 +503,10 @@ model WritingSubmission {
   submittedAt DateTime                @default(now())
   gradedAt    DateTime?
   gradedBy    String?
+  // Set the first time the student opens /writing-results after this submission was graded —
+  // lets the dashboard show a "N bài mới được chấm" badge that clears once they've actually seen
+  // it, instead of a raw graded-count that would never go away.
+  seenByStudentAt DateTime?
 
   account Account    @relation(fields: [accountId], references: [id_login], onDelete: Cascade)
   vocab   Vocabulary @relation(fields: [vocabId], references: [id], onDelete: Cascade)

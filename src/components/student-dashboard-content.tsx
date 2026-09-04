@@ -30,6 +30,7 @@ export function StudentDashboardContent({
   levels,
   topics,
   newWordsCount,
+  unseenGradedWritingCount,
   locale,
   dict,
 }: {
@@ -38,6 +39,7 @@ export function StudentDashboardContent({
   levels: LevelWithProgress[];
   topics: Topic[];
   newWordsCount: number;
+  unseenGradedWritingCount: number;
   locale: Locale;
   dict: Dictionary;
 }) {
@@ -67,6 +69,7 @@ export function StudentDashboardContent({
         <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/writing-results" />}>
           <PenLine className="size-4" />
           {dict.studentDashboard.writingResults}
+          {unseenGradedWritingCount > 0 && <Badge>{unseenGradedWritingCount}</Badge>}
         </Button>
       </div>
 

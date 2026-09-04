@@ -5,7 +5,10 @@ import { ArrowLeft } from "lucide-react";
 
 import { WritingResultsClient } from "./writing-results-client";
 import { BrandWordmark } from "@/components/brand-wordmark";
-import { listMyWritingSubmissionsAction } from "@/lib/actions/writing-submissions";
+import {
+  listMyWritingSubmissionsAction,
+  markMyGradedWritingSeenAction,
+} from "@/lib/actions/writing-submissions";
 import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
@@ -27,6 +30,11 @@ export default async function WritingResultsPage() {
     listMyWritingSubmissionsAction(),
   ]);
   redirectIfWarmupIncomplete(warmupStatus);
+
+  // Clears the dashboard's "N bài mới được chấm" badge now that the student is actually looking
+  // at the graded results. Must be awaited, not fire-and-forget — a serverless function can be
+  // torn down right after the response is sent, which would silently drop an unawaited write.
+  await markMyGradedWritingSeenAction();
 
   return (
     <div className="flex flex-1 flex-col bg-background bg-forest">

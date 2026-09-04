@@ -7,7 +7,10 @@ import { listAccountsAction } from "@/lib/actions/accounts";
 import { listClassesAction } from "@/lib/actions/classes";
 import { getMyLevelsAction, listLevelsAction } from "@/lib/actions/levels";
 import { listAllStudentsAction } from "@/lib/actions/students";
-import { countPendingWritingSubmissionsAction } from "@/lib/actions/writing-submissions";
+import {
+  countMyUnseenGradedWritingAction,
+  countPendingWritingSubmissionsAction,
+} from "@/lib/actions/writing-submissions";
 import { countWeakWordsAction } from "@/lib/actions/class-report";
 import {
   getMyDailyAssignmentsAction,
@@ -67,13 +70,15 @@ export default async function DashboardPage() {
     );
   }
 
-  const [warmupStatus, levels, dailyAssignments, topics, newWords] = await Promise.all([
-    getMyWarmupStatusAction(),
-    getMyLevelsAction(),
-    getMyDailyAssignmentsAction(),
-    listTopicsAction(),
-    getMyWordsForScopeAction("new"),
-  ]);
+  const [warmupStatus, levels, dailyAssignments, topics, newWords, unseenGradedWritingCount] =
+    await Promise.all([
+      getMyWarmupStatusAction(),
+      getMyLevelsAction(),
+      getMyDailyAssignmentsAction(),
+      listTopicsAction(),
+      getMyWordsForScopeAction("new"),
+      countMyUnseenGradedWritingAction(),
+    ]);
   redirectIfWarmupIncomplete(warmupStatus);
   // Matches profile-client.tsx's formula so the two pages never disagree on the number shown.
   const streak = Math.max(0, ...levels.map((l) => l.streak));
@@ -86,6 +91,7 @@ export default async function DashboardPage() {
         levels={levels}
         topics={topics}
         newWordsCount={newWords.length}
+        unseenGradedWritingCount={unseenGradedWritingCount}
         locale={locale}
         dict={dict}
       />

@@ -188,3 +188,26 @@ export async function listMyWritingSubmissionsAction(): Promise<MySubmissionItem
     gradedAt: r.gradedAt,
   }));
 }
+
+/** How many of the student's own submissions have been graded since they last opened
+ * /writing-results — drives the dashboard's "N bài mới được chấm" badge (see
+ * markMyGradedWritingSeenAction, called when that page loads, which is what clears this back to
+ * 0 rather than it counting every graded submission forever). */
+export async function countMyUnseenGradedWritingAction(): Promise<number> {
+  const account = await getCurrentAccount();
+  if (!account) return 0;
+  return prisma.writingSubmission.count({
+    where: { accountId: account.id_login, status: "graded", seenByStudentAt: null },
+  });
+}
+
+/** Marks every currently-graded submission as seen — called once when the student opens
+ * /writing-results, so the dashboard badge (countMyUnseenGradedWritingAction) clears. */
+export async function markMyGradedWritingSeenAction(): Promise<void> {
+  const account = await getCurrentAccount();
+  if (!account) return;
+  await prisma.writingSubmission.updateMany({
+    where: { accountId: account.id_login, status: "graded", seenByStudentAt: null },
+    data: { seenByStudentAt: new Date() },
+  });
+}
