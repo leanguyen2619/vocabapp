@@ -477,6 +477,15 @@ async function computeDailyWords(
     .map((vocab) => ({ vocab, status: statusOf(vocab.id) }));
 }
 
+/** Eagerly computes and persists a student's daily word pick without requiring them to have
+ * opened their own dashboard first — used by the admin's student list (see listAllStudentsAction)
+ * so "auto-assign is the default" is visible there the moment the admin looks, not only after
+ * that student's own next visit. Cheap to call repeatedly: computeDailyWords' own fast path
+ * no-ops once today's picks already exist. */
+export async function ensureDailyWordsForAccount(account: SessionAccount): Promise<void> {
+  await computeDailyWords(account);
+}
+
 export async function getMyDailyWordsAction(): Promise<Vocabulary[]> {
   const account = await getCurrentAccount();
   if (!account) return [];

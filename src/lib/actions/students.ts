@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { ensureDailyWordsForAccount } from "@/lib/actions/vocabulary";
 import { computeUnlockedLevelIds } from "@/lib/level-unlock";
 import { getCurrentAccount } from "@/lib/session";
 import type { AssignmentStatus } from "@/types";
@@ -66,6 +67,12 @@ export async function listAllStudentsAction(): Promise<StudentSummary[]> {
     orderBy: { fullName: "asc" },
   });
   if (students.length === 0) return [];
+
+  // Auto-assignment is the default (see ensureDailyWordsForAccount) — generate each student's
+  // today's words now, before reading assignments below, so the list reflects that immediately
+  // instead of only after each student happens to open their own dashboard first. No-ops (cheap)
+  // for any student whose words are already picked for today.
+  await Promise.all(students.map((s) => ensureDailyWordsForAccount(s)));
 
   const studentIds = students.map((s) => s.id_login);
   const [levels, accountLevels, learningHistory, assignments] = await Promise.all([
