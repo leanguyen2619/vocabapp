@@ -381,7 +381,29 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
       .slice(0, reviewQuota)
       .map((vocab) => ({ vocab, status: "mastered" as LearningStatus }));
 
-    picked = [...assignedWords, ...remaining.slice(0, newQuota), ...reviewWords].slice(0, Math.max(1, target));
+    const newWords = [...remaining.slice(0, newQuota), ...reviewWords];
+
+    // Persist the curriculum-default pick as real DailyAssignment rows too, exactly like the
+    // continuation-rule branch above does — otherwise a student who's never received an explicit
+    // assignment (so this branch runs instead of the rule branch) gets daily words that only ever
+    // show up on their own dashboard, never in the admin's per-student "words assigned today" list
+    // (see StudentSummary.assignedWords in students.ts, which reads only DailyAssignment). The
+    // admin's expectation, per their own explanation, is that auto-assignment is the default and
+    // stays visible there — pressing "Giao từ" is what overrides it, not a prerequisite for it to
+    // show up at all.
+    if (newWords.length > 0) {
+      await prisma.dailyAssignment.createMany({
+        data: newWords.map(({ vocab }) => ({
+          accountId: account.id_login,
+          vocabId: vocab.id,
+          assignedDate: today,
+          status: "pending" as const,
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    picked = [...assignedWords, ...newWords].slice(0, Math.max(1, target));
   }
 
   const pickedVocabIds = picked.map((p) => p.vocab.id);
