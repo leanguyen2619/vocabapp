@@ -160,6 +160,8 @@ const en: Dictionary = {
     statusOnTrackDesc: "You're keeping a great pace today.",
     statusStart: "Let's get started!",
     statusStartDesc: "Finish today's words to keep your streak going.",
+    statusAllDone: "Nice work, all done!",
+    statusAllDoneDesc: "You've finished today's words. See you tomorrow!",
     overviewTitle: "Today's Overview",
     statWordsToday: "Words today",
     statStreak: "Learning streak",

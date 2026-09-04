@@ -1,4 +1,4 @@
-import { CheckCircle2, Flame, TrendingUp } from "lucide-react";
+import { CheckCircle2, Flame, PartyPopper, TrendingUp } from "lucide-react";
 import Image from "next/image";
 
 import { formatMessage } from "@/lib/i18n/format";
@@ -29,6 +29,7 @@ export function DashboardOverviewCard({
   dict: Dictionary;
 }) {
   const hasStarted = wordsCompletedToday > 0;
+  const isAllDone = wordsTotalToday > 0 && wordsCompletedToday >= wordsTotalToday;
   const todayLabel = new Intl.DateTimeFormat(locale === "vi" ? "vi-VN" : "en-US", {
     day: "numeric",
     month: "long",
@@ -62,15 +63,29 @@ export function DashboardOverviewCard({
         />
 
         <div className="absolute inset-x-3 bottom-3 flex items-center gap-3 rounded-2xl bg-white/97 p-3 shadow-md backdrop-blur-md dark:bg-neutral-900/92">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400">
-            <CheckCircle2 className="size-5" />
+          <div
+            className={
+              isAllDone
+                ? "flex size-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/50 dark:text-amber-400"
+                : "flex size-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400"
+            }
+          >
+            {isAllDone ? <PartyPopper className="size-5" /> : <CheckCircle2 className="size-5" />}
           </div>
           <div>
             <p className="text-sm font-semibold text-foreground">
-              {hasStarted ? dict.studentDashboard.statusOnTrack : dict.studentDashboard.statusStart}
+              {isAllDone
+                ? dict.studentDashboard.statusAllDone
+                : hasStarted
+                  ? dict.studentDashboard.statusOnTrack
+                  : dict.studentDashboard.statusStart}
             </p>
             <p className="text-xs text-muted-foreground">
-              {hasStarted ? dict.studentDashboard.statusOnTrackDesc : dict.studentDashboard.statusStartDesc}
+              {isAllDone
+                ? dict.studentDashboard.statusAllDoneDesc
+                : hasStarted
+                  ? dict.studentDashboard.statusOnTrackDesc
+                  : dict.studentDashboard.statusStartDesc}
             </p>
           </div>
         </div>

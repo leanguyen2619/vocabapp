@@ -162,6 +162,8 @@ const vi = {
     statusOnTrackDesc: "Bạn đang giữ đúng nhịp học hôm nay.",
     statusStart: "Bắt đầu học nào!",
     statusStartDesc: "Hoàn thành từ vựng hôm nay để giữ chuỗi ngày học.",
+    statusAllDone: "Xuất sắc, xong hết rồi!",
+    statusAllDoneDesc: "Bạn đã học hết từ vựng hôm nay. Hẹn gặp lại ngày mai nhé!",
     overviewTitle: "Tổng quan hôm nay",
     statWordsToday: "Từ hôm nay",
     statStreak: "Chuỗi ngày học",
