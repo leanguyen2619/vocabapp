@@ -1,5 +1,7 @@
 "use server";
 
+import { cache } from "react";
+
 import { prisma } from "@/lib/prisma";
 import { deriveLastAssignmentRule } from "@/lib/assign-rule";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -26,6 +28,14 @@ async function requireAdmin() {
   if (!account || account.role !== "admin") return null;
   return account;
 }
+
+/** The full vocabulary bank, ordered by id — used everywhere a page/action needs "all words"
+ * (curriculum-order picking, the admin/my-vocabulary bank views). Wrapped in React's cache() so
+ * the several independent callers that can land in one request (e.g. the admin dashboard's own
+ * listVocabularyAction call plus a pickTodaysWordIds run for every student needing today's words
+ * picked) share one DB round trip instead of each separately re-querying this ~3900-row table —
+ * same dedup pattern already used for getCurrentAccount in session.ts. */
+const getAllVocabulary = cache(() => prisma.vocabulary.findMany({ orderBy: { id: "asc" } }));
 
 export async function listTopicsAction(): Promise<Topic[]> {
   const account = await getCurrentAccount();
@@ -58,7 +68,7 @@ export async function ensureTopicsAction(names: string[]): Promise<Topic[]> {
 export async function listVocabularyAction(): Promise<Vocabulary[]> {
   const account = await getCurrentAccount();
   if (!account) return [];
-  return prisma.vocabulary.findMany({ orderBy: { id: "asc" } });
+  return getAllVocabulary();
 }
 
 export async function getMyVocabularyWithProgressAction(): Promise<VocabularyWithProgress[]> {
@@ -66,7 +76,7 @@ export async function getMyVocabularyWithProgressAction(): Promise<VocabularyWit
   if (!account) return [];
 
   const [vocabulary, history] = await Promise.all([
-    prisma.vocabulary.findMany({ orderBy: { id: "asc" } }),
+    getAllVocabulary(),
     prisma.learningHistory.findMany({ where: { accountId: account.id_login } }),
   ]);
 
@@ -209,7 +219,7 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
   const [cls, vocabulary, history, assignments, priorPicks, unlockedLevelIds, readyIds, levels, derivedRule] =
     await Promise.all([
       account.classId ? prisma.schoolClass.findUnique({ where: { id: account.classId } }) : null,
-      prisma.vocabulary.findMany({ orderBy: { id: "asc" } }),
+      getAllVocabulary(),
       prisma.learningHistory.findMany({ where: { accountId: account.id_login } }),
       prisma.dailyAssignment.findMany({
         where: { accountId: account.id_login },

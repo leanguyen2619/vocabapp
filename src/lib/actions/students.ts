@@ -68,13 +68,27 @@ export async function listAllStudentsAction(): Promise<StudentSummary[]> {
   });
   if (students.length === 0) return [];
 
+  const studentIds = students.map((s) => s.id_login);
+
   // Auto-assignment is the default (see ensureDailyWordsForAccount) — generate each student's
   // today's words now, before reading assignments below, so the list reflects that immediately
-  // instead of only after each student happens to open their own dashboard first. No-ops (cheap)
-  // for any student whose words are already picked for today.
-  await Promise.all(students.map((s) => ensureDailyWordsForAccount(s)));
+  // instead of only after each student happens to open their own dashboard first. Batched into a
+  // single query first so students who already have today's words picked (the common case, after
+  // the first visit of the day by anyone) skip the round trip entirely instead of every student
+  // re-checking individually — meaningful given each of these round trips crosses a real network
+  // hop to the database.
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const alreadyPicked = await prisma.dailyWordPick.findMany({
+    where: { accountId: { in: studentIds }, pickedDate: today },
+    select: { accountId: true },
+    distinct: ["accountId"],
+  });
+  const alreadyPickedIds = new Set(alreadyPicked.map((p) => p.accountId));
+  await Promise.all(
+    students.filter((s) => !alreadyPickedIds.has(s.id_login)).map((s) => ensureDailyWordsForAccount(s))
+  );
 
-  const studentIds = students.map((s) => s.id_login);
   const [levels, accountLevels, learningHistory, assignments] = await Promise.all([
     prisma.level.findMany({ orderBy: { id: "asc" } }),
     prisma.accountLevel.findMany({ where: { accountId: { in: studentIds } } }),
