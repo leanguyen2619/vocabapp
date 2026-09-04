@@ -167,7 +167,7 @@ export function AdminDashboardContent({
 
             if (!isReady) {
               return (
-                <Card key={fn.title} className="opacity-60">
+                <Card key={fn.title} className="bg-card/85 opacity-60 backdrop-blur-sm">
                   {cardBody}
                 </Card>
               );
@@ -175,7 +175,9 @@ export function AdminDashboardContent({
 
             return (
               <Link key={fn.title} href={fn.href!}>
-                <Card className="h-full transition-colors hover:border-primary/50">{cardBody}</Card>
+                <Card className="h-full bg-card/85 backdrop-blur-sm transition-colors hover:border-primary/50">
+                  {cardBody}
+                </Card>
               </Link>
             );
           })}

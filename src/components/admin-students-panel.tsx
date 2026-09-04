@@ -563,7 +563,7 @@ export function AdminStudentsPanel({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
+        <Card className="bg-card/85 backdrop-blur-sm">
           <CardContent className="flex items-center gap-3 py-4">
             <div className="flex size-9 items-center justify-center rounded-full bg-primary/10">
               <IdCard className="size-4 text-primary" />
@@ -574,7 +574,7 @@ export function AdminStudentsPanel({
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-card/85 backdrop-blur-sm">
           <CardContent className="flex items-center gap-3 py-4">
             <div className="flex size-9 items-center justify-center rounded-full bg-emerald-500/10">
               <CheckCircle2 className="size-4 text-emerald-600" />
@@ -585,7 +585,7 @@ export function AdminStudentsPanel({
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-card/85 backdrop-blur-sm">
           <CardContent className="flex items-center gap-3 py-4">
             <div className="flex size-9 items-center justify-center rounded-full bg-orange-500/10">
               <Flame className="size-4 text-orange-500" />
@@ -600,7 +600,7 @@ export function AdminStudentsPanel({
         </Card>
       </div>
 
-      <Card>
+      <Card className="bg-card/85 backdrop-blur-sm">
         <CardHeader>
           <CardTitle>{dict.adminStudents.studentList}</CardTitle>
           <CardDescription>{dict.adminStudents.studentListDesc}</CardDescription>
