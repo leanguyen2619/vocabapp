@@ -163,10 +163,13 @@ export default async function ExercisesPage({
                   <p className="text-sm text-muted-foreground">{type.description}</p>
                 </div>
                 {!isReady && (
-                  <Badge variant="outline" className="w-fit gap-1 text-muted-foreground">
-                    <Clock className="size-3" />
-                    {dict.exercises.comingSoon}
-                  </Badge>
+                  <div className="flex flex-col gap-1">
+                    <Badge variant="outline" className="w-fit gap-1 text-muted-foreground">
+                      <Clock className="size-3" />
+                      {dict.exercises.comingSoon}
+                    </Badge>
+                    <p className="text-xs text-muted-foreground">{dict.exercises.comingSoonDesc}</p>
+                  </div>
                 )}
               </CardContent>
             );

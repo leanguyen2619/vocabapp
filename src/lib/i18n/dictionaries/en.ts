@@ -313,6 +313,7 @@ const en: Dictionary = {
     subtitle: "Choose an exercise type below to start practicing.",
     currentLevel: "Your current level: {level}.",
     comingSoon: "Coming soon",
+    comingSoonDesc: "This exercise type is still being built — not a bug, just not ready yet.",
     changeType: "Change type",
     scopeLabel: "Practice with",
     scopeNew: "New words",

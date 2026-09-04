@@ -315,6 +315,7 @@ const vi = {
     subtitle: "Chọn một dạng bài tập bên dưới để bắt đầu luyện tập.",
     currentLevel: "Cấp độ hiện tại của bạn: {level}.",
     comingSoon: "Sắp ra mắt",
+    comingSoonDesc: "Dạng bài này đang được xây dựng, chưa dùng được — không phải lỗi.",
     changeType: "Đổi dạng bài",
     scopeLabel: "Luyện với từ vựng",
     scopeNew: "Học từ mới",
