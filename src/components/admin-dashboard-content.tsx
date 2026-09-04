@@ -6,7 +6,7 @@ import { AdminOverviewCard } from "@/components/admin-overview-card";
 import { AdminStudentsPanel } from "@/components/admin-students-panel";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import type { AssignedVocabSummary, StudentSummary } from "@/lib/actions/students";
+import type { StudentSummary } from "@/lib/actions/students";
 import type { Dictionary, Locale } from "@/lib/i18n/dictionaries";
 import type { Account, Level, Topic, Vocabulary } from "@/types";
 
@@ -33,7 +33,6 @@ export function AdminDashboardContent({
   weakWordsCount,
   students,
   vocabularyBank,
-  assignedVocab,
   topics,
   levels,
   locale,
@@ -47,7 +46,6 @@ export function AdminDashboardContent({
   weakWordsCount: number;
   students: StudentSummary[];
   vocabularyBank: Vocabulary[];
-  assignedVocab: AssignedVocabSummary[];
   topics: Topic[];
   levels: Level[];
   locale: Locale;
@@ -187,7 +185,6 @@ export function AdminDashboardContent({
       <AdminStudentsPanel
         students={students}
         vocabularyBank={vocabularyBank}
-        assignedVocab={assignedVocab}
         topics={topics}
         levels={levels}
         dict={dict}

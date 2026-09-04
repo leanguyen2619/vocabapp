@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   AlertCircle,
@@ -58,14 +59,11 @@ import { Separator } from "@/components/ui/separator";
 import {
   assignVocabularyToAllStudentsAction,
   assignVocabularyToStudentAction,
-  cancelAssignmentAction,
   getStudentDetailAction,
-  listAllAssignedVocabAction,
   pinRandomTopicForStudentAction,
   pinTopicForStudentAction,
   setDailyWordTargetOverrideAction,
   unpinTopicForStudentAction,
-  type AssignedVocabSummary,
   type StudentDetail,
   type StudentSummary,
 } from "@/lib/actions/students";
@@ -85,18 +83,17 @@ interface KnownCredentials {
 export function AdminStudentsPanel({
   students,
   vocabularyBank,
-  assignedVocab: initialAssignedVocab,
   topics,
   levels,
   dict,
 }: {
   students: StudentSummary[];
   vocabularyBank: Vocabulary[];
-  assignedVocab: AssignedVocabSummary[];
   topics: Topic[];
   levels: Level[];
   dict: Dictionary;
 }) {
+  const router = useRouter();
   const [selectedVocab, setSelectedVocab] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [vocabSearch, setVocabSearch] = useState("");
@@ -104,8 +101,6 @@ export function AdminStudentsPanel({
   const [vocabLevelFilter, setVocabLevelFilter] = useState(ALL);
   const [vocabCountInput, setVocabCountInput] = useState("");
   const [assigning, setAssigning] = useState(false);
-  const [assignedVocab, setAssignedVocab] = useState(initialAssignedVocab);
-  const [cancelingId, setCancelingId] = useState<string | null>(null);
 
   const [detailStudentId, setDetailStudentId] = useState<string | null>(null);
   const [detailData, setDetailData] = useState<StudentDetail | null>(null);
@@ -220,7 +215,9 @@ export function AdminStudentsPanel({
       })
     );
     setSelectedVocab([]);
-    setAssignedVocab(await listAllAssignedVocabAction());
+    // Refetches listAllStudentsAction server-side so each student's assignedWords list (shown
+    // inline below) reflects the new assignment right away.
+    router.refresh();
   };
 
   const handleAssignToStudent = async () => {
@@ -245,19 +242,7 @@ export function AdminStudentsPanel({
     setStudentAssignSearch("");
     setStudentAssignTopicFilter(ALL);
     setStudentAssignLevelFilter(ALL);
-    setAssignedVocab(await listAllAssignedVocabAction());
-  };
-
-  const handleCancel = async (entry: AssignedVocabSummary) => {
-    setCancelingId(entry.vocabId);
-    const ok = await cancelAssignmentAction(entry.vocabId);
-    setCancelingId(null);
-    if (!ok) {
-      toast.error(dict.adminStudents.cancelError);
-      return;
-    }
-    setAssignedVocab((prev) => prev.filter((v) => v.vocabId !== entry.vocabId));
-    toast.success(formatMessage(dict.adminStudents.cancelSuccess, { word: entry.vocab }));
+    router.refresh();
   };
 
   const openDetail = async (studentId: string) => {
@@ -617,47 +602,6 @@ export function AdminStudentsPanel({
 
       <Card>
         <CardHeader>
-          <CardTitle>{dict.adminStudents.assignedTitle}</CardTitle>
-          <CardDescription>{dict.adminStudents.assignedDesc}</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-1">
-          {assignedVocab.length === 0 && (
-            <p className="py-4 text-center text-sm text-muted-foreground">
-              {dict.adminStudents.assignedEmpty}
-            </p>
-          )}
-          {assignedVocab.map((entry, index) => (
-            <div key={entry.vocabId}>
-              {index > 0 && <Separator className="my-2" />}
-              <div className="flex items-center justify-between gap-3 py-1">
-                <div>
-                  <span className="font-medium">{entry.vocab}</span>{" "}
-                  <span className="text-sm text-muted-foreground">— {entry.meanVI}</span>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <Badge variant="outline">
-                    {formatMessage(dict.adminStudents.assignedStudentCount, {
-                      count: entry.studentCount,
-                    })}
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label={dict.adminStudents.cancelButton}
-                    disabled={cancelingId === entry.vocabId}
-                    onClick={() => void handleCancel(entry)}
-                  >
-                    <X className="size-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
           <CardTitle>{dict.adminStudents.studentList}</CardTitle>
           <CardDescription>{dict.adminStudents.studentListDesc}</CardDescription>
         </CardHeader>
@@ -681,6 +625,23 @@ export function AdminStudentsPanel({
                       {student.className ?? dict.adminStudents.noClassLabel} · {student.levelName} ·{" "}
                       {student.masteredVocab} {dict.adminStudents.masteredWords}
                     </p>
+                    {/* Every word currently assigned to this student, inline — mastered ones stand
+                     * out (solid badge) from still-pending ones (outline), so it's obvious at a
+                     * glance who has which word without a separate, space-hungry word-centric
+                     * list (the "Đã giao gần đây" card this replaced). */}
+                    {student.assignedWords.length > 0 && (
+                      <div className="mt-1.5 flex max-w-full flex-wrap gap-1">
+                        {student.assignedWords.map((w) => (
+                          <Badge
+                            key={w.vocab}
+                            variant={w.mastered ? "default" : "outline"}
+                            className={w.mastered ? "font-semibold" : "text-muted-foreground"}
+                          >
+                            {w.vocab}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 

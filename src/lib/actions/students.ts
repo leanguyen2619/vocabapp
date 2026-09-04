@@ -47,6 +47,11 @@ export interface StudentSummary {
    * topic+level (see deriveLastAssignmentRule / Account.assignRuleExhaustedAt) — the admin needs
    * to manually assign from a different topic. Cleared by the next explicit assignment. */
   assignRuleExhausted: boolean;
+  /** Every word currently assigned to this student (DailyAssignment rows, any date), each flagged
+   * with whether they've since mastered it — shown inline per student instead of the old flat,
+   * word-centric "who has this word" list, which took a lot of space and made it hard to see which
+   * student had which word at a glance. */
+  assignedWords: { vocab: string; mastered: boolean }[];
 }
 
 /** Every student account, with real progress from Postgres — the admin manages the whole school,
@@ -63,10 +68,15 @@ export async function listAllStudentsAction(): Promise<StudentSummary[]> {
   if (students.length === 0) return [];
 
   const studentIds = students.map((s) => s.id_login);
-  const [levels, accountLevels, learningHistory] = await Promise.all([
+  const [levels, accountLevels, learningHistory, assignments] = await Promise.all([
     prisma.level.findMany({ orderBy: { id: "asc" } }),
     prisma.accountLevel.findMany({ where: { accountId: { in: studentIds } } }),
     prisma.learningHistory.findMany({ where: { accountId: { in: studentIds } } }),
+    prisma.dailyAssignment.findMany({
+      where: { accountId: { in: studentIds } },
+      include: { vocab: { select: { vocab: true } } },
+      orderBy: { assignedDate: "desc" },
+    }),
   ]);
 
   const startOfToday = new Date();
@@ -87,6 +97,15 @@ export async function listAllStudentsAction(): Promise<StudentSummary[]> {
       todayStatus = todayHistory.every((h) => h.status === "mastered") ? "done" : "in_progress";
     }
 
+    // Most-recently-assigned first (assignments is already sorted desc by assignedDate) — a
+    // student's newest word is the most relevant one for an admin scanning the list.
+    const assignedWords = assignments
+      .filter((a) => a.accountId === s.id_login)
+      .map((a) => ({
+        vocab: a.vocab.vocab,
+        mastered: myHistory.find((h) => h.vocabId === a.vocabId)?.status === "mastered",
+      }));
+
     return {
       id_login: s.id_login,
       fullName: s.fullName,
@@ -98,6 +117,7 @@ export async function listAllStudentsAction(): Promise<StudentSummary[]> {
       todayStatus,
       pinnedTopicName: s.pinnedTopic?.topic ?? null,
       assignRuleExhausted: s.assignRuleExhaustedAt !== null,
+      assignedWords,
     };
   });
 }

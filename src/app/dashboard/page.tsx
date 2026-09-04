@@ -6,7 +6,7 @@ import { StudentDashboardContent } from "@/components/student-dashboard-content"
 import { listAccountsAction } from "@/lib/actions/accounts";
 import { listClassesAction } from "@/lib/actions/classes";
 import { getMyLevelsAction, listLevelsAction } from "@/lib/actions/levels";
-import { listAllAssignedVocabAction, listAllStudentsAction } from "@/lib/actions/students";
+import { listAllStudentsAction } from "@/lib/actions/students";
 import { countPendingWritingSubmissionsAction } from "@/lib/actions/writing-submissions";
 import { countWeakWordsAction } from "@/lib/actions/class-report";
 import {
@@ -34,27 +34,17 @@ export default async function DashboardPage() {
   const dict = getDictionary(locale);
 
   if (account.role === "admin") {
-    const [
-      accounts,
-      classes,
-      vocabulary,
-      students,
-      assignedVocab,
-      pendingWritingCount,
-      weakWordsCount,
-      topics,
-      levels,
-    ] = await Promise.all([
-      listAccountsAction(),
-      listClassesAction(),
-      listVocabularyAction(),
-      listAllStudentsAction(),
-      listAllAssignedVocabAction(),
-      countPendingWritingSubmissionsAction(),
-      countWeakWordsAction(),
-      listTopicsAction(),
-      listLevelsAction(),
-    ]);
+    const [accounts, classes, vocabulary, students, pendingWritingCount, weakWordsCount, topics, levels] =
+      await Promise.all([
+        listAccountsAction(),
+        listClassesAction(),
+        listVocabularyAction(),
+        listAllStudentsAction(),
+        countPendingWritingSubmissionsAction(),
+        countWeakWordsAction(),
+        listTopicsAction(),
+        listLevelsAction(),
+      ]);
     const studentCount = accounts.filter((a) => a.account.role === "student").length;
 
     return (
@@ -68,7 +58,6 @@ export default async function DashboardPage() {
           weakWordsCount={weakWordsCount}
           students={students}
           vocabularyBank={vocabulary}
-          assignedVocab={assignedVocab}
           topics={topics}
           levels={levels}
           locale={locale}
