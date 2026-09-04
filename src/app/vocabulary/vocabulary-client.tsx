@@ -153,7 +153,7 @@ export function VocabularyClient({
             </TabsList>
           </Tabs>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Select
               value={topicFilter}
               onValueChange={(value) => {
@@ -161,7 +161,7 @@ export function VocabularyClient({
                 setPage(1);
               }}
             >
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full sm:w-40">
                 <SelectValue placeholder={dict.vocabulary.topicPlaceholder}>
                   {(value: string) =>
                     value === "all"
@@ -180,7 +180,7 @@ export function VocabularyClient({
               </SelectContent>
             </Select>
 
-            <div className="relative">
+            <div className="relative w-full sm:w-44">
               <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
@@ -189,7 +189,7 @@ export function VocabularyClient({
                   setPage(1);
                 }}
                 placeholder={dict.vocabulary.searchPlaceholder}
-                className="w-44 pl-8"
+                className="pl-8"
               />
             </div>
           </div>
