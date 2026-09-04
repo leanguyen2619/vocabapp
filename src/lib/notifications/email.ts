@@ -7,9 +7,10 @@ import { prisma } from "@/lib/prisma";
  * admin-panel badge (StudentSummary.assignRuleExhausted); this function additionally emails the
  * admin once the two env vars below are set.
  *
- * No email provider is wired in yet — nothing is sent until ADMIN_NOTIFICATION_EMAIL and
- * RESEND_API_KEY (https://resend.com, free tier) are set. Swap the provider below if a different
- * one is preferred; the call site (pickTodaysWordIds) doesn't need to change either way.
+ * Sends via Resend from a verified sender on buildurvocabwreindeer.com — until
+ * ADMIN_NOTIFICATION_EMAIL and RESEND_API_KEY are set (both env vars), this just logs a warning
+ * instead. Swap the provider below if a different one is ever preferred; the call site
+ * (pickTodaysWordIds) doesn't need to change either way.
  */
 export async function notifyAdminAssignmentExhausted(params: {
   studentId: string;
@@ -35,7 +36,7 @@ export async function notifyAdminAssignmentExhausted(params: {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "VocabApp <onboarding@resend.dev>",
+      from: "VocabApp <notify@buildurvocabwreindeer.com>",
       to: adminEmail,
       subject: `VocabApp: hết từ để giao cho ${params.studentName}`,
       text:
