@@ -397,7 +397,9 @@ export function AdminStudentsPanel({
               }
             }}
           >
-            <DialogTrigger render={<Button size="sm" />}>
+            <DialogTrigger
+              render={<Button size="sm" className="bg-[#42FFA4] text-[#0a3d26] hover:bg-[#42FFA4]/85" />}
+            >
               <ClipboardList className="size-4" />
               {dict.adminStudents.assignVocab}
             </DialogTrigger>
@@ -565,8 +567,8 @@ export function AdminStudentsPanel({
       <div className="grid gap-4 sm:grid-cols-3">
         <Card className="bg-card/85 backdrop-blur-sm">
           <CardContent className="flex items-center gap-3 py-4">
-            <div className="flex size-9 items-center justify-center rounded-full bg-primary/10">
-              <IdCard className="size-4 text-primary" />
+            <div className="flex size-9 items-center justify-center rounded-full bg-[#42FFA4]/20">
+              <IdCard className="size-4 text-[#0a8a52]" />
             </div>
             <div>
               <p className="text-lg font-semibold leading-none">{studentCount}</p>
@@ -635,7 +637,11 @@ export function AdminStudentsPanel({
                           <Badge
                             key={w.vocab}
                             variant={w.mastered ? "default" : "outline"}
-                            className={w.mastered ? "font-semibold" : "text-muted-foreground"}
+                            className={
+                              w.mastered
+                                ? "border-transparent bg-[#42FFA4] font-semibold text-[#0a3d26]"
+                                : "text-muted-foreground"
+                            }
                           >
                             {w.vocab}
                           </Badge>
@@ -649,7 +655,7 @@ export function AdminStudentsPanel({
                   <Progress
                     value={student.score}
                     className="flex-1 sm:w-32"
-                    indicatorClassName="bg-emerald-500"
+                    indicatorClassName="bg-[#42FFA4]"
                   />
                   {student.pinnedTopicName && (
                     <Badge variant="secondary" className="max-w-32 gap-1 shrink-0 truncate">
