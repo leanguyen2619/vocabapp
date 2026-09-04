@@ -206,13 +206,21 @@ function pickSequentialRemaining(
 }
 
 async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<string[]> {
-  const [cls, vocabulary, history, assignments, unlockedLevelIds, readyIds, levels, derivedRule] =
+  const [cls, vocabulary, history, assignments, priorPicks, unlockedLevelIds, readyIds, levels, derivedRule] =
     await Promise.all([
       account.classId ? prisma.schoolClass.findUnique({ where: { id: account.classId } }) : null,
       prisma.vocabulary.findMany({ orderBy: { id: "asc" } }),
       prisma.learningHistory.findMany({ where: { accountId: account.id_login } }),
       prisma.dailyAssignment.findMany({
         where: { accountId: account.id_login },
+        select: { vocabId: true, assignedDate: true },
+      }),
+      // Every word this student has ever been SHOWN on some earlier calendar day (regardless of
+      // source or whether they mastered it) — see the exclusion filters below. This is what makes
+      // "today's words" a genuinely different set from any prior day's, rather than the same
+      // still-unmastered batch sticking around indefinitely.
+      prisma.dailyWordPick.findMany({
+        where: { accountId: account.id_login, pickedDate: { lt: today } },
         select: { vocabId: true },
         distinct: ["vocabId"],
       }),
@@ -231,12 +239,18 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
   const statusOf = (vocabId: string): LearningStatus =>
     history.find((h) => h.vocabId === vocabId)?.status ?? "new";
 
-  const assignedIds = new Set(assignments.map((a) => a.vocabId));
+  const priorShownIds = new Set(priorPicks.map((p) => p.vocabId));
   const withStatus = vocabulary.map((vocab) => ({ vocab, status: statusOf(vocab.id) }));
 
-  // Explicit admin assignments are a deliberate override — never gated by content readiness.
+  // Only an assignment made TODAY gets automatic priority for today — an older, still-unmastered
+  // one is just "already shown" now (see priorShownIds) and won't keep sticking around day after
+  // day; the point of "reset every day" is that today's set genuinely differs from yesterday's,
+  // not that an explicit assignment is permanent until mastered.
+  const todaysAssignedIds = new Set(
+    assignments.filter((a) => a.assignedDate.getTime() === today.getTime()).map((a) => a.vocabId)
+  );
   const assignedWords = withStatus
-    .filter((w) => assignedIds.has(w.vocab.id) && w.status !== "mastered")
+    .filter((w) => todaysAssignedIds.has(w.vocab.id) && w.status !== "mastered")
     .sort((a, b) => priority[a.status] - priority[b.status]);
 
   let picked: { vocab: Vocabulary; status: LearningStatus }[];
@@ -246,12 +260,14 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
     // Repeat the topic+level of the student's last explicit assignment batch (see
     // deriveLastAssignmentRule) — not gated by unlocked levels or content-readiness, same as an
     // explicit assignment itself isn't, since this is just that same admin decision continuing.
+    // Excludes anything shown on any earlier day (priorShownIds), not just today's picks, so the
+    // batch genuinely moves forward through the topic each day instead of repeating.
     const totalQuota = Math.max(1, target) - assignedWords.length;
     const rulePool = vocabulary.filter(
       (v) =>
         v.topicId === derivedRule.topicId &&
         v.levelId === derivedRule.levelId &&
-        (!assignedIds.has(v.id) || statusOf(v.id) === "mastered") &&
+        !priorShownIds.has(v.id) &&
         statusOf(v.id) !== "mastered"
     );
     const sortedRulePool = rulePool
@@ -303,7 +319,7 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
     picked = [...assignedWords, ...continuationBatch].slice(0, Math.max(1, target));
   } else {
     const unassignedVocabAll = vocabulary.filter(
-      (v) => (!assignedIds.has(v.id) || statusOf(v.id) === "mastered") && unlockedLevelIds.has(v.levelId)
+      (v) => !todaysAssignedIds.has(v.id) && statusOf(v.id) !== "mastered" && unlockedLevelIds.has(v.levelId)
     );
     // A pinned topic (admin-set, per student — see Account.pinnedTopicId) restricts auto-pick to
     // just that topic, day after day, until the admin changes or clears it. Falls back to the
@@ -316,27 +332,45 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
     const unassignedVocab = pinnedTopicVocab.length > 0 ? pinnedTopicVocab : unassignedVocabAll;
     const levelOrder = levels.map((l) => l.id).filter((id) => unlockedLevelIds.has(id));
 
+    // The "genuinely never shown before" subset of the pool above — used for tiers 1-2 below so a
+    // fresh day gets fresh words whenever the curriculum has any left. Tier 3 deliberately falls
+    // back to the unfiltered pool (allowing an already-seen, still-unmastered word to repeat)
+    // rather than ever leaving the student with 0 words once everything unlocked has been shown.
+    const freshUnassignedVocab = unassignedVocab.filter((v) => !priorShownIds.has(v.id));
+
     // Reserve up to 1 of today's slots for a previously-mastered word to resurface as review —
     // mixed in alongside new/learning words rather than added on top, so the daily total never
     // grows past `target`. Skipped entirely once there's nothing left to reserve room for (an
     // explicit assignment already ate the whole quota) or the student has no mastered words yet.
+    // Deliberately drawn from the unfiltered pool — reviewing a mastered word only makes sense
+    // because the student HAS seen it before, so priorShownIds must not exclude it here.
     const totalQuota = Math.max(1, target) - assignedWords.length;
-    const masteredPool = unassignedVocab.filter((v) => statusOf(v.id) === "mastered");
+    const masteredPool = vocabulary.filter(
+      (v) => unlockedLevelIds.has(v.levelId) && statusOf(v.id) === "mastered"
+    );
     const reviewQuota = totalQuota > 0 && masteredPool.length > 0 ? Math.min(1, totalQuota) : 0;
     const newQuota = totalQuota - reviewQuota;
 
-    // Tier 1: curriculum-ordered, content-ready words (the normal path).
-    let remaining = pickSequentialRemaining(levelOrder, unassignedVocab, readyIds, statusOf, priority, newQuota);
-    // Tier 2: every ready word has already been introduced somewhere — fall back to any ready,
-    // not-yet-mastered word so review still flows once a level/topic's new content runs out.
+    // Tier 1: curriculum-ordered, content-ready, never-shown-before words (the normal path).
+    let remaining = pickSequentialRemaining(
+      levelOrder,
+      freshUnassignedVocab,
+      readyIds,
+      statusOf,
+      priority,
+      newQuota
+    );
+    // Tier 2: every ready, never-shown word has already been introduced somewhere in the pinned
+    // topic/curriculum order — fall back to any ready, never-shown, not-yet-mastered word instead.
     if (remaining.length === 0) {
-      remaining = unassignedVocab
-        .filter((v) => readyIds.has(v.id) && statusOf(v.id) !== "mastered")
+      remaining = freshUnassignedVocab
+        .filter((v) => readyIds.has(v.id))
         .map((vocab) => ({ vocab, status: statusOf(vocab.id) }))
         .sort((a, b) => priority[a.status] - priority[b.status]);
     }
-    // Tier 3: nothing ready at all (e.g. a freshly unlocked level with no authored content yet) —
-    // fall back to the old any-unlocked-word behavior so a student is never left with zero words.
+    // Tier 3: everything unlocked has already been shown on some earlier day — repeat from the
+    // full (not "never shown") pool so a student is never left with zero words once content runs
+    // out, same as the old any-unlocked-word fallback did before daily rotation existed.
     if (remaining.length === 0) {
       remaining = unassignedVocab
         .map((vocab) => ({ vocab, status: statusOf(vocab.id) }))
