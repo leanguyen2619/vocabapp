@@ -646,7 +646,11 @@ export function AdminStudentsPanel({
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 sm:w-auto">
-                  <Progress value={student.score} className="flex-1 sm:w-32" />
+                  <Progress
+                    value={student.score}
+                    className="flex-1 sm:w-32"
+                    indicatorClassName="bg-emerald-500"
+                  />
                   {student.pinnedTopicName && (
                     <Badge variant="secondary" className="max-w-32 gap-1 shrink-0 truncate">
                       <Pin className="size-3" />
