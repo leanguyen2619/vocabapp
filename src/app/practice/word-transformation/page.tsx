@@ -29,10 +29,11 @@ export default async function WordTransformationPage() {
   ]);
   redirectIfWarmupIncomplete(warmupStatus);
 
-  // Each attempt is a single randomly drawn sentence out of the full bank, not the whole bank —
-  // shuffled server-side (see FillBlankGame for why client-side shuffling causes a hydration
-  // mismatch) and cut down to 1 before it ever reaches the client.
-  const prompts = shuffle(rawPrompts).slice(0, 1);
+  // Shuffled here (once, server-side) rather than in the client component — see FillBlankGame
+  // for why shuffling client-side causes a hydration mismatch. Every other practice type shows
+  // its full available-question pool per attempt (see FillBlankPage); this one used to cut down
+  // to a single random sentence, which made it feel broken next to every other exercise.
+  const prompts = shuffle(rawPrompts);
 
   return (
     <div className="flex flex-1 flex-col bg-background bg-forest">

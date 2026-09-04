@@ -97,9 +97,8 @@ async function renderGameFor(code: PracticeTypeCode, dict: Dictionary) {
       return <WordFormationGame prompts={prepareWordFormation(rawPrompts)} dict={dict} warmupCode={code} />;
     }
     case "word_transformation": {
-      // Same "1 random sentence per attempt" rule as the standalone page — see its comment.
       const rawPrompts = await getWordTransformationPromptsAction();
-      return <WordTransformationGame prompts={shuffle(rawPrompts).slice(0, 1)} dict={dict} warmupCode={code} />;
+      return <WordTransformationGame prompts={shuffle(rawPrompts)} dict={dict} warmupCode={code} />;
     }
     case "sentence_writing": {
       const prompts = await getSentenceWritingPromptsAction();
