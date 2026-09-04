@@ -13,14 +13,23 @@ export function nextStatus(current: LearningStatus, isCorrect: boolean): Learnin
   return STATUS_ORDER[nextIndex];
 }
 
+// UTC-based, not local-time getters (getFullYear/getMonth/getDate) — this app's "today" boundary
+// must be deterministic regardless of which timezone the calling process happens to run under
+// (see src/lib/today.ts for the same fix applied to the daily-word-pick boundary, after local-time
+// truncation there caused the same word batch to get persisted twice under two different "today"
+// values for the same real day).
 export function isSameCalendarDay(a: Date, b: Date): boolean {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  return (
+    a.getUTCFullYear() === b.getUTCFullYear() &&
+    a.getUTCMonth() === b.getUTCMonth() &&
+    a.getUTCDate() === b.getUTCDate()
+  );
 }
 
 export function isNextCalendarDay(previous: Date, current: Date): boolean {
-  const prevDay = new Date(previous.getFullYear(), previous.getMonth(), previous.getDate());
-  const currentDay = new Date(current.getFullYear(), current.getMonth(), current.getDate());
-  const diffDays = Math.round((currentDay.getTime() - prevDay.getTime()) / 86_400_000);
+  const prevDay = Date.UTC(previous.getUTCFullYear(), previous.getUTCMonth(), previous.getUTCDate());
+  const currentDay = Date.UTC(current.getUTCFullYear(), current.getUTCMonth(), current.getUTCDate());
+  const diffDays = Math.round((currentDay - prevDay) / 86_400_000);
   return diffDays === 1;
 }
 

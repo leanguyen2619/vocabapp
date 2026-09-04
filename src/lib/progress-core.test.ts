@@ -22,45 +22,48 @@ describe("nextStatus", () => {
   });
 });
 
+// Dates use an explicit "Z" (UTC) suffix throughout — isSameCalendarDay/isNextCalendarDay compare
+// UTC calendar days, so an unsuffixed string (parsed in the machine's own local timezone) would
+// make these tests' outcomes depend on which timezone happens to run them.
 describe("isSameCalendarDay", () => {
   it("is true for two timestamps on the same calendar day, different times", () => {
-    expect(isSameCalendarDay(new Date("2026-08-28T01:00:00"), new Date("2026-08-28T23:59:00"))).toBe(true);
+    expect(isSameCalendarDay(new Date("2026-08-28T01:00:00Z"), new Date("2026-08-28T23:59:00Z"))).toBe(true);
   });
 
   it("is false across a day boundary even if less than 24h apart", () => {
-    expect(isSameCalendarDay(new Date("2026-08-28T23:59:00"), new Date("2026-08-29T00:01:00"))).toBe(false);
+    expect(isSameCalendarDay(new Date("2026-08-28T23:59:00Z"), new Date("2026-08-29T00:01:00Z"))).toBe(false);
   });
 });
 
 describe("isNextCalendarDay", () => {
   it("is true for the calendar day right after", () => {
-    expect(isNextCalendarDay(new Date("2026-08-28T10:00:00"), new Date("2026-08-29T02:00:00"))).toBe(true);
+    expect(isNextCalendarDay(new Date("2026-08-28T10:00:00Z"), new Date("2026-08-29T02:00:00Z"))).toBe(true);
   });
 
   it("is false for the same day", () => {
-    expect(isNextCalendarDay(new Date("2026-08-28T10:00:00"), new Date("2026-08-28T20:00:00"))).toBe(false);
+    expect(isNextCalendarDay(new Date("2026-08-28T10:00:00Z"), new Date("2026-08-28T20:00:00Z"))).toBe(false);
   });
 
   it("is false for a gap of 2+ days", () => {
-    expect(isNextCalendarDay(new Date("2026-08-28T10:00:00"), new Date("2026-08-30T10:00:00"))).toBe(false);
+    expect(isNextCalendarDay(new Date("2026-08-28T10:00:00Z"), new Date("2026-08-30T10:00:00Z"))).toBe(false);
   });
 });
 
 describe("computeStreak", () => {
   it("starts at 1 when there's no prior activity", () => {
-    expect(computeStreak(0, null, new Date("2026-08-28T10:00:00"))).toBe(1);
+    expect(computeStreak(0, null, new Date("2026-08-28T10:00:00Z"))).toBe(1);
   });
 
   it("stays unchanged (but at least 1) when already counted today", () => {
-    expect(computeStreak(5, new Date("2026-08-28T08:00:00"), new Date("2026-08-28T18:00:00"))).toBe(5);
-    expect(computeStreak(0, new Date("2026-08-28T08:00:00"), new Date("2026-08-28T18:00:00"))).toBe(1);
+    expect(computeStreak(5, new Date("2026-08-28T08:00:00Z"), new Date("2026-08-28T18:00:00Z"))).toBe(5);
+    expect(computeStreak(0, new Date("2026-08-28T08:00:00Z"), new Date("2026-08-28T18:00:00Z"))).toBe(1);
   });
 
   it("increments by 1 when practicing the day right after the last activity", () => {
-    expect(computeStreak(5, new Date("2026-08-27T08:00:00"), new Date("2026-08-28T18:00:00"))).toBe(6);
+    expect(computeStreak(5, new Date("2026-08-27T08:00:00Z"), new Date("2026-08-28T18:00:00Z"))).toBe(6);
   });
 
   it("resets to 1 after any gap of a day or more", () => {
-    expect(computeStreak(10, new Date("2026-08-20T08:00:00"), new Date("2026-08-28T18:00:00"))).toBe(1);
+    expect(computeStreak(10, new Date("2026-08-20T08:00:00Z"), new Date("2026-08-28T18:00:00Z"))).toBe(1);
   });
 });
