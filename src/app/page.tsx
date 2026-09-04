@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import {} from "lucide-react";
 
@@ -19,41 +20,19 @@ export default async function Home() {
 
   return (
     <div className="relative flex flex-1 flex-col bg-background">
-      {/* Colorful gradient wash for the WHOLE page (header, hero, footer) — matching the reindeer
-          mascot's own palette (amber sky, moss ground, coral nose, a warm gold accent) rather than
-          the site's pink brand tone, so the two feel like one scene instead of a colorful hero
-          sandwiched between plain white bands. Header/footer keep only their existing border, no
-          background of their own, so this shows through behind them too. Two versions (swapped via
-          dark:) since the light one's intensity would look wrong on a dark page — Tailwind's dark:
-          variant can't reach into an inline gradient, hence two divs. Deliberately no negative
-          z-index: body has `bg-background`, which CSS promotes to the *canvas* background — painted
-          beneath literally everything, including negative-z-index elements anywhere in the
-          document. DOM order (both divs come first, before header) is enough to keep them behind
-          everything else without that trap. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 dark:hidden"
-        style={{
-          background:
-            "radial-gradient(45% 38% at 50% 0%, #fdecc7 0%, rgba(253,236,199,0.45) 42%, rgba(253,236,199,0) 85%)," +
-            "radial-gradient(38% 34% at 0% 40%, #d9ecc0 0%, rgba(217,236,192,0.4) 45%, rgba(217,236,192,0) 85%)," +
-            "radial-gradient(38% 34% at 100% 20%, #f8d2c9 0%, rgba(248,210,201,0.4) 45%, rgba(248,210,201,0) 85%)," +
-            "radial-gradient(34% 30% at 78% 62%, #f6e2ae 0%, rgba(246,226,174,0.35) 45%, rgba(246,226,174,0) 85%)," +
-            "radial-gradient(36% 28% at 15% 92%, #f8d2c9 0%, rgba(248,210,201,0.3) 45%, rgba(248,210,201,0) 85%)",
-        }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 hidden dark:block"
-        style={{
-          background:
-            "radial-gradient(45% 38% at 50% 0%, rgba(217,163,63,0.32) 0%, rgba(217,163,63,0) 80%)," +
-            "radial-gradient(38% 34% at 0% 40%, rgba(122,159,94,0.24) 0%, rgba(122,159,94,0) 80%)," +
-            "radial-gradient(38% 34% at 100% 20%, rgba(196,103,90,0.24) 0%, rgba(196,103,90,0) 80%)," +
-            "radial-gradient(34% 30% at 78% 62%, rgba(196,150,63,0.2) 0%, rgba(196,150,63,0) 80%)," +
-            "radial-gradient(36% 28% at 15% 92%, rgba(196,103,90,0.18) 0%, rgba(196,103,90,0) 80%)",
-        }}
-      />
+      {/* Full-page background image (a misty, fairy-tale forest clearing) behind header, hero and
+          footer alike — replaces the earlier CSS-gradient wash. Header/footer keep only their
+          existing border, no background of their own, so the image shows through behind them too.
+          A dark scrim is layered on top in dark mode only — the source image is pale enough that
+          it would look like a jarring bright rectangle on an otherwise near-black page without one.
+          Deliberately no negative z-index: body has `bg-background`, which CSS promotes to the
+          *canvas* background — painted beneath literally everything, including negative-z-index
+          elements anywhere in the document. DOM order (this div comes first, before header) is
+          enough to keep it behind everything else without that trap. */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <Image src="/forest-bg.jpg" alt="" fill priority sizes="100vw" className="object-cover object-center" />
+        <div className="absolute inset-0 hidden dark:block dark:bg-black/60" />
+      </div>
 
       <header className="relative border-b border-border">
         <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-6 py-4 sm:gap-6">
