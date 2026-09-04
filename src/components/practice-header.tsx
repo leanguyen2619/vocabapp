@@ -23,7 +23,7 @@ export function PracticeHeader({
   dict: Dictionary;
 }) {
   return (
-    <header className="border-b border-border">
+    <header>
       <div className="mx-auto flex w-full max-w-2xl items-center justify-between gap-3 px-6 py-4">
         <div className="flex min-w-0 items-center gap-3">
           <Link

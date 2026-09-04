@@ -34,7 +34,7 @@ export default async function Home() {
         <div className="absolute inset-0 hidden dark:block dark:bg-black/60" />
       </div>
 
-      <header className="relative border-b border-border">
+      <header className="relative">
         <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-6 py-4 sm:gap-6">
           <Link href="/" className="flex shrink-0 items-center gap-2">
             <BrandWordmark size="md" />
@@ -73,7 +73,7 @@ export default async function Home() {
         </section>
       </main>
 
-      <footer className="relative border-t border-border">
+      <footer className="relative">
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-1 px-6 py-8 text-center text-sm text-muted-foreground sm:flex-row sm:justify-between sm:text-left">
           <p>
             © {new Date().getFullYear()} {dict.common.brand}. {dict.landing.footerRights}

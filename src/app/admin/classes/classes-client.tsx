@@ -131,7 +131,7 @@ export function AdminClassesClient({
 
   return (
     <div className="flex flex-1 flex-col bg-background bg-forest">
-      <header className="border-b border-border">
+      <header>
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-6 py-4">
           <Link
             href="/dashboard"
