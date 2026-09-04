@@ -1,14 +1,14 @@
 import { CheckCircle2, Flame, TrendingUp } from "lucide-react";
+import Image from "next/image";
 
-import { NatureHeroIllustration } from "@/components/nature-hero-illustration";
 import { formatMessage } from "@/lib/i18n/format";
 import type { Dictionary, Locale } from "@/lib/i18n/dictionaries";
 
-/** The dashboard's hero section — a calm nature illustration with a floating status card and a
- * "Today's Overview" stat row, styled independently of the rest of the app (a deliberately
- * different, green/nature palette scoped to just this card via explicit Tailwind color
- * utilities — the shared --primary token elsewhere in the app is untouched, so the rest of the
- * site keeps its usual look). */
+/** The dashboard's hero section — a forest photo banner (matching the site-wide bg-forest
+ * treatment) with a floating status card and a "Today's Overview" stat row, styled independently
+ * of the rest of the app (a deliberately different, green/nature palette scoped to just this card
+ * via explicit Tailwind color utilities — the shared --primary token elsewhere in the app is
+ * untouched, so the rest of the site keeps its usual look). */
 export function DashboardOverviewCard({
   fullName,
   wordsCompletedToday,
@@ -51,8 +51,15 @@ export function DashboardOverviewCard({
         </span>
       </div>
 
-      <div className="relative overflow-hidden rounded-2xl">
-        <NatureHeroIllustration className="h-40 w-full dark:opacity-90 dark:brightness-90 sm:h-48" />
+      <div className="relative h-40 overflow-hidden rounded-2xl sm:h-48">
+        <Image
+          src="/forest-bg.jpg"
+          alt=""
+          fill
+          sizes="(min-width: 640px) 600px, 100vw"
+          className="object-cover dark:opacity-90 dark:brightness-75"
+          priority
+        />
 
         <div className="absolute inset-x-3 bottom-3 flex items-center gap-3 rounded-2xl bg-white/97 p-3 shadow-md backdrop-blur-md dark:bg-neutral-900/92">
           <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400">

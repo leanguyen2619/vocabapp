@@ -1,11 +1,11 @@
 import { AlertCircle, Building2, CheckCircle2, Library, Users } from "lucide-react";
+import Image from "next/image";
 
-import { NatureHeroIllustration } from "@/components/nature-hero-illustration";
 import { formatMessage } from "@/lib/i18n/format";
 import type { Dictionary, Locale } from "@/lib/i18n/dictionaries";
 
-/** Admin-side counterpart to DashboardOverviewCard (the student dashboard's hero) — same nature
- * illustration and green palette scoped to just this card, but the status message and stat rows
+/** Admin-side counterpart to DashboardOverviewCard (the student dashboard's hero) — same forest
+ * photo banner and green palette scoped to just this card, but the status message and stat rows
  * reflect admin-relevant signals (pending grading) instead of a student's daily progress. */
 export function AdminOverviewCard({
   fullName,
@@ -47,8 +47,15 @@ export function AdminOverviewCard({
         </span>
       </div>
 
-      <div className="relative overflow-hidden rounded-2xl">
-        <NatureHeroIllustration className="h-40 w-full dark:opacity-90 dark:brightness-90 sm:h-48" />
+      <div className="relative h-40 overflow-hidden rounded-2xl sm:h-48">
+        <Image
+          src="/forest-bg.jpg"
+          alt=""
+          fill
+          sizes="(min-width: 640px) 600px, 100vw"
+          className="object-cover dark:opacity-90 dark:brightness-75"
+          priority
+        />
 
         <div className="absolute inset-x-3 bottom-3 flex items-center gap-3 rounded-2xl bg-white/97 p-3 shadow-md backdrop-blur-md dark:bg-neutral-900/92">
           <div
