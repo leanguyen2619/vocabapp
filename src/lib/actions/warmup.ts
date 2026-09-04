@@ -14,15 +14,14 @@ import {
 } from "@/lib/actions/practice-content";
 import { getMyQuizQuestionsAction, getMyWordsForScopeAction, getPosClassificationItemsAction } from "@/lib/actions/vocabulary";
 import { getCurrentAccount } from "@/lib/session";
+import { startOfUTCDay } from "@/lib/today";
 import { shuffle } from "@/lib/utils";
 import type { PracticeTypeCode } from "@/types";
 
 const WARMUP_SIZE = 3;
 
 function startOfToday(): Date {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return today;
+  return startOfUTCDay();
 }
 
 /** Whether a practice type actually has at least one item this student could be given today —

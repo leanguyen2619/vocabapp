@@ -11,6 +11,7 @@ import { computeUnlockedLevelIds } from "@/lib/level-unlock";
 import { notifyAdminAssignmentExhausted } from "@/lib/notifications/email";
 import { recordForVocab } from "@/lib/progress-core";
 import { getCurrentAccount, type SessionAccount } from "@/lib/session";
+import { startOfUTCDay } from "@/lib/today";
 import { shuffle } from "@/lib/utils";
 import type { WordScope } from "@/lib/word-scope";
 import type {
@@ -429,8 +430,7 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
 async function computeDailyWords(
   account: SessionAccount
 ): Promise<{ vocab: Vocabulary; status: LearningStatus }[]> {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = startOfUTCDay();
 
   const existingPicks = await prisma.dailyWordPick.findMany({
     where: { accountId: account.id_login, pickedDate: today },

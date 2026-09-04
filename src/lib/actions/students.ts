@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { ensureDailyWordsForAccount } from "@/lib/actions/vocabulary";
 import { computeUnlockedLevelIds } from "@/lib/level-unlock";
 import { getCurrentAccount } from "@/lib/session";
+import { startOfUTCDay } from "@/lib/today";
 import type { AssignmentStatus } from "@/types";
 
 async function requireAdmin() {
@@ -77,8 +78,7 @@ export async function listAllStudentsAction(): Promise<StudentSummary[]> {
   // the first visit of the day by anyone) skip the round trip entirely instead of every student
   // re-checking individually — meaningful given each of these round trips crosses a real network
   // hop to the database.
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = startOfUTCDay();
   const alreadyPicked = await prisma.dailyWordPick.findMany({
     where: { accountId: { in: studentIds }, pickedDate: today },
     select: { accountId: true },
@@ -100,8 +100,7 @@ export async function listAllStudentsAction(): Promise<StudentSummary[]> {
     }),
   ]);
 
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
+  const startOfToday = startOfUTCDay();
 
   return students.map((s) => {
     const myLevels = accountLevels.filter((al) => al.accountId === s.id_login);
@@ -157,8 +156,7 @@ export async function assignVocabularyToAllStudentsAction(
   });
   if (students.length === 0) return { error: "Chưa có học sinh nào trong hệ thống." };
 
-  const assignedDate = new Date();
-  assignedDate.setHours(0, 0, 0, 0);
+  const assignedDate = startOfUTCDay();
 
   const data = students.flatMap((s) =>
     vocabIds.map((vocabId) => ({
@@ -195,8 +193,7 @@ export async function assignVocabularyToStudentAction(
   const student = await prisma.account.findFirst({ where: { id_login: studentId, role: "student" } });
   if (!student) return { error: "Không tìm thấy học sinh này." };
 
-  const assignedDate = new Date();
-  assignedDate.setHours(0, 0, 0, 0);
+  const assignedDate = startOfUTCDay();
 
   const data = vocabIds.map((vocabId) => ({
     accountId: studentId,
