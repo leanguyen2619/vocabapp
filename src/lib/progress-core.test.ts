@@ -22,48 +22,56 @@ describe("nextStatus", () => {
   });
 });
 
-// Dates use an explicit "Z" (UTC) suffix throughout — isSameCalendarDay/isNextCalendarDay compare
-// UTC calendar days, so an unsuffixed string (parsed in the machine's own local timezone) would
-// make these tests' outcomes depend on which timezone happens to run them.
+// Dates use an explicit "Z" (UTC) suffix throughout, chosen so the comment next to each literal
+// states its actual Vietnam (ICT, UTC+7) wall-clock time — isSameCalendarDay/isNextCalendarDay
+// compare calendar days in ICT (see startOfUTCDay in src/lib/today.ts), so "same UTC date" is NOT
+// the same thing as "same day" here: the ICT day boundary falls at 17:00 UTC, not midnight UTC.
 describe("isSameCalendarDay", () => {
   it("is true for two timestamps on the same calendar day, different times", () => {
-    expect(isSameCalendarDay(new Date("2026-08-28T01:00:00Z"), new Date("2026-08-28T23:59:00Z"))).toBe(true);
+    // 08:00 ICT Aug 28 vs 23:00 ICT Aug 28 — same Vietnam day.
+    expect(isSameCalendarDay(new Date("2026-08-28T01:00:00Z"), new Date("2026-08-28T16:00:00Z"))).toBe(true);
   });
 
   it("is false across a day boundary even if less than 24h apart", () => {
-    expect(isSameCalendarDay(new Date("2026-08-28T23:59:00Z"), new Date("2026-08-29T00:01:00Z"))).toBe(false);
+    // 23:59 ICT Aug 28 vs 00:01 ICT Aug 29 — two minutes apart, but different Vietnam days.
+    expect(isSameCalendarDay(new Date("2026-08-28T16:59:00Z"), new Date("2026-08-28T17:01:00Z"))).toBe(false);
   });
 });
 
 describe("isNextCalendarDay", () => {
   it("is true for the calendar day right after", () => {
-    expect(isNextCalendarDay(new Date("2026-08-28T10:00:00Z"), new Date("2026-08-29T02:00:00Z"))).toBe(true);
+    // 10:00 ICT Aug 28 vs 02:00 ICT Aug 29.
+    expect(isNextCalendarDay(new Date("2026-08-28T03:00:00Z"), new Date("2026-08-28T19:00:00Z"))).toBe(true);
   });
 
   it("is false for the same day", () => {
-    expect(isNextCalendarDay(new Date("2026-08-28T10:00:00Z"), new Date("2026-08-28T20:00:00Z"))).toBe(false);
+    // 10:00 ICT Aug 28 vs 20:00 ICT Aug 28.
+    expect(isNextCalendarDay(new Date("2026-08-28T03:00:00Z"), new Date("2026-08-28T13:00:00Z"))).toBe(false);
   });
 
   it("is false for a gap of 2+ days", () => {
-    expect(isNextCalendarDay(new Date("2026-08-28T10:00:00Z"), new Date("2026-08-30T10:00:00Z"))).toBe(false);
+    // 10:00 ICT Aug 28 vs 10:00 ICT Aug 30.
+    expect(isNextCalendarDay(new Date("2026-08-28T03:00:00Z"), new Date("2026-08-30T03:00:00Z"))).toBe(false);
   });
 });
 
 describe("computeStreak", () => {
   it("starts at 1 when there's no prior activity", () => {
-    expect(computeStreak(0, null, new Date("2026-08-28T10:00:00Z"))).toBe(1);
+    expect(computeStreak(0, null, new Date("2026-08-28T03:00:00Z"))).toBe(1);
   });
 
   it("stays unchanged (but at least 1) when already counted today", () => {
-    expect(computeStreak(5, new Date("2026-08-28T08:00:00Z"), new Date("2026-08-28T18:00:00Z"))).toBe(5);
-    expect(computeStreak(0, new Date("2026-08-28T08:00:00Z"), new Date("2026-08-28T18:00:00Z"))).toBe(1);
+    // Both 15:00 ICT and 23:00 ICT on Aug 28 — same Vietnam day.
+    expect(computeStreak(5, new Date("2026-08-28T08:00:00Z"), new Date("2026-08-28T16:00:00Z"))).toBe(5);
+    expect(computeStreak(0, new Date("2026-08-28T08:00:00Z"), new Date("2026-08-28T16:00:00Z"))).toBe(1);
   });
 
   it("increments by 1 when practicing the day right after the last activity", () => {
-    expect(computeStreak(5, new Date("2026-08-27T08:00:00Z"), new Date("2026-08-28T18:00:00Z"))).toBe(6);
+    // 15:00 ICT Aug 27 vs 23:00 ICT Aug 28 — one Vietnam day apart.
+    expect(computeStreak(5, new Date("2026-08-27T08:00:00Z"), new Date("2026-08-28T16:00:00Z"))).toBe(6);
   });
 
   it("resets to 1 after any gap of a day or more", () => {
-    expect(computeStreak(10, new Date("2026-08-20T08:00:00Z"), new Date("2026-08-28T18:00:00Z"))).toBe(1);
+    expect(computeStreak(10, new Date("2026-08-20T08:00:00Z"), new Date("2026-08-28T16:00:00Z"))).toBe(1);
   });
 });
