@@ -3,6 +3,7 @@ import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 import { PrismaClient } from "../src/generated/prisma/client";
+import { startOfUTCDay } from "../src/lib/today";
 
 // Runs on top of prisma/seed.ts (which creates HS0001/QT0001 and the demo vocab/question bank).
 // This adds the two things that would otherwise make the e2e flows non-deterministic:
@@ -17,21 +18,18 @@ import { PrismaClient } from "../src/generated/prisma/client";
 //    computeDailyWords in src/lib/actions/vocabulary.ts, which reads back an existing
 //    DailyWordPick for the day instead of recomputing once one exists).
 //
-// Both use the exact same "start of today, local time" convention the app itself uses
-// (`new Date(); .setHours(0,0,0,0)`), so this only works correctly when run in the same
-// timezone/moment as the server under test — true for both local dev and CI (same machine).
+// Uses the app's own startOfUTCDay (Vietnam/ICT midnight, deterministic regardless of the calling
+// process's own timezone) rather than a local re-implementation — this script previously computed
+// "today" via `new Date(); .setHours(0,0,0,0)` (the calling process's own local time), which
+// happened to agree with the app's old plain-UTC-day boundary on CI (UTC) but silently diverged
+// the moment the app's boundary was fixed to real Vietnam midnight, leaving this seed's pinned
+// picks dated for a different "today" than what the running app would look up.
 
 const adapter = new PrismaPg(new Pool({ connectionString: process.env.DATABASE_URL }));
 const prisma = new PrismaClient({ adapter });
 
-function startOfToday(): Date {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return today;
-}
-
 async function main() {
-  const today = startOfToday();
+  const today = startOfUTCDay();
 
   await prisma.dailyWarmup.upsert({
     where: { accountId_warmupDate: { accountId: "HS0001", warmupDate: today } },
