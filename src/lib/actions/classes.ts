@@ -78,3 +78,70 @@ export async function deleteClassAction(id: string): Promise<{ error: string } |
   if (!deleted) return { error: "Không tìm thấy lớp này." };
   return {};
 }
+
+export interface ClassRosterStudent {
+  id_login: string;
+  fullName: string;
+  email: string;
+}
+
+/** Every student currently in this class, for the roster view on the classes page. */
+export async function listClassRosterAction(classId: string): Promise<ClassRosterStudent[]> {
+  const admin = await requireAdmin();
+  if (!admin) return [];
+
+  const students = await prisma.account.findMany({
+    where: { classId, role: "student" },
+    orderBy: { fullName: "asc" },
+    select: { id_login: true, fullName: true, email: true },
+  });
+  return students;
+}
+
+/** Every student NOT already in this class — whether unassigned or in a different class — so the
+ * roster's "add student" picker can also move someone over from elsewhere, not just pull from the
+ * unassigned pool. */
+export async function listAddableStudentsAction(classId: string): Promise<ClassRosterStudent[]> {
+  const admin = await requireAdmin();
+  if (!admin) return [];
+
+  const students = await prisma.account.findMany({
+    where: { role: "student", NOT: { classId } },
+    orderBy: { fullName: "asc" },
+    select: { id_login: true, fullName: true, email: true },
+  });
+  return students;
+}
+
+export async function addStudentToClassAction(
+  studentId: string,
+  classId: string
+): Promise<{ error: string } | { error?: undefined }> {
+  const admin = await requireAdmin();
+  if (!admin) return { error: "Bạn không có quyền thực hiện thao tác này." };
+
+  const classExists = await prisma.schoolClass.findUnique({ where: { id: classId } });
+  if (!classExists) return { error: "Lớp học không hợp lệ." };
+
+  const updated = await prisma.account
+    .updateMany({ where: { id_login: studentId, role: "student" }, data: { classId } })
+    .catch(() => null);
+  if (!updated || updated.count === 0) return { error: "Không tìm thấy học sinh này." };
+  return {};
+}
+
+/** Removes a student from their current class (does not delete the account) — the counterpart to
+ * addStudentToClassAction, both surfaced on the classes page's roster dialog per the admin's
+ * request to manage class membership from there instead of only via the accounts page. */
+export async function removeStudentFromClassAction(
+  studentId: string
+): Promise<{ error: string } | { error?: undefined }> {
+  const admin = await requireAdmin();
+  if (!admin) return { error: "Bạn không có quyền thực hiện thao tác này." };
+
+  const updated = await prisma.account
+    .updateMany({ where: { id_login: studentId, role: "student" }, data: { classId: null } })
+    .catch(() => null);
+  if (!updated || updated.count === 0) return { error: "Không tìm thấy học sinh này." };
+  return {};
+}

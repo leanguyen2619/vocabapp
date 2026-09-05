@@ -3,7 +3,7 @@
 import { useState, type SubmitEvent } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { AlertCircle, ArrowLeft, Plus, Trash2, Users } from "lucide-react";
+import { AlertCircle, ArrowLeft, Plus, Trash2, Users, X } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -20,13 +20,26 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { PaginationControls } from "@/components/pagination-controls";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import {
+  addStudentToClassAction,
   createClassAction,
   deleteClassAction,
+  listAddableStudentsAction,
   listClassesWithCountsAction,
+  listClassRosterAction,
+  removeStudentFromClassAction,
   updateClassTargetAction,
+  type ClassRosterStudent,
   type ClassWithStudentCount,
 } from "@/lib/actions/classes";
 import { formatMessage } from "@/lib/i18n/format";
@@ -53,6 +66,14 @@ export function AdminClassesClient({
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [page, setPage] = useState(1);
+
+  const [rosterTarget, setRosterTarget] = useState<ClassWithStudentCount | null>(null);
+  const [rosterStudents, setRosterStudents] = useState<ClassRosterStudent[]>([]);
+  const [addableStudents, setAddableStudents] = useState<ClassRosterStudent[]>([]);
+  const [rosterLoading, setRosterLoading] = useState(false);
+  const [addSelect, setAddSelect] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const PAGE_SIZE = 10;
   const totalPages = Math.max(1, Math.ceil(classes.length / PAGE_SIZE));
@@ -127,6 +148,59 @@ export function AdminClassesClient({
     setClasses((prev) => prev.filter((c) => c.id !== deleteTarget.id));
     toast.success(formatMessage(dict.admin.classes.deleteSuccess, { name: deleteTarget.className }));
     setDeleteTarget(null);
+  };
+
+  const openRoster = async (cls: ClassWithStudentCount) => {
+    setRosterTarget(cls);
+    setAddSelect("");
+    setRosterLoading(true);
+    const [roster, addable] = await Promise.all([
+      listClassRosterAction(cls.id),
+      listAddableStudentsAction(cls.id),
+    ]);
+    setRosterStudents(roster);
+    setAddableStudents(addable);
+    setRosterLoading(false);
+  };
+
+  const handleAddStudent = async () => {
+    if (!rosterTarget || !addSelect) return;
+    setAdding(true);
+    const result = await addStudentToClassAction(addSelect, rosterTarget.id);
+    setAdding(false);
+    if (result.error !== undefined) {
+      toast.error(result.error);
+      return;
+    }
+
+    const added = addableStudents.find((s) => s.id_login === addSelect);
+    setAddableStudents((prev) => prev.filter((s) => s.id_login !== addSelect));
+    if (added) {
+      setRosterStudents((prev) => [...prev, added].sort((a, b) => a.fullName.localeCompare(b.fullName)));
+      setClasses((prev) =>
+        prev.map((c) => (c.id === rosterTarget.id ? { ...c, studentCount: c.studentCount + 1 } : c))
+      );
+      toast.success(formatMessage(dict.admin.classes.addStudentSuccess, { name: added.fullName }));
+    }
+    setAddSelect("");
+  };
+
+  const handleRemoveStudent = async (student: ClassRosterStudent) => {
+    if (!rosterTarget) return;
+    setRemovingId(student.id_login);
+    const result = await removeStudentFromClassAction(student.id_login);
+    setRemovingId(null);
+    if (result.error !== undefined) {
+      toast.error(dict.admin.classes.removeStudentError);
+      return;
+    }
+
+    setRosterStudents((prev) => prev.filter((s) => s.id_login !== student.id_login));
+    setAddableStudents((prev) => [...prev, student].sort((a, b) => a.fullName.localeCompare(b.fullName)));
+    setClasses((prev) =>
+      prev.map((c) => (c.id === rosterTarget.id ? { ...c, studentCount: c.studentCount - 1 } : c))
+    );
+    toast.success(formatMessage(dict.admin.classes.removeStudentSuccess, { name: student.fullName }));
   };
 
   return (
@@ -223,7 +297,7 @@ export function AdminClassesClient({
                     </Badge>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Label htmlFor={`target-${cls.id}`} className="text-sm text-muted-foreground">
                       {dict.admin.classes.targetPerDay}
                     </Label>
@@ -236,6 +310,10 @@ export function AdminClassesClient({
                       onBlur={() => void handleTargetBlur(cls)}
                       className="w-20"
                     />
+                    <Button variant="outline" size="sm" onClick={() => void openRoster(cls)}>
+                      <Users className="size-3.5" />
+                      {dict.admin.classes.rosterButton}
+                    </Button>
                     <Button
                       variant="outline"
                       size="icon-sm"
@@ -291,6 +369,93 @@ export function AdminClassesClient({
               {dict.common.delete}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={rosterTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setRosterTarget(null);
+            setRosterStudents([]);
+            setAddableStudents([]);
+            setAddSelect("");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {formatMessage(dict.admin.classes.rosterTitle, { name: rosterTarget?.className ?? "" })}
+            </DialogTitle>
+            <DialogDescription>{dict.admin.classes.rosterDesc}</DialogDescription>
+          </DialogHeader>
+
+          <div className="flex items-center gap-2">
+            <Select value={addSelect} onValueChange={(v) => setAddSelect(v ?? "")}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={dict.admin.classes.addStudentPlaceholder}>
+                  {(value: string) =>
+                    addableStudents.find((s) => s.id_login === value)?.fullName ??
+                    dict.admin.classes.addStudentPlaceholder
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {addableStudents.length === 0 ? (
+                  <p className="px-2 py-4 text-center text-sm text-muted-foreground">
+                    {dict.admin.classes.noAddableStudents}
+                  </p>
+                ) : (
+                  addableStudents.map((s) => (
+                    <SelectItem key={s.id_login} value={s.id_login}>
+                      {s.fullName}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+            <Button
+              type="button"
+              variant="outline"
+              className="shrink-0"
+              disabled={!addSelect || adding}
+              onClick={() => void handleAddStudent()}
+            >
+              <Plus className="size-4" />
+              {dict.admin.classes.addStudentButton}
+            </Button>
+          </div>
+
+          <div className="flex max-h-80 flex-col gap-1 overflow-y-auto">
+            {rosterLoading && (
+              <p className="py-6 text-center text-sm text-muted-foreground">{dict.common.loading}</p>
+            )}
+            {!rosterLoading && rosterStudents.length === 0 && (
+              <p className="py-6 text-center text-sm text-muted-foreground">{dict.admin.classes.rosterEmpty}</p>
+            )}
+            {!rosterLoading &&
+              rosterStudents.map((student, index) => (
+                <div key={student.id_login}>
+                  {index > 0 && <Separator className="my-1" />}
+                  <div className="flex items-center justify-between gap-3 py-1.5">
+                    <div>
+                      <p className="text-sm font-medium">{student.fullName}</p>
+                      <p className="text-xs text-muted-foreground">{student.email}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={dict.common.delete}
+                      disabled={removingId === student.id_login}
+                      onClick={() => void handleRemoveStudent(student)}
+                    >
+                      <X className="size-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
