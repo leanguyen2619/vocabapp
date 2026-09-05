@@ -85,9 +85,20 @@ export async function listAllStudentsAction(): Promise<StudentSummary[]> {
     distinct: ["accountId"],
   });
   const alreadyPickedIds = new Set(alreadyPicked.map((p) => p.accountId));
-  await Promise.all(
-    students.filter((s) => !alreadyPickedIds.has(s.id_login)).map((s) => ensureDailyWordsForAccount(s))
-  );
+  const unpicked = students.filter((s) => !alreadyPickedIds.has(s.id_login));
+
+  // Bounded by a time budget, not just batched — a school with many students who all lack a
+  // pick at once (e.g. a batch of new accounts on their first day) previously ran every one of
+  // these concurrently with no cap, which crossed Vercel's function timeout and 500'd the whole
+  // admin page. Whichever students don't finish in time just show 0 words for this one page
+  // load — no different from the pre-eager-generation behavior — and get generated for real the
+  // next time this page loads (once picked, a student is skipped above) or the student logs in
+  // themselves. Failures are swallowed per-student so one bad row can't sink the rest.
+  const GENERATION_BUDGET_MS = 6000;
+  await Promise.race([
+    Promise.all(unpicked.map((s) => ensureDailyWordsForAccount(s).catch(() => undefined))),
+    new Promise((resolve) => setTimeout(resolve, GENERATION_BUDGET_MS)),
+  ]);
 
   const [levels, accountLevels, learningHistory, assignments] = await Promise.all([
     prisma.level.findMany({ orderBy: { id: "asc" } }),
