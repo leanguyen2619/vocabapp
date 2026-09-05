@@ -54,6 +54,7 @@ const vi = {
     pageLabel: "Trang {page}/{total}",
     previousPage: "Trang trước",
     nextPage: "Trang sau",
+    next: "Tiếp",
   },
   warmup: {
     title: "Khởi động trước khi học",

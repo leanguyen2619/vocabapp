@@ -100,18 +100,26 @@ export async function listAllStudentsAction(): Promise<StudentSummary[]> {
     new Promise((resolve) => setTimeout(resolve, GENERATION_BUDGET_MS)),
   ]);
 
+  // Bounded to a recent window, not "ever" — a student who studies daily accumulates a new
+  // DailyAssignment batch every single day (see the auto-continuation/auto-default tiers in
+  // pickTodaysWordIds), so an unscoped query here grows without limit the longer the app is used,
+  // both bloating the badge list under each student's name and, eventually, this query itself
+  // (the same class of unbounded-growth risk that crossed Vercel's timeout for eager-generation —
+  // see the commit capping that with GENERATION_BUDGET_MS above). 30 days is "recent enough to be
+  // useful to an admin scanning who has what" without growing past a small, constant size.
+  const startOfToday = startOfUTCDay();
+  const assignmentWindowStart = new Date(startOfToday.getTime() - 30 * 24 * 60 * 60 * 1000);
+
   const [levels, accountLevels, learningHistory, assignments] = await Promise.all([
     prisma.level.findMany({ orderBy: { id: "asc" } }),
     prisma.accountLevel.findMany({ where: { accountId: { in: studentIds } } }),
     prisma.learningHistory.findMany({ where: { accountId: { in: studentIds } } }),
     prisma.dailyAssignment.findMany({
-      where: { accountId: { in: studentIds } },
+      where: { accountId: { in: studentIds }, assignedDate: { gte: assignmentWindowStart } },
       include: { vocab: { select: { vocab: true } } },
       orderBy: { assignedDate: "desc" },
     }),
   ]);
-
-  const startOfToday = startOfUTCDay();
 
   return students.map((s) => {
     const myLevels = accountLevels.filter((al) => al.accountId === s.id_login);

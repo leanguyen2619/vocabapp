@@ -52,6 +52,7 @@ const en: Dictionary = {
     pageLabel: "Page {page}/{total}",
     previousPage: "Previous page",
     nextPage: "Next page",
+    next: "Next",
   },
   warmup: {
     title: "Warm up before you start",

@@ -29,6 +29,7 @@ import { resetPasswordByAdminAction } from "@/lib/actions/accounts";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { NumberedPagination } from "@/components/numbered-pagination";
 import {
   Card,
   CardContent,
@@ -126,6 +127,9 @@ export function AdminStudentsPanel({
   const [studentAssignLevelFilter, setStudentAssignLevelFilter] = useState(ALL);
   const [studentAssignCountInput, setStudentAssignCountInput] = useState("");
   const [studentAssigning, setStudentAssigning] = useState(false);
+
+  const [studentPage, setStudentPage] = useState(1);
+  const STUDENT_PAGE_SIZE = 10;
 
   const studentCount = students.length;
   const averageScore =
@@ -369,6 +373,13 @@ export function AdminStudentsPanel({
     setNewPassword("");
   };
 
+  const studentTotalPages = Math.max(1, Math.ceil(students.length / STUDENT_PAGE_SIZE));
+  const currentStudentPage = Math.min(studentPage, studentTotalPages);
+  const pagedStudents = students.slice(
+    (currentStudentPage - 1) * STUDENT_PAGE_SIZE,
+    currentStudentPage * STUDENT_PAGE_SIZE
+  );
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
@@ -611,7 +622,7 @@ export function AdminStudentsPanel({
           {students.length === 0 && (
             <p className="py-6 text-center text-sm text-muted-foreground">{dict.adminStudents.noStudents}</p>
           )}
-          {students.map((student, index) => (
+          {pagedStudents.map((student, index) => (
             <div key={student.id_login}>
               {index > 0 && <Separator className="my-3" />}
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -703,6 +714,13 @@ export function AdminStudentsPanel({
           ))}
         </CardContent>
       </Card>
+
+      <NumberedPagination
+        page={currentStudentPage}
+        totalPages={studentTotalPages}
+        onPageChange={setStudentPage}
+        dict={dict}
+      />
 
       <Dialog
         open={studentAssignTarget !== null}
