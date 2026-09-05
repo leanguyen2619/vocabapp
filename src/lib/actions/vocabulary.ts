@@ -291,6 +291,7 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
           vocabId: vocab.id,
           assignedDate: today,
           status: "pending" as const,
+          source: "auto_continuation" as const,
         })),
         skipDuplicates: true,
       });
@@ -403,6 +404,7 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
           vocabId: vocab.id,
           assignedDate: today,
           status: "pending" as const,
+          source: "auto_default" as const,
         })),
         skipDuplicates: true,
       });

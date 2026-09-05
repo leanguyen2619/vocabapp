@@ -91,6 +91,20 @@ enum AssignmentStatus {
   overdue
 }
 
+// Where a DailyAssignment row came from — manual (admin picked it), auto_continuation (repeating
+// the topic+level of the student's last manual/continuation batch, see deriveLastAssignmentRule),
+// or auto_default (curriculum-order/random pick for a student with no assignment history at all).
+// Distinguishing these matters because deriveLastAssignmentRule infers "the admin wants this
+// topic+level repeated" from the most recent batch's shape — without this field, a coincidentally
+// single-topic auto_default batch (easy to hit once a level's remaining content narrows to one or
+// two topics) would get mistaken for a deliberate admin choice and start pinning that topic, which
+// was never actually decided by anyone.
+enum AssignmentSource {
+  manual
+  auto_continuation
+  auto_default
+}
+
 enum WritingSubmissionStatus {
   pending
   graded
@@ -148,10 +162,10 @@ model Account {
 // marks the request resolved.
 
 model PasswordResetRequest {
-  id         String                      @id @default(cuid())
+  id         String                     @id @default(cuid())
   accountId  String
-  status     PasswordResetRequestStatus  @default(pending)
-  createdAt  DateTime                    @default(now())
+  status     PasswordResetRequestStatus @default(pending)
+  createdAt  DateTime                   @default(now())
   resolvedAt DateTime?
 
   account Account @relation(fields: [accountId], references: [id_login], onDelete: Cascade)
@@ -249,8 +263,8 @@ model Vocabulary {
   level Level @relation(fields: [levelId], references: [id])
   topic Topic @relation(fields: [topicId], references: [id])
 
-  mainRelations      WordRelation[]       @relation("MainVocab")
-  subRelations       WordRelation[]       @relation("SubVocab")
+  mainRelations      WordRelation[]      @relation("MainVocab")
+  subRelations       WordRelation[]      @relation("SubVocab")
   questions          Question[]
   learningHistory    LearningHistory[]
   exerciseAttempts   ExerciseAttempt[]
@@ -440,6 +454,7 @@ model DailyAssignment {
   vocabId      String
   assignedDate DateTime
   status       AssignmentStatus @default(pending)
+  source       AssignmentSource @default(manual)
 
   account Account    @relation(fields: [accountId], references: [id_login], onDelete: Cascade)
   vocab   Vocabulary @relation(fields: [vocabId], references: [id])
@@ -493,16 +508,16 @@ model DailyWarmup {
 // student doesn't wait on the admin to move on, only to see their score.
 
 model WritingSubmission {
-  id          String                  @id @default(cuid())
-  accountId   String
-  vocabId     String
-  sentence    String
-  status      WritingSubmissionStatus @default(pending)
-  score       Int?
-  feedback    String?
-  submittedAt DateTime                @default(now())
-  gradedAt    DateTime?
-  gradedBy    String?
+  id              String                  @id @default(cuid())
+  accountId       String
+  vocabId         String
+  sentence        String
+  status          WritingSubmissionStatus @default(pending)
+  score           Int?
+  feedback        String?
+  submittedAt     DateTime                @default(now())
+  gradedAt        DateTime?
+  gradedBy        String?
   // Set the first time the student opens /writing-results after this submission was graded —
   // lets the dashboard show a "N bài mới được chấm" badge that clears once they've actually seen
   // it, instead of a raw graded-count that would never go away.

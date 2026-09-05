@@ -183,6 +183,7 @@ export async function assignVocabularyToAllStudentsAction(
       vocabId,
       assignedDate,
       status: "pending" as const,
+      source: "manual" as const,
     }))
   );
 
@@ -219,6 +220,7 @@ export async function assignVocabularyToStudentAction(
     vocabId,
     assignedDate,
     status: "pending" as const,
+    source: "manual" as const,
   }));
 
   const result = await prisma.dailyAssignment.createMany({ data, skipDuplicates: true }).catch(() => null);
