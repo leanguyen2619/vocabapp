@@ -171,16 +171,14 @@ async function computeReadyVocabIds(): Promise<Set<string>> {
 }
 
 /**
- * Picks the auto-assigned "remaining" pool in curriculum order: earliest unlocked level first,
- * then earliest topic within that level (Topic.id order — for A2 this matches the Cambridge
- * source file's category order), introducing every word in a topic before moving to the next one
- * — a student works through one theme at a time rather than a random grab-bag across 25+ topics.
- * Only draws NEW words from the ready set (see computeReadyVocabIds). A topic contributes its own
- * ready, not-yet-mastered words (new first, then learning) while it still has anything new to
- * introduce; once a topic's new supply is exhausted it's skipped entirely (its learning words fall
- * to the tier-2 review pool in the caller, not here) — but picking still spills into the next
- * topic/level to fill the daily target rather than stopping at whatever a single small topic has,
- * so "Family" having only 1 A1 word doesn't leave a student with a 1-word day.
+ * Picks the auto-assigned "remaining" pool randomly within each unlocked level: earliest unlocked
+ * level first (so a student still finishes A1 before touching A2, etc.), but the words drawn from
+ * that level are shuffled rather than walked in a fixed topic/id order. This used to be a strict
+ * curriculum order (topic by topic, lowest id first) — deterministic, so every student starting
+ * from the same blank state got the literal identical first batch, which looked broken once many
+ * students were created at once (see the incident this replaced). Random draw still keeps "new"
+ * words ahead of "learning" ones (stable sort after the shuffle), and only from the ready set (see
+ * computeReadyVocabIds) so a word missing e.g. its multiple-choice content never gets handed out.
  */
 function pickSequentialRemaining(
   levelOrder: string[],
@@ -194,23 +192,17 @@ function pickSequentialRemaining(
 
   for (const levelId of levelOrder) {
     if (collected.length >= target) break;
-    const levelVocab = vocabulary.filter((v) => v.levelId === levelId);
-    const topicIds = [...new Set(levelVocab.map((v) => v.topicId))].sort((a, b) => a - b);
+    const readyLevelVocab = vocabulary.filter(
+      (v) => v.levelId === levelId && readyIds.has(v.id) && statusOf(v.id) !== "mastered"
+    );
+    if (readyLevelVocab.length === 0) continue; // nothing left to introduce at this level — move on
 
-    for (const topicId of topicIds) {
+    const shuffled = shuffle(readyLevelVocab)
+      .map((vocab) => ({ vocab, status: statusOf(vocab.id) }))
+      .sort((a, b) => priority[a.status] - priority[b.status]);
+    for (const item of shuffled) {
       if (collected.length >= target) break;
-      const readyTopicVocab = levelVocab.filter((v) => v.topicId === topicId && readyIds.has(v.id));
-      const hasNew = readyTopicVocab.some((v) => statusOf(v.id) === "new");
-      if (!hasNew) continue; // this topic's ready words are already all introduced — move on
-
-      const sorted = readyTopicVocab
-        .filter((v) => statusOf(v.id) !== "mastered")
-        .map((vocab) => ({ vocab, status: statusOf(vocab.id) }))
-        .sort((a, b) => priority[a.status] - priority[b.status]);
-      for (const item of sorted) {
-        if (collected.length >= target) break;
-        collected.push(item);
-      }
+      collected.push(item);
     }
   }
   return collected;
@@ -362,7 +354,8 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
     const reviewQuota = totalQuota > 0 && masteredPool.length > 0 ? Math.min(1, totalQuota) : 0;
     const newQuota = totalQuota - reviewQuota;
 
-    // Tier 1: curriculum-ordered, content-ready, never-shown-before words (the normal path).
+    // Tier 1: random, content-ready, never-shown-before words from the earliest unlocked level
+    // with any left to introduce (the normal path).
     let remaining = pickSequentialRemaining(
       levelOrder,
       freshUnassignedVocab,
@@ -373,9 +366,10 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
     );
     // Tier 2: every ready, never-shown word has already been introduced somewhere in the pinned
     // topic/curriculum order — fall back to any ready, never-shown, not-yet-mastered word instead.
+    // Shuffled for the same reason as tier 1 above — different students shouldn't land on the
+    // identical fallback batch either.
     if (remaining.length === 0) {
-      remaining = freshUnassignedVocab
-        .filter((v) => readyIds.has(v.id))
+      remaining = shuffle(freshUnassignedVocab.filter((v) => readyIds.has(v.id)))
         .map((vocab) => ({ vocab, status: statusOf(vocab.id) }))
         .sort((a, b) => priority[a.status] - priority[b.status]);
     }
@@ -383,7 +377,7 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
     // full (not "never shown") pool so a student is never left with zero words once content runs
     // out, same as the old any-unlocked-word fallback did before daily rotation existed.
     if (remaining.length === 0) {
-      remaining = unassignedVocab
+      remaining = shuffle(unassignedVocab)
         .map((vocab) => ({ vocab, status: statusOf(vocab.id) }))
         .sort((a, b) => priority[a.status] - priority[b.status]);
     }
