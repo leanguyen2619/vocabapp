@@ -159,3 +159,32 @@ export async function updateAccountByAdminAction(
 
   return {};
 }
+
+/** Permanently deletes an account and everything tied to it (progress, assignments, sessions,
+ * writing submissions — all cascade via the schema's onDelete: Cascade). Unlike locking, this
+ * cannot be undone, so it carries the same two safety checks as setAccountStatusAction: an admin
+ * can't delete themselves (would sever their own session mid-request) or delete the last active
+ * admin (would leave nobody able to administer the school at all). */
+export async function deleteAccountAction(id_login: string): Promise<{ error: string } | { error?: undefined }> {
+  const admin = await requireAdmin();
+  if (!admin) return { error: "Bạn không có quyền thực hiện thao tác này." };
+
+  if (id_login === admin.id_login) {
+    return { error: "Không thể xóa tài khoản của chính mình." };
+  }
+
+  const target = await prisma.account.findUnique({ where: { id_login } });
+  if (!target) return { error: "Không tìm thấy tài khoản." };
+
+  if (target.role === "admin") {
+    const activeAdminCount = await prisma.account.count({ where: { role: "admin", status: "active" } });
+    if (activeAdminCount <= 1) {
+      return { error: "Không thể xóa quản trị viên duy nhất còn hoạt động." };
+    }
+  }
+
+  const deleted = await prisma.account.delete({ where: { id_login } }).catch(() => null);
+  if (!deleted) return { error: "Không tìm thấy tài khoản." };
+
+  return {};
+}

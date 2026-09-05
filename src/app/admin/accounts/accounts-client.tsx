@@ -16,6 +16,7 @@ import {
   Pencil,
   Plus,
   Search,
+  Trash2,
   X,
 } from "lucide-react";
 
@@ -48,6 +49,7 @@ import { Separator } from "@/components/ui/separator";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import {
   createAccountByAdminAction,
+  deleteAccountAction,
   listAccountsAction,
   resetPasswordByAdminAction,
   setAccountStatusAction,
@@ -106,6 +108,10 @@ export function AdminAccountsClient({
 
   const [knownCredentials, setKnownCredentials] = useState<Record<string, KnownCredentials>>({});
   const [resetRequests, setResetRequests] = useState(initialResetRequests);
+
+  const [deleteTarget, setDeleteTarget] = useState<AccountSummary | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [search, setSearch] = useState("");
   const [sortMode, setSortMode] = useState<SortMode>("default");
@@ -310,6 +316,22 @@ export function AdminAccountsClient({
         name,
       })
     );
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const result = await deleteAccountAction(deleteTarget.account.id_login);
+    setDeleting(false);
+
+    if (result.error !== undefined) {
+      setDeleteError(result.error);
+      return;
+    }
+
+    setAccounts((prev) => prev.filter((a) => a.account.id_login !== deleteTarget.account.id_login));
+    toast.success(formatMessage(dict.admin.accounts.deleteSuccess, { name: deleteTarget.account.fullName }));
+    setDeleteTarget(null);
   };
 
   return (
@@ -598,6 +620,17 @@ export function AdminAccountsClient({
                               </>
                             )}
                           </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setDeleteTarget(summary);
+                              setDeleteError(null);
+                            }}
+                          >
+                            <Trash2 className="size-3.5" />
+                            {dict.admin.accounts.deleteButton}
+                          </Button>
                         </>
                       )}
                     </div>
@@ -786,6 +819,43 @@ export function AdminAccountsClient({
               )}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteTarget(null);
+            setDeleteError(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{dict.admin.accounts.deleteConfirmTitle}</DialogTitle>
+            <DialogDescription>
+              {formatMessage(dict.admin.accounts.deleteConfirmDesc, {
+                name: deleteTarget?.account.fullName ?? "",
+              })}
+            </DialogDescription>
+          </DialogHeader>
+
+          {deleteError && (
+            <Alert variant="destructive">
+              <AlertCircle />
+              <AlertDescription>{deleteError}</AlertDescription>
+            </Alert>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+              {dict.common.cancel}
+            </Button>
+            <Button variant="destructive" disabled={deleting} onClick={() => void handleDelete()}>
+              {dict.common.delete}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
