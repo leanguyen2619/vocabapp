@@ -64,16 +64,26 @@ export function AdminLevelsClient({
   unlockCandidates: LevelUnlockCandidate[];
   dict: Dictionary;
 }) {
-  const [autoUnlockInputs, setAutoUnlockInputs] = useState<Record<string, string>>(
-    Object.fromEntries(levels.map((l) => [l.id, l.autoUnlockNextAt !== null ? String(l.autoUnlockNextAt) : ""]))
+  const initialAutoUnlock = Object.fromEntries(
+    levels.map((l) => [l.id, l.autoUnlockNextAt !== null ? String(l.autoUnlockNextAt) : ""])
   );
+  const [autoUnlockInputs, setAutoUnlockInputs] = useState<Record<string, string>>(initialAutoUnlock);
+  // Last-SAVED value per level, separate from the input's current (possibly-edited) value — lets
+  // each row's own Save button tell whether IT has unsaved changes, rather than every button
+  // showing the same solid, equally-urgent style whether or not there's anything to save.
+  const [savedAutoUnlockInputs, setSavedAutoUnlockInputs] =
+    useState<Record<string, string>>(initialAutoUnlock);
   const [savingAutoUnlock, setSavingAutoUnlock] = useState<string | null>(null);
 
   const [selectedId, setSelectedId] = useState<string>(students[0]?.id_login ?? "");
   const [statusMap, setStatusMap] = useState<Record<string, AccountLevelStatus>>(
     statusesFromEntries(initialEntries)
   );
+  const [savedStatusMap, setSavedStatusMap] = useState<Record<string, AccountLevelStatus>>(
+    statusesFromEntries(initialEntries)
+  );
   const [notes, setNotes] = useState<Record<string, string>>(notesFromEntries(initialEntries));
+  const [savedNotes, setSavedNotes] = useState<Record<string, string>>(notesFromEntries(initialEntries));
   const [studentSearch, setStudentSearch] = useState("");
   const [candidates, setCandidates] = useState<LevelUnlockCandidate[]>(unlockCandidates);
 
@@ -90,8 +100,12 @@ export function AdminLevelsClient({
   const handleSelectStudent = async (id: string) => {
     setSelectedId(id);
     const entries = await getAccountLevelStatusesAction(id);
-    setStatusMap(statusesFromEntries(entries));
-    setNotes(notesFromEntries(entries));
+    const status = statusesFromEntries(entries);
+    const noteMap = notesFromEntries(entries);
+    setStatusMap(status);
+    setSavedStatusMap(status);
+    setNotes(noteMap);
+    setSavedNotes(noteMap);
   };
 
   const handleSave = async (levelId: string, levelName: string) => {
@@ -101,6 +115,8 @@ export function AdminLevelsClient({
       toast.error(dict.admin.levels.saveError);
       return;
     }
+    setSavedStatusMap((m) => ({ ...m, [levelId]: newStatus }));
+    setSavedNotes((n) => ({ ...n, [levelId]: notes[levelId] ?? "" }));
     if (newStatus !== "locked") {
       setCandidates((prev) =>
         prev.filter((c) => !(c.accountId === selectedId && c.nextLevelId === levelId))
@@ -130,6 +146,7 @@ export function AdminLevelsClient({
       toast.error(dict.admin.levels.saveError);
       return;
     }
+    setSavedAutoUnlockInputs((m) => ({ ...m, [levelId]: raw }));
     toast.success(
       threshold === null
         ? formatMessage(dict.admin.levels.autoUnlockClearSuccess, { level: levelName })
@@ -179,6 +196,8 @@ export function AdminLevelsClient({
 
             {levels.map((level, index) => {
               const nextLevel = levels[index + 1];
+              const autoUnlockDirty =
+                (autoUnlockInputs[level.id] ?? "") !== (savedAutoUnlockInputs[level.id] ?? "");
               return (
                 <div key={level.id}>
                   {index > 0 && <div className="mb-4 h-px bg-border" />}
@@ -211,7 +230,7 @@ export function AdminLevelsClient({
                         <Button
                           size="sm"
                           variant="outline"
-                          disabled={savingAutoUnlock === level.id}
+                          disabled={savingAutoUnlock === level.id || !autoUnlockDirty}
                           onClick={() => void handleSaveAutoUnlock(level.id, level.level, nextLevel.level)}
                         >
                           {dict.admin.levels.autoUnlockSave}
@@ -300,6 +319,9 @@ export function AdminLevelsClient({
               <CardContent className="flex flex-col gap-4 py-4">
                 {levels.map((level, index) => {
                   const currentStatus = statusMap[level.id] ?? "locked";
+                  const statusDirty =
+                    currentStatus !== (savedStatusMap[level.id] ?? "locked") ||
+                    (notes[level.id] ?? "") !== (savedNotes[level.id] ?? "");
                   return (
                     <div key={level.id}>
                       {index > 0 && <div className="mb-4 h-px bg-border" />}
@@ -340,7 +362,11 @@ export function AdminLevelsClient({
                             }
                             className="w-40"
                           />
-                          <Button size="sm" onClick={() => void handleSave(level.id, level.level)}>
+                          <Button
+                            size="sm"
+                            disabled={!statusDirty}
+                            onClick={() => void handleSave(level.id, level.level)}
+                          >
                             {dict.admin.levels.save}
                           </Button>
                         </div>
