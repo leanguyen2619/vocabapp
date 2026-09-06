@@ -529,6 +529,8 @@ const en: Dictionary = {
     noQuestions: "No words available for this exercise yet.",
     showDefinition: "Show English definition",
     definitionLabel: "Definition:",
+    showFirstLetterHint: "Hint: first letter",
+    firstLetterHintLabel: "The word starts with \"{letter}\".",
   },
   listeningGame: {
     finishedTitle: "Listening exercise complete!",
