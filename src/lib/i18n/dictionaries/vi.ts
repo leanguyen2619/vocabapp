@@ -529,6 +529,8 @@ const vi = {
     viewResults: "Xem kết quả",
     checkButton: "Kiểm tra",
     noQuestions: "Chưa có từ nào cho dạng bài này.",
+    showDefinition: "Xem định nghĩa tiếng Anh",
+    definitionLabel: "Định nghĩa:",
   },
   listeningGame: {
     finishedTitle: "Hoàn thành bài nghe từ!",

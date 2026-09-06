@@ -35,15 +35,16 @@ import {
   listTopicsAction,
 } from "@/lib/actions/vocabulary";
 import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
+import { getMyStudentLevelIndexAction } from "@/lib/actions/levels";
 import { getDictionary, type Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { getLocale } from "@/lib/i18n/locale";
 import { buildPosQuestions, prepareWordFormation } from "@/lib/practice-prep";
 import { getCurrentAccount } from "@/lib/session";
-import { shuffle } from "@/lib/utils";
+import { B1_LEVEL_ORDINAL, shuffle } from "@/lib/utils";
 import type { PracticeTypeCode } from "@/types";
 
-async function renderGameFor(code: PracticeTypeCode, dict: Dictionary) {
+async function renderGameFor(code: PracticeTypeCode, dict: Dictionary, showEnglishDefinition: boolean) {
   switch (code) {
     case "multiple_choice": {
       const [questions, topics] = await Promise.all([
@@ -65,7 +66,14 @@ async function renderGameFor(code: PracticeTypeCode, dict: Dictionary) {
     }
     case "typing": {
       const vocabList = await getMyWordsForScopeAction("mixed");
-      return <TypingGame vocabList={vocabList} dict={dict} warmupCode={code} />;
+      return (
+        <TypingGame
+          vocabList={vocabList}
+          dict={dict}
+          warmupCode={code}
+          showEnglishDefinition={showEnglishDefinition}
+        />
+      );
     }
     case "listening": {
       const vocabList = await getMyWordsForScopeAction("mixed");
@@ -153,7 +161,9 @@ export default async function WarmupPage() {
   const stepIndex = status.completed.length + 1;
   const totalSteps = status.types.length;
 
-  const game = await renderGameFor(currentType, dict);
+  const studentLevelIndex = await getMyStudentLevelIndexAction();
+  const showEnglishDefinition = studentLevelIndex >= B1_LEVEL_ORDINAL;
+  const game = await renderGameFor(currentType, dict, showEnglishDefinition);
 
   return (
     <div className="flex flex-1 flex-col bg-background bg-forest">

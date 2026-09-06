@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type SubmitEvent } from "react";
 import Link from "next/link";
-import { Check, PartyPopper, RotateCcw, Volume2, X } from "lucide-react";
+import { Check, Lightbulb, PartyPopper, RotateCcw, Volume2, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,23 +13,30 @@ import { markWarmupTypeCompleteAction } from "@/lib/actions/warmup";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { speakWord } from "@/lib/speech";
-import { cn } from "@/lib/utils";
+import { cn, normalizeForAnswerMatch } from "@/lib/utils";
 import type { PracticeTypeCode, Vocabulary } from "@/types";
 
 export function TypingGame({
   vocabList,
   dict,
   warmupCode,
+  showEnglishDefinition = false,
 }: {
   vocabList: Vocabulary[];
   dict: Dictionary;
   warmupCode?: PracticeTypeCode;
+  /** B1+ students can additionally reveal the word's English definition as a hint — see
+   * getMyStudentLevelIndexAction in the page that renders this. Beginners (A1/A2) only get the
+   * Vietnamese meaning as the prompt, since reading an English definition is itself the skill
+   * they haven't built up to yet. */
+  showEnglishDefinition?: boolean;
 }) {
   const [index, setIndex] = useState(0);
   const [value, setValue] = useState("");
   const [checked, setChecked] = useState(false);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
+  const [showDefinition, setShowDefinition] = useState(false);
 
   const total = vocabList.length;
 
@@ -52,7 +59,7 @@ export function TypingGame({
   }
 
   const current = vocabList[index];
-  const isCorrect = value.trim().toLowerCase() === current.vocab.toLowerCase();
+  const isCorrect = normalizeForAnswerMatch(value) === normalizeForAnswerMatch(current.vocab);
 
   const handleNext = () => {
     if (index + 1 >= total) {
@@ -62,6 +69,7 @@ export function TypingGame({
     setIndex((i) => i + 1);
     setValue("");
     setChecked(false);
+    setShowDefinition(false);
   };
 
   const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
@@ -83,6 +91,7 @@ export function TypingGame({
     setChecked(false);
     setScore(0);
     setFinished(false);
+    setShowDefinition(false);
   };
 
   if (finished) {
@@ -124,6 +133,27 @@ export function TypingGame({
         <p className="text-sm text-muted-foreground">{dict.typingGame.promptLabel}</p>
         <h2 className="font-heading text-2xl font-semibold tracking-tight">{current.meanVI}</h2>
       </div>
+
+      {showEnglishDefinition &&
+        (showDefinition ? (
+          <div className="mx-auto flex max-w-xs items-start gap-2 rounded-lg bg-muted p-3 text-sm">
+            <Lightbulb className="mt-0.5 size-4 shrink-0 text-amber-500" />
+            <p>
+              {dict.typingGame.definitionLabel} <span className="italic">{current.definition}</span>
+            </p>
+          </div>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mx-auto"
+            onClick={() => setShowDefinition(true)}
+          >
+            <Lightbulb className="size-4" />
+            {dict.typingGame.showDefinition}
+          </Button>
+        ))}
 
       <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4">
         <Input

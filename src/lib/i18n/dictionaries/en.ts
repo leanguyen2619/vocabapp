@@ -527,6 +527,8 @@ const en: Dictionary = {
     viewResults: "View results",
     checkButton: "Check",
     noQuestions: "No words available for this exercise yet.",
+    showDefinition: "Show English definition",
+    definitionLabel: "Definition:",
   },
   listeningGame: {
     finishedTitle: "Listening exercise complete!",
