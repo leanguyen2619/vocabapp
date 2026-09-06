@@ -288,14 +288,14 @@ export function AdminQuestionBankClient({
           />
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
           {!loadingType &&
             pagedQuestions.map((q) => (
-              <Card key={q.id}>
-                <CardContent className="flex flex-col gap-3 py-4">
+              <Card key={q.id} size="sm">
+                <CardContent className="flex flex-col gap-2">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="font-medium">{q.questionText}</p>
+                      <p className="text-sm font-medium">{q.questionText}</p>
                       <p className="text-xs text-muted-foreground">
                         {dict.admin.questionBank.wordLabel} {q.vocab.vocab} ({q.vocab.meanVI})
                       </p>
@@ -306,18 +306,21 @@ export function AdminQuestionBankClient({
                   </div>
 
                   {q.answers.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-2">
+                    // Chips sized to their own text (not a fixed-column grid) so short answers —
+                    // the common case, single English words — pack several per row instead of
+                    // each claiming half the card's width regardless of length.
+                    <div className="flex flex-wrap gap-1.5">
                       {q.answers.map((a) => (
-                        <div
+                        <span
                           key={a.ansId}
-                          className={`rounded-lg border px-3 py-1.5 text-sm ${
+                          className={`rounded-full border px-2.5 py-1 text-xs ${
                             a.isCorrect
                               ? "border-emerald-500 bg-emerald-50 text-emerald-700"
                               : "border-border text-muted-foreground"
                           }`}
                         >
                           {a.ansText}
-                        </div>
+                        </span>
                       ))}
                     </div>
                   ) : (
