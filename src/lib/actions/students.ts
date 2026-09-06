@@ -49,10 +49,13 @@ export interface StudentSummary {
    * topic+level (see deriveLastAssignmentRule / Account.assignRuleExhaustedAt) — the admin needs
    * to manually assign from a different topic. Cleared by the next explicit assignment. */
   assignRuleExhausted: boolean;
-  /** Every word currently assigned to this student (DailyAssignment rows, any date), each flagged
+  /** Today's assigned words for this student (DailyAssignment rows dated today only), each flagged
    * with whether they've since mastered it — shown inline per student instead of the old flat,
    * word-centric "who has this word" list, which took a lot of space and made it hard to see which
-   * student had which word at a glance. */
+   * student had which word at a glance. Scoped to today (not "ever assigned") so the badge list
+   * genuinely refreshes at the day boundary — yesterday's words disappear and today's take their
+   * place, matching what the student's own dashboard shows them, instead of piling up every batch
+   * a student has ever received. */
   assignedWords: { vocab: string; mastered: boolean }[];
 }
 
@@ -100,24 +103,22 @@ export async function listAllStudentsAction(): Promise<StudentSummary[]> {
     new Promise((resolve) => setTimeout(resolve, GENERATION_BUDGET_MS)),
   ]);
 
-  // Bounded to a recent window, not "ever" — a student who studies daily accumulates a new
+  // Scoped to exactly today, not a rolling window — a student who studies daily accumulates a new
   // DailyAssignment batch every single day (see the auto-continuation/auto-default tiers in
-  // pickTodaysWordIds), so an unscoped query here grows without limit the longer the app is used,
-  // both bloating the badge list under each student's name and, eventually, this query itself
-  // (the same class of unbounded-growth risk that crossed Vercel's timeout for eager-generation —
-  // see the commit capping that with GENERATION_BUDGET_MS above). 30 days is "recent enough to be
-  // useful to an admin scanning who has what" without growing past a small, constant size.
+  // pickTodaysWordIds), so a wider window here just piles up every batch a student has ever
+  // received into one ever-growing badge list, most of it already mastered or long since replaced.
+  // Matching the exact day boundary the student's own dashboard uses means this list flips over
+  // automatically at midnight: today's words appear, yesterday's disappear, with no separate
+  // cleanup needed.
   const startOfToday = startOfUTCDay();
-  const assignmentWindowStart = new Date(startOfToday.getTime() - 30 * 24 * 60 * 60 * 1000);
 
   const [levels, accountLevels, learningHistory, assignments] = await Promise.all([
     prisma.level.findMany({ orderBy: { id: "asc" } }),
     prisma.accountLevel.findMany({ where: { accountId: { in: studentIds } } }),
     prisma.learningHistory.findMany({ where: { accountId: { in: studentIds } } }),
     prisma.dailyAssignment.findMany({
-      where: { accountId: { in: studentIds }, assignedDate: { gte: assignmentWindowStart } },
+      where: { accountId: { in: studentIds }, assignedDate: startOfToday },
       include: { vocab: { select: { vocab: true } } },
-      orderBy: { assignedDate: "desc" },
     }),
   ]);
 
@@ -136,8 +137,6 @@ export async function listAllStudentsAction(): Promise<StudentSummary[]> {
       todayStatus = todayHistory.every((h) => h.status === "mastered") ? "done" : "in_progress";
     }
 
-    // Most-recently-assigned first (assignments is already sorted desc by assignedDate) — a
-    // student's newest word is the most relevant one for an admin scanning the list.
     const assignedWords = assignments
       .filter((a) => a.accountId === s.id_login)
       .map((a) => ({
