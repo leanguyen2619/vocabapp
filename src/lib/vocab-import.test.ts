@@ -110,10 +110,6 @@ describe("normalizePartOfSpeech", () => {
     expect(normalizePartOfSpeech("noun/verb")).toBe("noun");
   });
 
-  it("still returns null for a bare 'phrase' tag with no type signal to go on", () => {
-    expect(normalizePartOfSpeech("phrase")).toBeNull();
-  });
-
   it("doesn't false-positive on a POS word that merely contains another one as a substring", () => {
     // "adverb" contains "verb"; "pronoun" contains "noun" — a plain substring check would
     // misclassify both.
@@ -132,6 +128,15 @@ describe("normalizePartOfSpeech", () => {
     expect(normalizePartOfSpeech("possessive")).toBe("pronoun");
     expect(normalizePartOfSpeech("exclamation")).toBe("interjection");
     expect(normalizePartOfSpeech("uncountable noun")).toBe("noun");
+  });
+
+  // A bare "phrase" tag (no other grammatical signal) shows up 65 times across the real B1/B2
+  // source files, all multi-word idiomatic expressions ("get hold of", "take place", "battle it
+  // out") — sampling them showed most function as verb phrases, so this maps the same way "idiom"
+  // already does above. A compound tag that already names its type, like "noun phrase" or
+  // "prepositional phrase" (covered separately above), never reaches this fallback.
+  it("maps a bare 'phrase' tag to verb, the closest fit for an idiomatic multi-word expression", () => {
+    expect(normalizePartOfSpeech("phrase")).toBe("verb");
   });
 
   it("splits on '+' the same way as the other separators, preserving first-mentioned-wins", () => {

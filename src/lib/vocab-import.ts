@@ -72,17 +72,20 @@ export function normalizeImportRow(raw: Record<string, unknown>): ImportRow {
  * verb" and "preposition" matches the prefix "prepositional", while neither wrongly matches inside
  * an unrelated word that merely contains the same letters — "verb" inside "adVERB", or "noun"
  * inside "proNOUN" (a real regression a plain substring check like /verb/ hits immediately).
- * The extra alternatives (idiom, determiner, discourse marker, interrogative, possessive) are
- * grammatical categories outside the app's 8-value enum that a Cambridge-style list still tags
- * words with — each mapped to whichever of the 8 values fits its typical usage closely enough for
- * a language-learning app (idiom -> verb: sampled a real B2 file's "idiom"-tagged rows and most
- * were verb phrases like "draw the line", "hand in your notice"; determiner -> adjective: both
- * modify a following noun; discourse marker -> adverb: "well"/"actually"/"anyway"-type words are
- * conventionally classed as adverbs in simplified ESL grammar; interrogative/possessive -> pronoun:
- * "what/who/which" and "mine/yours" function as pronouns). */
+ * The extra alternatives (idiom, determiner, discourse marker, interrogative, possessive, a bare
+ * "phrase") are grammatical categories outside the app's 8-value enum that a Cambridge-style list
+ * still tags words with — each mapped to whichever of the 8 values fits its typical usage closely
+ * enough for a language-learning app (idiom -> verb, and likewise a bare "phrase" -> verb: sampled
+ * every "idiom"/plain-"phrase"-tagged row across the real A1/A2/B1/B2 source files and most were
+ * verb phrases like "draw the line", "hand in your notice", "get hold of", "take place" — compound
+ * tags that already say what they are, like "noun phrase" or "prepositional phrase", never reach
+ * this fallback since the split below strips " phrase"/" phr" as a separator first; determiner ->
+ * adjective: both modify a following noun; discourse marker -> adverb: "well"/"actually"/"anyway"-
+ * type words are conventionally classed as adverbs in simplified ESL grammar; interrogative/
+ * possessive -> pronoun: "what/who/which" and "mine/yours" function as pronouns). */
 const POS_PATTERNS: [pattern: RegExp, pos: PartOfSpeech][] = [
   [/^n$|\bnoun/, "noun"],
-  [/^v$|\bverb|\bidiom/, "verb"],
+  [/^v$|\bverb|\bidiom|^phrase$/, "verb"],
   [/^adj$|\badjective|\bdeterminer/, "adjective"],
   [/^adv$|\badverb|\bdiscourse marker/, "adverb"],
   [/^prep$|\bpreposition/, "preposition"],
@@ -99,9 +102,9 @@ const POS_PATTERNS: [pattern: RegExp, pos: PartOfSpeech][] = [
  * segment against POS_PATTERNS and return the FIRST one that resolves — this preserves whichever
  * type the file itself listed first as the "primary" sense (e.g. "n & v" -> noun, but "v & n" ->
  * verb; "adjective + noun" -> adjective, but "noun + adjective" -> noun). Still returns null
- * (never a guessed fallback) when nothing matches — e.g. a bare "phrase" tag with no other
- * grammatical signal — so a genuinely unrecognized value causes the row to be skipped rather than
- * silently miscategorized. */
+ * (never a guessed fallback) when nothing matches at all — e.g. a stray typo or a tag from a
+ * grammatical category this app has no mapping for — so a genuinely unrecognized value causes the
+ * row to be skipped rather than silently miscategorized. */
 export function normalizePartOfSpeech(raw: string | undefined): PartOfSpeech | null {
   if (!raw) return null;
   const lower = raw.trim().toLowerCase();
