@@ -16,6 +16,11 @@ async function practiceTypeId(code: PracticeTypeCode): Promise<string> {
   return pracType.id;
 }
 
+// Bounded per practice type, not unlimited — the admin question bank's own client already
+// paginates over whatever this returns, but the query itself still re-fetches the WHOLE set on
+// every type switch with no cap, growing without limit as the bank fills up.
+const QUESTIONS_LIST_CAP = 1000;
+
 export async function listQuestionsAction(pracTypeCode: PracticeTypeCode): Promise<QuestionWithAnswers[]> {
   const admin = await requireAdmin();
   if (!admin) return [];
@@ -25,6 +30,7 @@ export async function listQuestionsAction(pracTypeCode: PracticeTypeCode): Promi
     where: { pracTypeId: pracTypeIdValue },
     include: { answers: true, vocab: true },
     orderBy: { id: "asc" },
+    take: QUESTIONS_LIST_CAP,
   });
 
   return rows.map((q) => ({
@@ -92,26 +98,31 @@ export async function updateQuestionAction(
   const admin = await requireAdmin();
   if (!admin) return false;
 
-  await prisma.question.update({
-    where: { id },
-    data: {
-      vocabId: patch.vocabId,
-      questionText: patch.questionText,
-      explanation: patch.explanation,
-    },
-  });
-
-  if (patch.answers) {
-    await prisma.answer.deleteMany({ where: { questionId: id } });
-    await prisma.answer.createMany({
-      data: patch.answers.map((a, i) => ({
-        questionId: id,
-        ansId: `a${i}`,
-        ansText: a.ansText,
-        isCorrect: a.isCorrect,
-      })),
+  // The question-field update and the answer delete+recreate must all land together — as
+  // separate statements, a crash or failed write between the deleteMany and createMany would
+  // leave the question with zero answers instead of either its old or new set.
+  await prisma.$transaction(async (tx) => {
+    await tx.question.update({
+      where: { id },
+      data: {
+        vocabId: patch.vocabId,
+        questionText: patch.questionText,
+        explanation: patch.explanation,
+      },
     });
-  }
+
+    if (patch.answers) {
+      await tx.answer.deleteMany({ where: { questionId: id } });
+      await tx.answer.createMany({
+        data: patch.answers.map((a, i) => ({
+          questionId: id,
+          ansId: `a${i}`,
+          ansText: a.ansText,
+          isCorrect: a.isCorrect,
+        })),
+      });
+    }
+  });
 
   return true;
 }

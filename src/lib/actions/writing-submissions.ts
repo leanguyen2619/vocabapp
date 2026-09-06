@@ -53,7 +53,15 @@ export interface PendingSubmissionItem {
   submittedAt: Date;
 }
 
-/** Oldest-first so the admin naturally works through the backlog in submission order. */
+/** Oldest-first so the admin naturally works through the backlog in submission order. Capped like
+ * its listRecentlyGradedSubmissionsAction sibling below (which already has `take: 20`) — a plain
+ * unbounded query here would grow without limit if the backlog piles up faster than it's graded,
+ * unlike the graded list, which is a bounded "most recent N" by design either way. 200 is well
+ * past a backlog any admin would let build up before noticing, while still capping the worst case;
+ * countPendingWritingSubmissionsAction (the dashboard's own badge count) is unaffected — it's a
+ * separate, uncapped `count()` query, not this list. */
+const PENDING_SUBMISSIONS_CAP = 200;
+
 export async function listPendingWritingSubmissionsAction(): Promise<PendingSubmissionItem[]> {
   const admin = await requireAdmin();
   if (!admin) return [];
@@ -62,6 +70,7 @@ export async function listPendingWritingSubmissionsAction(): Promise<PendingSubm
     where: { status: "pending" },
     include: { account: true, vocab: true },
     orderBy: { submittedAt: "asc" },
+    take: PENDING_SUBMISSIONS_CAP,
   });
 
   return rows.map((r) => ({

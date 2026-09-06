@@ -28,3 +28,14 @@ export function startOfUTCDay(date: Date = new Date()): Date {
   const shiftedMidnightUTC = Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate());
   return new Date(shiftedMidnightUTC - VIETNAM_UTC_OFFSET_MS);
 }
+
+/** Today's calendar date in Vietnam's ICT, as a plain "YYYY-MM-DD" string — for display/labeling
+ * use that wants a date string rather than the day-boundary instant startOfUTCDay returns above.
+ * Naively doing `new Date().toISOString().slice(0, 10)` gives the UTC calendar date instead, which
+ * is a DIFFERENT day for roughly 7 hours of each Vietnam calendar day (right around and after real
+ * local midnight — see startOfUTCDay's own comment for the identical mistake this once caused
+ * elsewhere in the app). */
+export function todayDateString(date: Date = new Date()): string {
+  const shifted = new Date(date.getTime() + VIETNAM_UTC_OFFSET_MS);
+  return shifted.toISOString().slice(0, 10);
+}

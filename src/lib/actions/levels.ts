@@ -78,11 +78,19 @@ export interface StudentSummary {
   email: string;
 }
 
+// Bounded, not "every student ever enrolled" — feeds a plain <Select> on the admin levels page,
+// which would otherwise re-fetch and render an ever-growing list on every page load.
+const STUDENTS_LIST_CAP = 2000;
+
 export async function listStudentsAction(): Promise<StudentSummary[]> {
   const admin = await requireAdmin();
   if (!admin) return [];
 
-  const rows = await prisma.account.findMany({ where: { role: "student" }, orderBy: { fullName: "asc" } });
+  const rows = await prisma.account.findMany({
+    where: { role: "student" },
+    orderBy: { fullName: "asc" },
+    take: STUDENTS_LIST_CAP,
+  });
   return rows.map((r) => ({ id_login: r.id_login, fullName: r.fullName, email: r.email }));
 }
 
@@ -132,18 +140,26 @@ export async function listLevelUnlockCandidatesAction(): Promise<LevelUnlockCand
 
   const [levels, students, accountLevels] = await Promise.all([
     prisma.level.findMany({ orderBy: { id: "asc" } }),
-    prisma.account.findMany({ where: { role: "student" }, orderBy: { fullName: "asc" } }),
+    prisma.account.findMany({
+      where: { role: "student" },
+      orderBy: { fullName: "asc" },
+      take: STUDENTS_LIST_CAP,
+    }),
     prisma.accountLevel.findMany(),
   ]);
 
+  // A Map keyed by "accountId:levelId" turns each lookup below into O(1) instead of an
+  // O(accountLevels-per-student) .find() re-scanned for every (student, level) pair — the
+  // previous version was effectively O(students × levels × accountLevels-per-student).
+  const statusByKey = new Map(accountLevels.map((al) => [`${al.accountId}:${al.levelId}`, al.status]));
+
   const candidates: LevelUnlockCandidate[] = [];
   for (const student of students) {
-    const myLevels = accountLevels.filter((al) => al.accountId === student.id_login);
     for (let i = 0; i < levels.length - 1; i++) {
       const current = levels[i];
       const next = levels[i + 1];
-      const currentStatus = myLevels.find((al) => al.levelId === current.id)?.status ?? "locked";
-      const nextStatus = myLevels.find((al) => al.levelId === next.id)?.status ?? "locked";
+      const currentStatus = statusByKey.get(`${student.id_login}:${current.id}`) ?? "locked";
+      const nextStatus = statusByKey.get(`${student.id_login}:${next.id}`) ?? "locked";
       if (currentStatus === "completed" && nextStatus === "locked") {
         candidates.push({
           accountId: student.id_login,
@@ -187,11 +203,16 @@ export async function setAccountLevelStatusAction(
   const admin = await requireAdmin();
   if (!admin) return false;
 
+  // A truthy check on manualNote would treat "" (the admin deliberately clearing the note) the
+  // same as "nothing to update", so the update clause silently drops the field and the old note
+  // stays in the DB forever — checking `!== undefined` instead lets "" through to actually clear
+  // it (as null, matching the column's own empty-note representation), while a genuinely omitted
+  // argument still leaves the existing note untouched.
   const updated = await prisma.accountLevel
     .upsert({
       where: { accountId_levelId: { accountId, levelId } },
-      update: { status, ...(manualNote ? { manualNote } : {}) },
-      create: { accountId, levelId, status, manualNote, score: 0, streak: 0 },
+      update: { status, ...(manualNote !== undefined ? { manualNote: manualNote || null } : {}) },
+      create: { accountId, levelId, status, manualNote: manualNote || null, score: 0, streak: 0 },
     })
     .catch(() => null);
   return updated !== null;

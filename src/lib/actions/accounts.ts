@@ -23,11 +23,16 @@ async function requireAdmin() {
   return account;
 }
 
+// Bounded, not "every account ever created" — a school's account list only ever grows, and this
+// is the initial full-list fetch every admin/accounts page load re-runs. 1000 is far past any
+// real school's headcount while still capping the worst case.
+const ACCOUNTS_LIST_CAP = 1000;
+
 export async function listAccountsAction(): Promise<AccountSummary[]> {
   const admin = await requireAdmin();
   if (!admin) return [];
 
-  const rows = await prisma.account.findMany({ orderBy: { createdAt: "asc" } });
+  const rows = await prisma.account.findMany({ orderBy: { createdAt: "asc" }, take: ACCOUNTS_LIST_CAP });
   return rows.map((r) => ({
     account: {
       id_login: r.id_login,

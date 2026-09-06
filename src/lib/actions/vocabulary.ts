@@ -12,7 +12,7 @@ import { notifyAdminAssignmentExhausted } from "@/lib/notifications/email";
 import { POS_OPTIONS } from "@/lib/practice-prep";
 import { recordForVocab } from "@/lib/progress-core";
 import { getCurrentAccount, type SessionAccount } from "@/lib/session";
-import { startOfUTCDay } from "@/lib/today";
+import { startOfUTCDay, todayDateString } from "@/lib/today";
 import { shuffle } from "@/lib/utils";
 import type { WordScope } from "@/lib/word-scope";
 import type {
@@ -504,7 +504,11 @@ export async function getMyDailyAssignmentsAction(): Promise<DailyAssignmentWith
   const account = await getCurrentAccount();
   if (!account) return [];
 
-  const today = new Date().toISOString().slice(0, 10);
+  // Vietnam-calendar-date string, not the UTC one — see todayDateString's own comment. This field
+  // isn't rendered anywhere on the client today, but a raw UTC slice here would silently repeat
+  // the same "7 hours late" bug this app has already hit (and fixed) elsewhere if a future feature
+  // starts displaying it.
+  const today = todayDateString();
   const words = await computeDailyWords(account);
 
   return words.map(({ vocab, status }) => {

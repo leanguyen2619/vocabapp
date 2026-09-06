@@ -173,6 +173,33 @@ export function AdminQuestionBankClient({
         explanation: form.explanation.trim() || undefined,
         answers: needsAnswers ? answers : undefined,
       });
+      // Patched locally from the form's own data (plus a vocabularyBank lookup for the vocab
+      // sub-object) instead of refetching the whole per-type question list for one edited row.
+      const vocab = vocabularyBank.find((v) => v.id === form.vocabId);
+      if (vocab) {
+        setQuestions((prev) =>
+          prev.map((q) =>
+            q.id === editingId
+              ? {
+                  ...q,
+                  vocabId: form.vocabId,
+                  vocab,
+                  questionText: form.questionText.trim(),
+                  explanation: form.explanation.trim() || undefined,
+                  answers: needsAnswers
+                    ? answers.map((a, i) => ({
+                        questionId: editingId,
+                        ansId: `a${i}`,
+                        ansText: a.ansText,
+                        isCorrect: a.isCorrect,
+                        status: "active",
+                      }))
+                    : q.answers,
+                }
+              : q
+          )
+        );
+      }
       toast.success(dict.admin.questionBank.updateSuccess);
     } else {
       await createQuestionAction(activeType, {
@@ -181,10 +208,14 @@ export function AdminQuestionBankClient({
         explanation: form.explanation.trim() || undefined,
         answers,
       });
+      // createQuestionAction doesn't hand back the new row's id, so there's nothing to patch
+      // locally with here — refetching is the simplest correct option for this one (rarer, more
+      // deliberate) action; the list itself is now capped (see listQuestionsAction), so this stays
+      // bounded rather than growing unboundedly expensive.
+      setQuestions(await listQuestionsAction(activeType));
       toast.success(dict.admin.questionBank.addSuccess);
     }
 
-    setQuestions(await listQuestionsAction(activeType));
     setDialogOpen(false);
   };
 
@@ -206,7 +237,10 @@ export function AdminQuestionBankClient({
 
   const handleSetStatus = async (q: QuestionWithAnswers, next: QuestionStatus) => {
     await setQuestionStatusAction(q.id, next);
-    setQuestions(await listQuestionsAction(activeType));
+    // Patched locally — a show/hide toggle is the most frequent mutation on this page (reviewing
+    // many questions in a row), so refetching the whole capped list here was the most wasteful of
+    // the three mutation sites on this page.
+    setQuestions((prev) => prev.map((question) => (question.id === q.id ? { ...question, status: next } : question)));
     toast.success(
       next === "approved" ? dict.admin.questionBank.showSuccess : dict.admin.questionBank.hideSuccess
     );

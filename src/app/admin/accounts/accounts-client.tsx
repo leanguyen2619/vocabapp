@@ -50,7 +50,6 @@ import { BrandWordmark } from "@/components/brand-wordmark";
 import {
   createAccountByAdminAction,
   deleteAccountAction,
-  listAccountsAction,
   resetPasswordByAdminAction,
   setAccountStatusAction,
   updateAccountByAdminAction,
@@ -220,11 +219,28 @@ export function AdminAccountsClient({
       return;
     }
 
-    setAccounts(await listAccountsAction());
-    setDialogOpen(false);
     const createdName = fullName.trim();
     const createdEmail = email.trim();
     const createdPassword = password;
+    const createdClassId = role !== "admin" && classId !== NONE_CLASS ? classId : null;
+    // Appended locally from what we already know about the just-created account, instead of
+    // refetching the entire (unbounded) account list for one new row — same pattern handleDelete
+    // already uses below.
+    setAccounts((prev) => [
+      ...prev,
+      {
+        account: {
+          id_login: result.id_login,
+          fullName: createdName,
+          role,
+          status: "active",
+          classId: createdClassId,
+          avatarUrl: null,
+        },
+        email: createdEmail,
+      },
+    ]);
+    setDialogOpen(false);
     setKnownCredentials((prev) => ({
       ...prev,
       [result.id_login]: { fullName: createdName, email: createdEmail, password: createdPassword },
@@ -296,11 +312,23 @@ export function AdminAccountsClient({
       return;
     }
 
-    const updatedAccounts = await listAccountsAction();
-    setAccounts(updatedAccounts);
-    const refreshed = updatedAccounts.find((a) => a.account.id_login === editTarget.id_login);
-    if (refreshed) setDetailTarget(refreshed);
-    toast.success(formatMessage(dict.admin.accounts.saveSuccess, { name: editFullName.trim() }));
+    const trimmedName = editFullName.trim();
+    const newClassId = editTarget.role !== "admin" && editClassId !== NONE_CLASS ? editClassId : null;
+    // Patched locally — same reasoning as handleCreate above, we already have the full new state
+    // of this one row, no need to refetch every account to reflect it.
+    setAccounts((prev) =>
+      prev.map((a) =>
+        a.account.id_login === editTarget.id_login
+          ? { ...a, account: { ...a.account, fullName: trimmedName, classId: newClassId } }
+          : a
+      )
+    );
+    setDetailTarget((prev) =>
+      prev && prev.account.id_login === editTarget.id_login
+        ? { ...prev, account: { ...prev.account, fullName: trimmedName, classId: newClassId } }
+        : prev
+    );
+    toast.success(formatMessage(dict.admin.accounts.saveSuccess, { name: trimmedName }));
   };
 
   const handleToggleStatus = async (id_login: string, name: string, active: boolean) => {
@@ -309,7 +337,10 @@ export function AdminAccountsClient({
       toast.error(dict.admin.accounts.lockError);
       return;
     }
-    setAccounts(await listAccountsAction());
+    const newStatus = active ? "inactive" : "active";
+    setAccounts((prev) =>
+      prev.map((a) => (a.account.id_login === id_login ? { ...a, account: { ...a.account, status: newStatus } } : a))
+    );
     toast.success(
       formatMessage(dict.admin.accounts.lockSuccess, {
         action: active ? dict.admin.accounts.lockAction : dict.admin.accounts.unlockAction,
