@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
 import { PracticeHeader } from "@/components/practice-header";
+import { PracticeCard } from "@/components/practice-card";
 import { MatchingGame } from "@/components/matching-game";
 import { listVisibleExerciseTypesAction } from "@/lib/actions/exercise-types";
 import { getMyWordsForScopeAction } from "@/lib/actions/vocabulary";
@@ -44,9 +45,9 @@ export default async function MatchingPage({
     <div className="flex flex-1 flex-col bg-background bg-forest">
       <PracticeHeader currentCode="matching" types={exerciseTypes} dict={dict} />
 
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-10 sm:py-16">
+      <PracticeCard>
         <MatchingGame leftItems={leftItems} rightItems={rightItems} dict={dict} />
-      </main>
+      </PracticeCard>
     </div>
   );
 }

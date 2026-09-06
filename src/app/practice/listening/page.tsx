@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
 import { PracticeHeader } from "@/components/practice-header";
+import { PracticeCard } from "@/components/practice-card";
 import { ListeningGame } from "@/components/listening-game";
 import { listVisibleExerciseTypesAction } from "@/lib/actions/exercise-types";
 import { getMyWordsForScopeAction } from "@/lib/actions/vocabulary";
@@ -38,9 +39,9 @@ export default async function ListeningPage({
     <div className="flex flex-1 flex-col bg-background bg-forest">
       <PracticeHeader currentCode="listening" types={exerciseTypes} dict={dict} />
 
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-10 sm:py-16">
+      <PracticeCard>
         <ListeningGame vocabList={dailyWords} dict={dict} />
-      </main>
+      </PracticeCard>
     </div>
   );
 }

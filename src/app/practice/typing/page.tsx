@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
 import { PracticeHeader } from "@/components/practice-header";
+import { PracticeCard } from "@/components/practice-card";
 import { TypingGame } from "@/components/typing-game";
 import { listVisibleExerciseTypesAction } from "@/lib/actions/exercise-types";
 import { getMyStudentLevelIndexAction } from "@/lib/actions/levels";
@@ -44,9 +45,9 @@ export default async function TypingPage({
     <div className="flex flex-1 flex-col bg-background bg-forest">
       <PracticeHeader currentCode="typing" types={exerciseTypes} dict={dict} />
 
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-10 sm:py-16">
+      <PracticeCard>
         <TypingGame vocabList={dailyWords} dict={dict} showEnglishDefinition={showEnglishDefinition} />
-      </main>
+      </PracticeCard>
     </div>
   );
 }

@@ -51,10 +51,13 @@ export function AdminExerciseTypesClient({
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    // A 2-column grid instead of one long vertical stack — 12 exercise types previously meant
+    // ~2500px of scrolling to see them all, same class of issue the question bank had before it
+    // got the same treatment.
+    <div className="grid gap-3 sm:grid-cols-2">
       {types.map((type) => (
-        <Card key={type.code}>
-          <CardContent className="flex flex-col gap-3 py-4">
+        <Card key={type.code} size="sm">
+          <CardContent className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-3">
               <Input
                 value={type.name}
@@ -67,7 +70,7 @@ export function AdminExerciseTypesClient({
                   delete beforeEditRef.current[`${type.code}:name`];
                   void commit(type.code, { name: e.target.value }, { name: previous });
                 }}
-                className="max-w-64 font-medium"
+                className="min-w-0 flex-1 font-medium"
               />
               <Switch
                 checked={type.enabled}

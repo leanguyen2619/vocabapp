@@ -407,7 +407,9 @@ export function ProfileClient({
               <h2 className="font-heading text-lg font-semibold tracking-tight">
                 {dict.profile.levelProgress}
               </h2>
-              <div className="grid gap-4 sm:grid-cols-3">
+              {/* 4 fixed CEFR levels (A1/A2/B1/B2), not an open-ended list — 4 columns is the
+               * correct fit; 3 would leave B2 alone in a dangling last row. */}
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {levels.map((level) => (
                   <LevelCard key={level.id} level={level} dict={dict} />
                 ))}

@@ -143,7 +143,11 @@ export function StudentDashboardContent({
         </Card>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      {/* This app has exactly 4 fixed CEFR levels (A1/A2/B1/B2 — see prisma/seed.ts), not an
+       * open-ended list, so a plain 4-column grid is the correct fit here — unlike the admin
+       * dashboard's function grid (which DOES grow over time and needs the dynamic last-row-span
+       * treatment), 3 columns would leave this one with a permanently lonely B2 card. */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {levels.map((level) => (
           <LevelCard key={level.id} level={level} dict={dict} />
         ))}
