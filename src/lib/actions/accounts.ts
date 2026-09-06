@@ -112,6 +112,14 @@ export async function resetPasswordByAdminAction(
   return {};
 }
 
+// Guards the "at least one active admin must always exist" invariant shared by
+// setAccountStatusAction and deleteAccountAction below. A fixed key (not scoped to id_login) so
+// two concurrent requests targeting DIFFERENT admins also serialize against each other — e.g. two
+// admins each locking the other at the same moment, both reading "2 active admins" as safe before
+// either write lands, would otherwise leave zero. Same pg_advisory_xact_lock pattern as the
+// daily-word-pick race in vocabulary.ts.
+const ADMIN_LOCKOUT_GUARD_KEY = "admin-lockout-guard";
+
 /** A locked account's active session is rejected on its very next request (see getCurrentAccount). */
 export async function setAccountStatusAction(id_login: string, status: AccountStatus): Promise<boolean> {
   const admin = await requireAdmin();
@@ -121,17 +129,26 @@ export async function setAccountStatusAction(id_login: string, status: AccountSt
   // themselves out immediately (the session is rejected on the very next request).
   if (status !== "active" && id_login === admin.id_login) return false;
 
-  // Never allow the last active admin to be locked — that would leave the panel with no way
-  // for anyone to unlock accounts again.
-  if (status !== "active") {
-    const target = await prisma.account.findUnique({ where: { id_login } });
-    if (target?.role === "admin") {
-      const activeAdminCount = await prisma.account.count({ where: { role: "admin", status: "active" } });
-      if (activeAdminCount <= 1) return false;
-    }
+  // Reactivating never threatens the "at least one active admin" invariant, so it doesn't need
+  // to contend for the lockout-guard lock below.
+  if (status === "active") {
+    const updated = await prisma.account.update({ where: { id_login }, data: { status } }).catch(() => null);
+    return updated !== null;
   }
 
-  const updated = await prisma.account.update({ where: { id_login }, data: { status } }).catch(() => null);
+  // Never allow the last active admin to be locked — that would leave the panel with no way for
+  // anyone to unlock accounts again. Reading activeAdminCount and writing the new status in the
+  // same locked transaction (rather than two separate statements) closes the race where two
+  // concurrent requests both read "2 active admins" as safe and both proceed.
+  const updated = await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${ADMIN_LOCKOUT_GUARD_KEY}))`;
+    const target = await tx.account.findUnique({ where: { id_login } });
+    if (target?.role === "admin") {
+      const activeAdminCount = await tx.account.count({ where: { role: "admin", status: "active" } });
+      if (activeAdminCount <= 1) return null;
+    }
+    return tx.account.update({ where: { id_login }, data: { status } }).catch(() => null);
+  });
   return updated !== null;
 }
 
@@ -176,15 +193,23 @@ export async function deleteAccountAction(id_login: string): Promise<{ error: st
   const target = await prisma.account.findUnique({ where: { id_login } });
   if (!target) return { error: "Không tìm thấy tài khoản." };
 
-  if (target.role === "admin") {
-    const activeAdminCount = await prisma.account.count({ where: { role: "admin", status: "active" } });
+  if (target.role !== "admin") {
+    const deleted = await prisma.account.delete({ where: { id_login } }).catch(() => null);
+    if (!deleted) return { error: "Không tìm thấy tài khoản." };
+    return {};
+  }
+
+  // Same lockout race as setAccountStatusAction — reading activeAdminCount and deleting must
+  // happen in the same locked transaction, and against the SAME guard key, so a concurrent
+  // "lock this other admin" request can't slip through on a stale count either.
+  return prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${ADMIN_LOCKOUT_GUARD_KEY}))`;
+    const activeAdminCount = await tx.account.count({ where: { role: "admin", status: "active" } });
     if (activeAdminCount <= 1) {
       return { error: "Không thể xóa quản trị viên duy nhất còn hoạt động." };
     }
-  }
-
-  const deleted = await prisma.account.delete({ where: { id_login } }).catch(() => null);
-  if (!deleted) return { error: "Không tìm thấy tài khoản." };
-
-  return {};
+    const deleted = await tx.account.delete({ where: { id_login } }).catch(() => null);
+    if (!deleted) return { error: "Không tìm thấy tài khoản." };
+    return {};
+  });
 }
