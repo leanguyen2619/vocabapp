@@ -108,75 +108,81 @@ export function AdminWritingSubmissionsClient({
           <p className="text-muted-foreground">{dict.adminWriting.subtitle}</p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="size-4 text-amber-500" />
-              {formatMessage(dict.adminWriting.pendingTitle, { count: pending.length })}
-            </CardTitle>
-            <CardDescription>{dict.adminWriting.pendingDesc}</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-1">
-            {pending.length === 0 && (
-              <p className="py-6 text-center text-sm text-muted-foreground">{dict.adminWriting.noPending}</p>
-            )}
-            {pending.map((item, index) => (
-              <div key={item.id}>
-                {index > 0 && <Separator className="my-3" />}
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium">{item.studentName}</span>
-                      <Badge variant="secondary">
-                        {item.vocab} — {item.meanVI}
-                      </Badge>
+        {/* Centered in the remaining space rather than left stacked at the top — a school with
+         * few submissions otherwise leaves these two cards hugging the header with a lot of
+         * unused space below them on a tall screen. Degrades to normal top-anchored flow once
+         * content is long enough to fill the space anyway. */}
+        <div className="flex flex-1 flex-col justify-center gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="size-4 text-amber-500" />
+                {formatMessage(dict.adminWriting.pendingTitle, { count: pending.length })}
+              </CardTitle>
+              <CardDescription>{dict.adminWriting.pendingDesc}</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-1">
+              {pending.length === 0 && (
+                <p className="py-6 text-center text-sm text-muted-foreground">{dict.adminWriting.noPending}</p>
+              )}
+              {pending.map((item, index) => (
+                <div key={item.id}>
+                  {index > 0 && <Separator className="my-3" />}
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium">{item.studentName}</span>
+                        <Badge variant="secondary">
+                          {item.vocab} — {item.meanVI}
+                        </Badge>
+                      </div>
+                      <p className="max-w-xl rounded-lg bg-muted p-3 text-sm italic">“{item.sentence}”</p>
                     </div>
-                    <p className="max-w-xl rounded-lg bg-muted p-3 text-sm italic">“{item.sentence}”</p>
+                    <Button size="sm" className="shrink-0" onClick={() => openGrade(item)}>
+                      <PenLine className="size-3.5" />
+                      {dict.adminWriting.gradeButton}
+                    </Button>
                   </div>
-                  <Button size="sm" className="shrink-0" onClick={() => openGrade(item)}>
-                    <PenLine className="size-3.5" />
-                    {dict.adminWriting.gradeButton}
-                  </Button>
                 </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+              ))}
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle2 className="size-4 text-emerald-600" />
-              {dict.adminWriting.gradedTitle}
-            </CardTitle>
-            <CardDescription>{dict.adminWriting.gradedDesc}</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-1">
-            {graded.length === 0 && (
-              <p className="py-6 text-center text-sm text-muted-foreground">{dict.adminWriting.noGraded}</p>
-            )}
-            {graded.map((item, index) => (
-              <div key={item.id}>
-                {index > 0 && <Separator className="my-3" />}
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium">{item.studentName}</span>
-                      <Badge variant="secondary">
-                        {item.vocab} — {item.meanVI}
-                      </Badge>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle2 className="size-4 text-emerald-600" />
+                {dict.adminWriting.gradedTitle}
+              </CardTitle>
+              <CardDescription>{dict.adminWriting.gradedDesc}</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-1">
+              {graded.length === 0 && (
+                <p className="py-6 text-center text-sm text-muted-foreground">{dict.adminWriting.noGraded}</p>
+              )}
+              {graded.map((item, index) => (
+                <div key={item.id}>
+                  {index > 0 && <Separator className="my-3" />}
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium">{item.studentName}</span>
+                        <Badge variant="secondary">
+                          {item.vocab} — {item.meanVI}
+                        </Badge>
+                      </div>
+                      <p className="max-w-xl rounded-lg bg-muted p-3 text-sm italic">“{item.sentence}”</p>
+                      {item.feedback && <p className="text-sm text-muted-foreground">{item.feedback}</p>}
                     </div>
-                    <p className="max-w-xl rounded-lg bg-muted p-3 text-sm italic">“{item.sentence}”</p>
-                    {item.feedback && <p className="text-sm text-muted-foreground">{item.feedback}</p>}
+                    <Badge className={cn("shrink-0 border text-sm font-semibold", scoreColorClasses(item.score))}>
+                      {item.score}/100
+                    </Badge>
                   </div>
-                  <Badge className={cn("shrink-0 border text-sm font-semibold", scoreColorClasses(item.score))}>
-                    {item.score}/100
-                  </Badge>
                 </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
       </main>
 
       <Dialog open={target !== null} onOpenChange={(open) => !open && setTarget(null)}>

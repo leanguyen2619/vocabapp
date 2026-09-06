@@ -43,47 +43,53 @@ export function ClassReportClient({ weakWords, dict }: { weakWords: WeakWordItem
           <p className="text-muted-foreground">{dict.classReport.subtitle}</p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingDown className="size-4 text-red-500" />
-              {dict.classReport.listTitle}
-            </CardTitle>
-            <CardDescription>{dict.classReport.listDesc}</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-1">
-            {weakWords.length === 0 && (
-              <p className="py-8 text-center text-sm text-muted-foreground">{dict.classReport.empty}</p>
-            )}
-            {weakWords.map((w, index) => (
-              <div key={w.vocabId}>
-                {index > 0 && <Separator className="my-3" />}
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium">{w.vocab}</span>
-                      <span className="text-sm text-muted-foreground">— {w.meanVI}</span>
-                      <Badge variant="secondary">{w.levelName}</Badge>
+        {/* Centered in the remaining space rather than left stacked at the top — a school with
+         * few weak words otherwise leaves this card hugging the header with a lot of unused space
+         * below it on a tall screen. Degrades to normal top-anchored flow once content is long
+         * enough to fill the space anyway. */}
+        <div className="flex flex-1 flex-col justify-center">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingDown className="size-4 text-red-500" />
+                {dict.classReport.listTitle}
+              </CardTitle>
+              <CardDescription>{dict.classReport.listDesc}</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-1">
+              {weakWords.length === 0 && (
+                <p className="py-8 text-center text-sm text-muted-foreground">{dict.classReport.empty}</p>
+              )}
+              {weakWords.map((w, index) => (
+                <div key={w.vocabId}>
+                  {index > 0 && <Separator className="my-3" />}
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium">{w.vocab}</span>
+                        <span className="text-sm text-muted-foreground">— {w.meanVI}</span>
+                        <Badge variant="secondary">{w.levelName}</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {formatMessage(dict.classReport.attemptedLabel, { count: w.attempted })}
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {formatMessage(dict.classReport.attemptedLabel, { count: w.attempted })}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-3 sm:w-48">
-                    <Progress value={w.notMasteredPercent} className="flex-1" />
-                    <Badge className={cn("shrink-0 border", percentColorClasses(w.notMasteredPercent))}>
-                      {formatMessage(dict.classReport.percentLabel, {
-                        count: w.notMasteredCount,
-                        total: w.attempted,
-                        percent: w.notMasteredPercent,
-                      })}
-                    </Badge>
+                    <div className="flex shrink-0 items-center gap-3 sm:w-48">
+                      <Progress value={w.notMasteredPercent} className="flex-1" />
+                      <Badge className={cn("shrink-0 border", percentColorClasses(w.notMasteredPercent))}>
+                        {formatMessage(dict.classReport.percentLabel, {
+                          count: w.notMasteredCount,
+                          total: w.attempted,
+                          percent: w.notMasteredPercent,
+                        })}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
       </main>
     </div>
   );

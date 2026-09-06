@@ -502,146 +502,153 @@ export function AdminAccountsClient({
           </Card>
         )}
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative max-w-sm flex-1">
-            <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              placeholder={dict.admin.accounts.searchPlaceholder}
-              className="pl-8"
-            />
+        {/* Centered in the remaining space rather than left stacked at the top — a school with
+         * few accounts otherwise leaves this list hugging the header with a lot of unused space
+         * below it on a tall screen. Degrades to normal top-anchored flow once content is long
+         * enough to fill the space anyway. Excludes the pending-reset-requests card above, which
+         * stays anchored right under the header since it's a notification, not browsable content. */}
+        <div className="flex flex-1 flex-col justify-center gap-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative max-w-sm flex-1">
+              <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                placeholder={dict.admin.accounts.searchPlaceholder}
+                className="pl-8"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => void handleCopyAll()}>
+                <Copy className="size-3.5" />
+                {dict.admin.accounts.copyAllButton}
+              </Button>
+
+              <Label className="text-sm text-muted-foreground whitespace-nowrap">
+                {dict.admin.accounts.sortLabel}
+              </Label>
+              <Select
+                value={sortMode}
+                onValueChange={(value) => {
+                  setSortMode((value as SortMode) ?? "default");
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-40">
+                  <SelectValue>
+                    {(value: SortMode) =>
+                      value === "class" ? dict.admin.accounts.sortByClass : dict.admin.accounts.sortDefault
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="default">{dict.admin.accounts.sortDefault}</SelectItem>
+                  <SelectItem value="class">{dict.admin.accounts.sortByClass}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => void handleCopyAll()}>
-              <Copy className="size-3.5" />
-              {dict.admin.accounts.copyAllButton}
-            </Button>
+          <Card>
+            <CardContent className="flex flex-col gap-1 py-4">
+              {pagedAccounts.length === 0 && (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  {dict.admin.accounts.noResults}
+                </p>
+              )}
+              {pagedAccounts.map((summary, index) => {
+                const acc = summary.account;
+                const accEmail = summary.email;
+                const isSelf = acc.id_login === adminAccount.id_login;
+                const isActive = acc.status === "active";
+                const initials = getInitials(acc.fullName);
 
-            <Label className="text-sm text-muted-foreground whitespace-nowrap">
-              {dict.admin.accounts.sortLabel}
-            </Label>
-            <Select
-              value={sortMode}
-              onValueChange={(value) => {
-                setSortMode((value as SortMode) ?? "default");
-                setPage(1);
-              }}
-            >
-              <SelectTrigger className="w-40">
-                <SelectValue>
-                  {(value: SortMode) =>
-                    value === "class" ? dict.admin.accounts.sortByClass : dict.admin.accounts.sortDefault
-                  }
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="default">{dict.admin.accounts.sortDefault}</SelectItem>
-                <SelectItem value="class">{dict.admin.accounts.sortByClass}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <Card>
-          <CardContent className="flex flex-col gap-1 py-4">
-            {pagedAccounts.length === 0 && (
-              <p className="py-6 text-center text-sm text-muted-foreground">
-                {dict.admin.accounts.noResults}
-              </p>
-            )}
-            {pagedAccounts.map((summary, index) => {
-              const acc = summary.account;
-              const accEmail = summary.email;
-              const isSelf = acc.id_login === adminAccount.id_login;
-              const isActive = acc.status === "active";
-              const initials = getInitials(acc.fullName);
-
-              return (
-                <div key={acc.id_login}>
-                  {index > 0 && <div className="my-3 h-px bg-border" />}
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        {acc.avatarUrl && <AvatarImage src={acc.avatarUrl} alt={acc.fullName} />}
-                        <AvatarFallback>{initials}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">
-                          {acc.fullName}{" "}
-                          {isSelf && <span className="text-muted-foreground">{dict.admin.accounts.you}</span>}
-                        </p>
-                        <div className="flex flex-col text-sm text-muted-foreground">
-                          <span>
-                            {dict.admin.accounts.idLabel}: <span className="font-mono">{acc.id_login}</span>
-                          </span>
-                          <span>{accEmail}</span>
-                          {acc.role !== "admin" && (
+                return (
+                  <div key={acc.id_login}>
+                    {index > 0 && <div className="my-3 h-px bg-border" />}
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          {acc.avatarUrl && <AvatarImage src={acc.avatarUrl} alt={acc.fullName} />}
+                          <AvatarFallback>{initials}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">
+                            {acc.fullName}{" "}
+                            {isSelf && <span className="text-muted-foreground">{dict.admin.accounts.you}</span>}
+                          </p>
+                          <div className="flex flex-col text-sm text-muted-foreground">
                             <span>
-                              {dict.admin.accounts.classShort}:{" "}
-                              {acc.classId ? className(acc.classId) : dict.admin.accounts.noClass}
+                              {dict.admin.accounts.idLabel}: <span className="font-mono">{acc.id_login}</span>
                             </span>
-                          )}
+                            <span>{accEmail}</span>
+                            {acc.role !== "admin" && (
+                              <span>
+                                {dict.admin.accounts.classShort}:{" "}
+                                {acc.classId ? className(acc.classId) : dict.admin.accounts.noClass}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant="secondary">{dict.roles[acc.role]}</Badge>
-                      <Badge variant={isActive ? "default" : "destructive"}>
-                        {isActive ? dict.accountStatus.active : dict.accountStatus.inactive}
-                      </Badge>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="secondary">{dict.roles[acc.role]}</Badge>
+                        <Badge variant={isActive ? "default" : "destructive"}>
+                          {isActive ? dict.accountStatus.active : dict.accountStatus.inactive}
+                        </Badge>
 
-                      <Button variant="outline" size="sm" onClick={() => openDetail(summary)}>
-                        <IdCard className="size-3.5" />
-                        {dict.admin.accounts.detailButton}
-                      </Button>
+                        <Button variant="outline" size="sm" onClick={() => openDetail(summary)}>
+                          <IdCard className="size-3.5" />
+                          {dict.admin.accounts.detailButton}
+                        </Button>
 
-                      {!isSelf && (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => void handleToggleStatus(acc.id_login, acc.fullName, isActive)}
-                          >
-                            {isActive ? (
-                              <>
-                                <Lock className="size-3.5" />
-                                {dict.admin.accounts.lockButton}
-                              </>
-                            ) : (
-                              <>
-                                <LockOpen className="size-3.5" />
-                                {dict.admin.accounts.unlockButton}
-                              </>
-                            )}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setDeleteTarget(summary);
-                              setDeleteError(null);
-                            }}
-                          >
-                            <Trash2 className="size-3.5" />
-                            {dict.admin.accounts.deleteButton}
-                          </Button>
-                        </>
-                      )}
+                        {!isSelf && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => void handleToggleStatus(acc.id_login, acc.fullName, isActive)}
+                            >
+                              {isActive ? (
+                                <>
+                                  <Lock className="size-3.5" />
+                                  {dict.admin.accounts.lockButton}
+                                </>
+                              ) : (
+                                <>
+                                  <LockOpen className="size-3.5" />
+                                  {dict.admin.accounts.unlockButton}
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setDeleteTarget(summary);
+                                setDeleteError(null);
+                              }}
+                            >
+                              <Trash2 className="size-3.5" />
+                              {dict.admin.accounts.deleteButton}
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
+                );
+              })}
+            </CardContent>
+          </Card>
 
-        <PaginationControls page={currentPage} totalPages={totalPages} onPageChange={setPage} dict={dict} />
+          <PaginationControls page={currentPage} totalPages={totalPages} onPageChange={setPage} dict={dict} />
+        </div>
       </main>
 
       <Dialog

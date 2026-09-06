@@ -283,56 +283,62 @@ export function AdminClassesClient({
           </Dialog>
         </div>
 
-        <Card>
-          <CardContent className="flex flex-col gap-1 py-4">
-            {pagedClasses.map((cls, index) => (
-              <div key={cls.id}>
-                {index > 0 && <div className="my-3 h-px bg-border" />}
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="font-medium">{cls.className}</p>
-                    <Badge variant="outline" className="mt-1 gap-1">
-                      <Users className="size-3" />
-                      {cls.studentCount} {dict.admin.classes.studentCount}
-                    </Badge>
-                  </div>
+        {/* Centered in the remaining space rather than left stacked at the top — a school with
+         * few classes otherwise leaves the card hugging the header with a lot of unused space
+         * below it on a tall screen. Degrades to normal top-anchored flow once content is long
+         * enough to fill the space anyway (a centered flex item can't push past its container). */}
+        <div className="flex flex-1 flex-col justify-center gap-6">
+          <Card>
+            <CardContent className="flex flex-col gap-1 py-4">
+              {pagedClasses.map((cls, index) => (
+                <div key={cls.id}>
+                  {index > 0 && <div className="my-3 h-px bg-border" />}
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="font-medium">{cls.className}</p>
+                      <Badge variant="outline" className="mt-1 gap-1">
+                        <Users className="size-3" />
+                        {cls.studentCount} {dict.admin.classes.studentCount}
+                      </Badge>
+                    </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Label htmlFor={`target-${cls.id}`} className="text-sm text-muted-foreground">
-                      {dict.admin.classes.targetPerDay}
-                    </Label>
-                    <Input
-                      id={`target-${cls.id}`}
-                      type="number"
-                      min={1}
-                      value={targetInputs[cls.id] ?? cls.dailyWordTarget}
-                      onChange={(e) => handleTargetInputChange(cls.id, e.target.value)}
-                      onBlur={() => void handleTargetBlur(cls)}
-                      className="w-20"
-                    />
-                    <Button variant="outline" size="sm" onClick={() => void openRoster(cls)}>
-                      <Users className="size-3.5" />
-                      {dict.admin.classes.rosterButton}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon-sm"
-                      aria-label={dict.common.delete}
-                      onClick={() => {
-                        setDeleteTarget(cls);
-                        setDeleteError(null);
-                      }}
-                    >
-                      <Trash2 className="size-3.5" />
-                    </Button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Label htmlFor={`target-${cls.id}`} className="text-sm text-muted-foreground">
+                        {dict.admin.classes.targetPerDay}
+                      </Label>
+                      <Input
+                        id={`target-${cls.id}`}
+                        type="number"
+                        min={1}
+                        value={targetInputs[cls.id] ?? cls.dailyWordTarget}
+                        onChange={(e) => handleTargetInputChange(cls.id, e.target.value)}
+                        onBlur={() => void handleTargetBlur(cls)}
+                        className="w-20"
+                      />
+                      <Button variant="outline" size="sm" onClick={() => void openRoster(cls)}>
+                        <Users className="size-3.5" />
+                        {dict.admin.classes.rosterButton}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label={dict.common.delete}
+                        onClick={() => {
+                          setDeleteTarget(cls);
+                          setDeleteError(null);
+                        }}
+                      >
+                        <Trash2 className="size-3.5" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+              ))}
+            </CardContent>
+          </Card>
 
-        <PaginationControls page={currentPage} totalPages={totalPages} onPageChange={setPage} dict={dict} />
+          <PaginationControls page={currentPage} totalPages={totalPages} onPageChange={setPage} dict={dict} />
+        </div>
       </main>
 
       <Dialog
