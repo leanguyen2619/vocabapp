@@ -11,7 +11,11 @@ import type { WordFormationItem } from "@/lib/actions/practice-content";
 import { shuffle } from "@/lib/utils";
 import type { PartOfSpeech } from "@/types";
 
-const POS_OPTIONS: PartOfSpeech[] = ["noun", "verb", "adjective", "adverb"];
+// The game's answer grid only ever shows these 4 — exported so getPosClassificationItemsAction
+// (vocabulary.ts) can filter its source pool to just these types too. Vocabulary.partOfSpeech has
+// 4 more values (preposition, pronoun, conjunction, interjection); without that filter, a word
+// tagged with one of those has no correct option to pick from the fixed 4-choice grid at all.
+export const POS_OPTIONS: PartOfSpeech[] = ["noun", "verb", "adjective", "adverb"];
 
 export interface PosQuestion {
   item: PosClassificationItem;

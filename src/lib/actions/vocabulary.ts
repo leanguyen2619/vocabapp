@@ -9,6 +9,7 @@ import { formatMessage } from "@/lib/i18n/format";
 import { getLocale } from "@/lib/i18n/locale";
 import { computeUnlockedLevelIds } from "@/lib/level-unlock";
 import { notifyAdminAssignmentExhausted } from "@/lib/notifications/email";
+import { POS_OPTIONS } from "@/lib/practice-prep";
 import { recordForVocab } from "@/lib/progress-core";
 import { getCurrentAccount, type SessionAccount } from "@/lib/session";
 import { startOfUTCDay } from "@/lib/today";
@@ -673,7 +674,10 @@ export async function getPosClassificationItemsAction(): Promise<PosClassificati
 
   const unlockedLevelIds = await computeUnlockedLevelIds(account.id_login, account.role);
   const rows = await prisma.vocabulary.findMany({
-    where: { levelId: { in: [...unlockedLevelIds] } },
+    // Restricted to the same 4 types the answer grid offers (POS_OPTIONS) — a word tagged
+    // preposition/pronoun/conjunction/interjection would otherwise show up here with no correct
+    // option anywhere in the fixed 4-choice UI to pick.
+    where: { levelId: { in: [...unlockedLevelIds] }, partOfSpeech: { in: POS_OPTIONS } },
   });
 
   return shuffle(rows)
