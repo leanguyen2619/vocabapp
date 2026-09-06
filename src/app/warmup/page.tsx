@@ -17,6 +17,7 @@ import { TypingGame } from "@/components/typing-game";
 import { WordFormationGame } from "@/components/word-formation-game";
 import { WordTransformationGame } from "@/components/word-transformation-game";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
+import { Card, CardContent } from "@/components/ui/card";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import {
   getFillBlankQuestionsAction,
@@ -176,21 +177,25 @@ export default async function WarmupPage() {
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-10 sm:py-16">
-        <div className="flex flex-col gap-1 text-center">
-          <h1 className="font-heading text-xl font-semibold tracking-tight">{dict.warmup.title}</h1>
-          <p className="text-sm text-muted-foreground">
-            {formatMessage(dict.warmup.subtitle, { total: totalSteps })}
-          </p>
-        </div>
+      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center px-6 py-10 sm:py-16">
+        <Card className="w-full">
+          <CardContent className="flex flex-col gap-6">
+            <div className="flex flex-col gap-1 text-center">
+              <h1 className="font-heading text-xl font-semibold tracking-tight">{dict.warmup.title}</h1>
+              <p className="text-sm text-muted-foreground">
+                {formatMessage(dict.warmup.subtitle, { total: totalSteps })}
+              </p>
+            </div>
 
-        <Progress value={((stepIndex - 1) / totalSteps) * 100}>
-          <ProgressLabel>
-            {formatMessage(dict.warmup.stepCounter, { current: stepIndex, total: totalSteps })}
-          </ProgressLabel>
-        </Progress>
+            <Progress value={((stepIndex - 1) / totalSteps) * 100}>
+              <ProgressLabel>
+                {formatMessage(dict.warmup.stepCounter, { current: stepIndex, total: totalSteps })}
+              </ProgressLabel>
+            </Progress>
 
-        {game}
+            {game}
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
