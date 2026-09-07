@@ -45,6 +45,14 @@ import { getCurrentAccount } from "@/lib/session";
 import { B1_LEVEL_ORDINAL, shuffle } from "@/lib/utils";
 import type { PracticeTypeCode } from "@/types";
 
+// Warmup is meant to be a quick daily routine (3 short exercises), not a full pass through the
+// content bank — the "mixed"-scoped types below (matching/typing/listening) are already naturally
+// bounded to the student's own small daily word set, but the ones that pull straight from a
+// practice-content bank (fill_blank, synonym_antonym, word_formation, word_transformation,
+// sentence_writing, listening_comprehension) had no cap at all: a bank of hundreds of questions
+// meant a single warmup "bài" could run to hundreds of "câu" instead of the intended handful.
+const WARMUP_QUESTION_CAP = 10;
+
 async function renderGameFor(code: PracticeTypeCode, dict: Dictionary, showEnglishDefinition: boolean) {
   switch (code) {
     case "multiple_choice": {
@@ -93,29 +101,40 @@ async function renderGameFor(code: PracticeTypeCode, dict: Dictionary, showEngli
     }
     case "synonym_antonym": {
       const rawQuestions = await getSynonymAntonymQuestionsAction();
-      const questions = shuffle(rawQuestions).map((q) => ({ ...q, options: shuffle(q.options) }));
+      const questions = shuffle(rawQuestions)
+        .slice(0, WARMUP_QUESTION_CAP)
+        .map((q) => ({ ...q, options: shuffle(q.options) }));
       return <SynonymAntonymGame questions={questions} dict={dict} warmupCode={code} />;
     }
     case "fill_blank": {
       const rawQuestions = await getFillBlankQuestionsAction();
-      const questions = shuffle(rawQuestions).map((q) => ({ ...q, options: shuffle(q.options) }));
+      const questions = shuffle(rawQuestions)
+        .slice(0, WARMUP_QUESTION_CAP)
+        .map((q) => ({ ...q, options: shuffle(q.options) }));
       return <FillBlankGame questions={questions} dict={dict} warmupCode={code} />;
     }
     case "word_formation": {
       const rawPrompts = await getWordFormationPromptsAction();
-      return <WordFormationGame prompts={prepareWordFormation(rawPrompts)} dict={dict} warmupCode={code} />;
+      // prepareWordFormation shuffles internally, so slicing its own output still yields a random
+      // subset rather than always the same first WARMUP_QUESTION_CAP prompts in bank order.
+      const prompts = prepareWordFormation(rawPrompts).slice(0, WARMUP_QUESTION_CAP);
+      return <WordFormationGame prompts={prompts} dict={dict} warmupCode={code} />;
     }
     case "word_transformation": {
       const rawPrompts = await getWordTransformationPromptsAction();
-      return <WordTransformationGame prompts={shuffle(rawPrompts)} dict={dict} warmupCode={code} />;
+      const prompts = shuffle(rawPrompts).slice(0, WARMUP_QUESTION_CAP);
+      return <WordTransformationGame prompts={prompts} dict={dict} warmupCode={code} />;
     }
     case "sentence_writing": {
-      const prompts = await getSentenceWritingPromptsAction();
+      const rawPrompts = await getSentenceWritingPromptsAction();
+      const prompts = shuffle(rawPrompts).slice(0, WARMUP_QUESTION_CAP);
       return <SentenceWritingExercise prompts={prompts} dict={dict} warmupCode={code} />;
     }
     case "listening_comprehension": {
       const rawQuestions = await getListeningComprehensionQuestionsAction();
-      const questions = shuffle(rawQuestions).map((q) => ({ ...q, options: shuffle(q.options) }));
+      const questions = shuffle(rawQuestions)
+        .slice(0, WARMUP_QUESTION_CAP)
+        .map((q) => ({ ...q, options: shuffle(q.options) }));
       return <ListeningComprehensionGame questions={questions} dict={dict} warmupCode={code} />;
     }
     case "reading_comprehension": {
