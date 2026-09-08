@@ -531,7 +531,6 @@ const vi = {
     noQuestions: "Chưa có từ nào cho dạng bài này.",
     showDefinition: "Xem định nghĩa tiếng Anh",
     definitionLabel: "Định nghĩa:",
-    showFirstLetterHint: "Gợi ý chữ cái đầu",
     firstLetterHintLabel: "Từ bắt đầu bằng chữ \"{letter}\".",
   },
   listeningGame: {

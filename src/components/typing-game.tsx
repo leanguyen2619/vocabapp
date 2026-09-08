@@ -37,7 +37,6 @@ export function TypingGame({
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
   const [showDefinition, setShowDefinition] = useState(false);
-  const [showFirstLetter, setShowFirstLetter] = useState(false);
 
   const total = vocabList.length;
 
@@ -71,7 +70,6 @@ export function TypingGame({
     setValue("");
     setChecked(false);
     setShowDefinition(false);
-    setShowFirstLetter(false);
   };
 
   const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
@@ -94,7 +92,6 @@ export function TypingGame({
     setScore(0);
     setFinished(false);
     setShowDefinition(false);
-    setShowFirstLetter(false);
   };
 
   if (finished) {
@@ -138,30 +135,23 @@ export function TypingGame({
       </div>
 
       <div className="flex flex-col items-center gap-2">
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          {!showFirstLetter && (
-            <Button type="button" variant="outline" size="sm" onClick={() => setShowFirstLetter(true)}>
-              <Lightbulb className="size-4" />
-              {dict.typingGame.showFirstLetterHint}
-            </Button>
-          )}
-          {showEnglishDefinition && !showDefinition && (
-            <Button type="button" variant="outline" size="sm" onClick={() => setShowDefinition(true)}>
-              <Lightbulb className="size-4" />
-              {dict.typingGame.showDefinition}
-            </Button>
-          )}
+        {/* Always shown, not a click-to-reveal hint like the English definition below it — the
+         * first letter alone is a small enough scaffold that gating it behind a button just added
+         * friction without protecting much of the actual challenge. */}
+        <div className="mx-auto flex max-w-xs items-start gap-2 rounded-lg bg-muted p-3 text-sm">
+          <Lightbulb className="mt-0.5 size-4 shrink-0 text-amber-500" />
+          <p>
+            {formatMessage(dict.typingGame.firstLetterHintLabel, {
+              letter: current.vocab.charAt(0).toUpperCase(),
+            })}
+          </p>
         </div>
 
-        {showFirstLetter && (
-          <div className="mx-auto flex max-w-xs items-start gap-2 rounded-lg bg-muted p-3 text-sm">
-            <Lightbulb className="mt-0.5 size-4 shrink-0 text-amber-500" />
-            <p>
-              {formatMessage(dict.typingGame.firstLetterHintLabel, {
-                letter: current.vocab.charAt(0).toUpperCase(),
-              })}
-            </p>
-          </div>
+        {showEnglishDefinition && !showDefinition && (
+          <Button type="button" variant="outline" size="sm" onClick={() => setShowDefinition(true)}>
+            <Lightbulb className="size-4" />
+            {dict.typingGame.showDefinition}
+          </Button>
         )}
 
         {showEnglishDefinition && showDefinition && (
