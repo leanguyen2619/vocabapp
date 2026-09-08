@@ -36,7 +36,6 @@ export function TypingGame({
   const [checked, setChecked] = useState(false);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
-  const [showDefinition, setShowDefinition] = useState(false);
 
   const total = vocabList.length;
 
@@ -69,7 +68,6 @@ export function TypingGame({
     setIndex((i) => i + 1);
     setValue("");
     setChecked(false);
-    setShowDefinition(false);
   };
 
   const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
@@ -91,7 +89,6 @@ export function TypingGame({
     setChecked(false);
     setScore(0);
     setFinished(false);
-    setShowDefinition(false);
   };
 
   if (finished) {
@@ -135,9 +132,9 @@ export function TypingGame({
       </div>
 
       <div className="flex flex-col items-center gap-2">
-        {/* Always shown, not a click-to-reveal hint like the English definition below it — the
-         * first letter alone is a small enough scaffold that gating it behind a button just added
-         * friction without protecting much of the actual challenge. */}
+        {/* Both hints are always shown, not click-to-reveal — the scaffolding they provide is
+         * small enough that gating it behind a button just added friction without protecting much
+         * of the actual challenge. */}
         <div className="mx-auto flex max-w-xs items-start gap-2 rounded-lg bg-muted p-3 text-sm">
           <Lightbulb className="mt-0.5 size-4 shrink-0 text-amber-500" />
           <p>
@@ -147,14 +144,7 @@ export function TypingGame({
           </p>
         </div>
 
-        {showEnglishDefinition && !showDefinition && (
-          <Button type="button" variant="outline" size="sm" onClick={() => setShowDefinition(true)}>
-            <Lightbulb className="size-4" />
-            {dict.typingGame.showDefinition}
-          </Button>
-        )}
-
-        {showEnglishDefinition && showDefinition && (
+        {showEnglishDefinition && (
           <div className="mx-auto flex max-w-xs items-start gap-2 rounded-lg bg-muted p-3 text-sm">
             <Lightbulb className="mt-0.5 size-4 shrink-0 text-amber-500" />
             <p>
