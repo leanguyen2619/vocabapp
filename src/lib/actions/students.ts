@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { ensureDailyWordsForAccount } from "@/lib/actions/vocabulary";
-import { computeUnlockedLevelIds } from "@/lib/level-unlock";
+import { computeUnlockedLevelIds, getAllLevels } from "@/lib/level-unlock";
 import { getCurrentAccount } from "@/lib/session";
 import { startOfUTCDay } from "@/lib/today";
 import type { AssignmentStatus } from "@/types";
@@ -113,7 +113,7 @@ export async function listAllStudentsAction(): Promise<StudentSummary[]> {
   const startOfToday = startOfUTCDay();
 
   const [levels, accountLevels, learningHistory, assignments] = await Promise.all([
-    prisma.level.findMany({ orderBy: { id: "asc" } }),
+    getAllLevels(),
     prisma.accountLevel.findMany({ where: { accountId: { in: studentIds } } }),
     prisma.learningHistory.findMany({ where: { accountId: { in: studentIds } } }),
     prisma.dailyAssignment.findMany({
@@ -319,7 +319,7 @@ export async function getStudentDetailAction(studentId: string): Promise<Student
   if (!student) return null;
 
   const [levels, accountLevels, history, totalVocab] = await Promise.all([
-    prisma.level.findMany({ orderBy: { id: "asc" } }),
+    getAllLevels(),
     prisma.accountLevel.findMany({ where: { accountId: studentId } }),
     prisma.learningHistory.findMany({ where: { accountId: studentId }, include: { vocab: true } }),
     prisma.vocabulary.count(),

@@ -7,7 +7,7 @@ import { deriveLastAssignmentRule } from "@/lib/assign-rule";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { getLocale } from "@/lib/i18n/locale";
-import { computeUnlockedLevelIds } from "@/lib/level-unlock";
+import { computeUnlockedLevelIds, getAllLevels } from "@/lib/level-unlock";
 import { notifyAdminAssignmentExhausted } from "@/lib/notifications/email";
 import { POS_OPTIONS } from "@/lib/practice-prep";
 import { recordForVocab } from "@/lib/progress-core";
@@ -143,7 +143,7 @@ const READY_GATE_TYPES = [
  * pool below only introduces NEW words from this set, so a student is never hand a word that then
  * dead-ends into "no questions" on most exercise types. An explicit admin assignment bypasses this
  * (see pickTodaysWordIds) since that's a deliberate override, not an auto-pick. */
-async function computeReadyVocabIds(): Promise<Set<string>> {
+const computeReadyVocabIds = cache(async (): Promise<Set<string>> => {
   const gateTypes = await prisma.practiceType.findMany({
     where: { type: { in: [...READY_GATE_TYPES] } },
     select: { id: true },
@@ -169,7 +169,7 @@ async function computeReadyVocabIds(): Promise<Set<string>> {
     if (typeIds.size >= gateTypeIds.length) ready.add(vocabId);
   }
   return ready;
-}
+});
 
 /**
  * Picks the auto-assigned "remaining" pool randomly within each unlocked level: earliest unlocked
@@ -230,7 +230,7 @@ async function pickTodaysWordIds(account: SessionAccount, today: Date): Promise<
       }),
       computeUnlockedLevelIds(account.id_login, account.role),
       computeReadyVocabIds(),
-      prisma.level.findMany({ orderBy: { id: "asc" }, select: { id: true } }),
+      getAllLevels(),
       // A manual topic pin (below) is a deliberate standing choice — it takes priority over this
       // inferred-from-history one, so don't bother deriving it at all when a pin is set.
       account.pinnedTopicId === null ? deriveLastAssignmentRule(account.id_login) : null,

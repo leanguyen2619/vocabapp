@@ -169,6 +169,7 @@ const vi = {
     statWordsToday: "Từ hôm nay",
     statStreak: "Chuỗi ngày học",
     statStreakValue: "{count} ngày",
+    streakLine: "Bạn đang ở chuỗi {count} ngày nhé!",
     statLevelProgress: "Cấp độ hiện tại",
   },
   adminStudents: {

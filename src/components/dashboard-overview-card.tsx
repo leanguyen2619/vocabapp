@@ -46,6 +46,14 @@ export function DashboardOverviewCard({
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-emerald-950 dark:text-emerald-50">
             {formatMessage(dict.studentDashboard.greeting, { name: fullName })}
           </h1>
+          {/* A casual one-line reminder distinct from the Flame stat row below — that row is a
+           * scannable number in a list, this is a short, friendly sentence right next to the
+           * greeting. Only makes sense once a streak actually exists. */}
+          {streak > 0 && (
+            <p className="text-sm text-emerald-700 dark:text-emerald-400">
+              {formatMessage(dict.studentDashboard.streakLine, { count: streak })}
+            </p>
+          )}
         </div>
         <span className="shrink-0 rounded-full border border-emerald-200 bg-white/70 px-3 py-1 text-xs font-medium text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-200">
           {todayLabel}

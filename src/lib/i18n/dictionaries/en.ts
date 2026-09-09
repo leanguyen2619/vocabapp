@@ -167,6 +167,7 @@ const en: Dictionary = {
     statWordsToday: "Words today",
     statStreak: "Learning streak",
     statStreakValue: "{count} days",
+    streakLine: "You're on a {count}-day streak!",
     statLevelProgress: "Current level",
   },
   adminStudents: {

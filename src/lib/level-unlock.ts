@@ -1,5 +1,15 @@
+import { cache } from "react";
+
 import { prisma } from "@/lib/prisma";
 import type { Role } from "@/types";
+
+/** The level table rarely changes and is tiny, but this function runs on nearly every "get my
+ * content" action (~20 call sites) and — worse — once per student inside the admin student list's
+ * eager daily-word generation (see ensureDailyWordsForAccount/pickTodaysWordIds), where it used to
+ * mean N identical queries for a batch of N students all competing for the same time-boxed
+ * generation window. cache() dedupes repeat calls within one request/server-action invocation down
+ * to a single round trip. */
+export const getAllLevels = cache(() => prisma.level.findMany({ orderBy: { id: "asc" } }));
 
 /**
  * Level ids the student has unlocked: level 1 is open by default, each further level opens once
@@ -17,14 +27,14 @@ import type { Role } from "@/types";
  */
 export async function computeUnlockedLevelIds(accountId: string, role?: Role): Promise<Set<string>> {
   if (role === "admin") {
-    const levels = await prisma.level.findMany({ orderBy: { id: "asc" } });
+    const levels = await getAllLevels();
     return new Set(levels.map((l) => l.id));
   }
 
   // Independent of each other — fetched in parallel rather than as two sequential round trips,
   // since this runs on nearly every "get my content" action (~20 call sites).
   const [levels, accountLevels] = await Promise.all([
-    prisma.level.findMany({ orderBy: { id: "asc" } }),
+    getAllLevels(),
     prisma.accountLevel.findMany({ where: { accountId } }),
   ]);
 
