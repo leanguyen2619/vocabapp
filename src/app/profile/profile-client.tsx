@@ -79,7 +79,6 @@ export function ProfileClient({
 
   const unlockedLevels = levels.filter((level) => level.status !== "locked");
   const totalMastered = unlockedLevels.reduce((sum, l) => sum + l.masteredVocab, 0);
-  const totalVocab = unlockedLevels.reduce((sum, l) => sum + l.totalVocab, 0);
   const completedLevels = levels.filter((level) => level.status === "completed").length;
   const streak = Math.max(0, ...levels.map((level) => level.streak));
 
@@ -365,39 +364,39 @@ export function ProfileClient({
 
         {account.role === "student" && (
           <>
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-3 gap-3">
               <Card>
-                <CardContent className="flex items-center gap-3 py-4">
-                  <div className="flex size-9 items-center justify-center rounded-full bg-orange-500/10">
+                <CardContent className="flex flex-col items-center gap-1.5 py-4 text-center sm:flex-row sm:text-left">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-orange-500/10">
                     <Flame className="size-4 text-orange-500" />
                   </div>
                   <div>
                     <p className="text-lg font-semibold leading-none">{streak}</p>
-                    <p className="text-xs text-muted-foreground">{dict.profile.streakDays}</p>
+                    <p className="mt-1 text-xs text-muted-foreground sm:mt-0">{dict.profile.streakDays}</p>
                   </div>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="flex items-center gap-3 py-4">
-                  <div className="flex size-9 items-center justify-center rounded-full bg-primary/10">
+                <CardContent className="flex flex-col items-center gap-1.5 py-4 text-center sm:flex-row sm:text-left">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
                     <BookOpen className="size-4 text-primary" />
                   </div>
                   <div>
-                    <p className="text-lg font-semibold leading-none">
-                      {totalMastered}/{totalVocab}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{dict.profile.wordsMastered}</p>
+                    {/* mastered count only — the "N/total" form here disagreed with the My
+                     * Vocabulary page's own count, which is scoped differently */}
+                    <p className="text-lg font-semibold leading-none">{totalMastered}</p>
+                    <p className="mt-1 text-xs text-muted-foreground sm:mt-0">{dict.profile.wordsMastered}</p>
                   </div>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="flex items-center gap-3 py-4">
-                  <div className="flex size-9 items-center justify-center rounded-full bg-amber-500/10">
+                <CardContent className="flex flex-col items-center gap-1.5 py-4 text-center sm:flex-row sm:text-left">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-amber-500/10">
                     <Trophy className="size-4 text-amber-500" />
                   </div>
                   <div>
                     <p className="text-lg font-semibold leading-none">{completedLevels}</p>
-                    <p className="text-xs text-muted-foreground">{dict.profile.levelsCompleted}</p>
+                    <p className="mt-1 text-xs text-muted-foreground sm:mt-0">{dict.profile.levelsCompleted}</p>
                   </div>
                 </CardContent>
               </Card>

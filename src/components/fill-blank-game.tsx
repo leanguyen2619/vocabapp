@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { PracticeEmptyState } from "@/components/practice-empty-state";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { submitFillBlankAnswerAction } from "@/lib/actions/practice-content";
 import type { FillBlankItem } from "@/lib/actions/practice-content";
@@ -45,12 +46,11 @@ export function FillBlankGame({
 
   if (total === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
-        <p>{dict.fillBlankGame.noQuestions}</p>
-        <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
-          {warmupCode ? dict.warmup.continueButton : dict.fillBlankGame.changeType}
-        </Button>
-      </div>
+      <PracticeEmptyState
+        message={dict.fillBlankGame.noQuestions}
+        actionLabel={warmupCode ? dict.warmup.continueButton : dict.fillBlankGame.changeType}
+        actionHref={warmupCode ? "/warmup" : "/exercises"}
+      />
     );
   }
 

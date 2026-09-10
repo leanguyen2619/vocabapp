@@ -44,15 +44,16 @@ export function DashboardShell({
   return (
     <div className="flex flex-1 flex-col bg-background bg-forest">
       <header className="sticky top-0 z-20 bg-background/30 backdrop-blur-sm">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-2 px-4 py-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2">
-            <BrandWordmark size="md" />
+            <BrandWordmark size="sm" />
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3">
             {account.role === "student" && (
               <Badge variant="outline" className="gap-1">
                 <Flame className="size-3 text-orange-500" />
-                {streak} {dict.dashboard.streakDays}
+                {streak}
+                <span className="hidden sm:inline">{dict.dashboard.streakDays}</span>
               </Badge>
             )}
             <ThemeToggle />

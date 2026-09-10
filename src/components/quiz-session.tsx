@@ -6,6 +6,7 @@ import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PracticeEmptyState } from "@/components/practice-empty-state";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { markWarmupTypeCompleteAction } from "@/lib/actions/warmup";
 import { submitQuizAnswerAction } from "@/lib/actions/vocabulary";
@@ -46,12 +47,11 @@ export function QuizSession({
 
   if (total === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
-        <p>{dict.quizSession.noQuestions}</p>
-        <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
-          {warmupCode ? dict.warmup.continueButton : dict.quizSession.changeType}
-        </Button>
-      </div>
+      <PracticeEmptyState
+        message={dict.quizSession.noQuestions}
+        actionLabel={warmupCode ? dict.warmup.continueButton : dict.quizSession.changeType}
+        actionHref={warmupCode ? "/warmup" : "/exercises"}
+      />
     );
   }
 

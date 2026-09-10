@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowLeft } from "lucide-react";
 
+import { PracticeCard } from "@/components/practice-card";
 import { PracticeSession } from "@/components/practice-session";
 import { RandomExerciseButton } from "@/components/random-exercise-button";
 import { BrandWordmark } from "@/components/brand-wordmark";
@@ -60,14 +61,14 @@ export default async function PracticePage({
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-10 sm:py-16">
+      <PracticeCard>
         <PracticeSession
           vocabList={dailyWords}
           topics={topics}
           exampleSentences={exampleSentences}
           dict={dict}
         />
-      </main>
+      </PracticeCard>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PracticeEmptyState } from "@/components/practice-empty-state";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { submitReadingAnswerAction } from "@/lib/actions/practice-content";
 import type { ReadingPassageData } from "@/lib/actions/practice-content";
@@ -58,12 +59,11 @@ export function ReadingComprehensionGame({
 
   if (!passage || total === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
-        <p>{dict.readingComprehensionGame.noQuestions}</p>
-        <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
-          {warmupCode ? dict.warmup.continueButton : dict.readingComprehensionGame.changeType}
-        </Button>
-      </div>
+      <PracticeEmptyState
+        message={dict.readingComprehensionGame.noQuestions}
+        actionLabel={warmupCode ? dict.warmup.continueButton : dict.readingComprehensionGame.changeType}
+        actionHref={warmupCode ? "/warmup" : "/exercises"}
+      />
     );
   }
 

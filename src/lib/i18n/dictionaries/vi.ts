@@ -301,7 +301,7 @@ const vi = {
   },
   vocabulary: {
     title: "Kho từ vựng của tôi",
-    subtitle: "{filtered}/{total} từ — tiến độ học của riêng bạn.",
+    subtitle: "{total} từ trong kho của bạn — trạng thái học của từng từ hiện bên dưới.",
     mastered: "Đã thuộc",
     learning: "Đang học",
     new: "Chưa học",
@@ -442,7 +442,7 @@ const vi = {
     restart: "Chơi lại",
     changeType: "Chọn dạng khác",
     wordCounter: "Từ {current}/{total}",
-    emptyPlaceholder: "Chạm vào các chữ bên dưới",
+    emptyPlaceholder: "Chọn các chữ bên dưới để xếp thành từ",
     backspaceAriaLabel: "Xóa chữ cuối",
     successMessage: "Chính xác! {answer} nghĩa là “{mean}”.",
     nextWord: "Từ tiếp theo",

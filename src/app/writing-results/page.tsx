@@ -41,11 +41,11 @@ export default async function WritingResultsPage() {
       <header className="sticky top-0 z-20 bg-background/30 backdrop-blur-sm">
         <div className="mx-auto flex w-full max-w-2xl items-center justify-between px-6 py-4">
           <Link
-            href="/exercises"
+            href="/dashboard"
             className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="size-4" />
-            {dict.common.backToExercises}
+            {dict.common.backToDashboard}
           </Link>
           <div className="flex items-center gap-2">
             <BrandWordmark size="sm" />

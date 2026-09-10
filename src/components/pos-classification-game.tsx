@@ -6,6 +6,7 @@ import { Check, PartyPopper, RotateCcw, Volume2, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PracticeEmptyState } from "@/components/practice-empty-state";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { submitPosAnswerAction } from "@/lib/actions/vocabulary";
 import { markWarmupTypeCompleteAction } from "@/lib/actions/warmup";
@@ -48,12 +49,11 @@ export function PosClassificationGame({
 
   if (total === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
-        <p>{dict.posGame.noQuestions}</p>
-        <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
-          {warmupCode ? dict.warmup.continueButton : dict.posGame.changeType}
-        </Button>
-      </div>
+      <PracticeEmptyState
+        message={dict.posGame.noQuestions}
+        actionLabel={warmupCode ? dict.warmup.continueButton : dict.posGame.changeType}
+        actionHref={warmupCode ? "/warmup" : "/exercises"}
+      />
     );
   }
 

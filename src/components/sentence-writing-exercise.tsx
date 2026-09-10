@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Lightbulb, PartyPopper, RotateCcw, Send, Volume2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { PracticeEmptyState } from "@/components/practice-empty-state";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { submitSentenceAction } from "@/lib/actions/writing-submissions";
@@ -43,12 +44,11 @@ export function SentenceWritingExercise({
 
   if (total === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
-        <p>{dict.writingExercise.noQuestions}</p>
-        <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
-          {warmupCode ? dict.warmup.continueButton : dict.writingExercise.changeType}
-        </Button>
-      </div>
+      <PracticeEmptyState
+        message={dict.writingExercise.noQuestions}
+        actionLabel={warmupCode ? dict.warmup.continueButton : dict.writingExercise.changeType}
+        actionHref={warmupCode ? "/warmup" : "/exercises"}
+      />
     );
   }
 

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Check, Eye, PartyPopper, RotateCcw, Volume2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { PracticeEmptyState } from "@/components/practice-empty-state";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import {
   getListeningSentenceAudioAction,
@@ -70,12 +71,11 @@ export function ListeningComprehensionGame({
 
   if (total === 0 || !question) {
     return (
-      <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
-        <p>{dict.listeningComprehensionGame.noQuestions}</p>
-        <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
-          {warmupCode ? dict.warmup.continueButton : dict.listeningComprehensionGame.changeType}
-        </Button>
-      </div>
+      <PracticeEmptyState
+        message={dict.listeningComprehensionGame.noQuestions}
+        actionLabel={warmupCode ? dict.warmup.continueButton : dict.listeningComprehensionGame.changeType}
+        actionHref={warmupCode ? "/warmup" : "/exercises"}
+      />
     );
   }
 

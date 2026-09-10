@@ -75,14 +75,19 @@ export function StudentDashboardContent({
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <CardTitle>{dict.studentDashboard.todayWords}</CardTitle>
               <CardDescription>
                 {formatMessage(dict.studentDashboard.todayWordsDesc, { count: dailyAssignments.length })}
               </CardDescription>
             </div>
-            <Button size="sm" nativeButton={false} render={<Link href="/exercises" />}>
+            <Button
+              size="sm"
+              nativeButton={false}
+              className="w-full sm:w-auto"
+              render={<Link href="/exercises" />}
+            >
               {dict.studentDashboard.chooseExerciseType}
               <ArrowRight className="size-4" />
             </Button>
@@ -101,7 +106,7 @@ export function StudentDashboardContent({
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   {assignment.status === "done" ? (
-                    <CheckCircle2 className="size-5 shrink-0 text-primary" />
+                    <CheckCircle2 className="size-5 shrink-0 text-emerald-600" />
                   ) : (
                     <Circle className="size-5 shrink-0 text-muted-foreground" />
                   )}
@@ -112,7 +117,15 @@ export function StudentDashboardContent({
                     </p>
                   </div>
                 </div>
-                <Badge variant={assignment.status === "done" ? "default" : "outline"}>
+                <Badge
+                  variant={
+                    assignment.status === "done"
+                      ? "success"
+                      : assignment.status === "in_progress"
+                        ? "secondary"
+                        : "outline"
+                  }
+                >
                   {assignmentStatusLabel[assignment.status]}
                 </Badge>
               </div>

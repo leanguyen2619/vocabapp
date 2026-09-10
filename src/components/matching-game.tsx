@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { PartyPopper, RotateCcw, Timer } from "lucide-react";
 
+import { PracticeEmptyState } from "@/components/practice-empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { recordVocabAttemptAction } from "@/lib/actions/progress";
@@ -62,12 +63,11 @@ export function MatchingGame({
 
   if (total === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
-        <p>{dict.matchingGame.noQuestions}</p>
-        <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/dashboard"} />}>
-          {warmupCode ? dict.warmup.continueButton : dict.errors.backToDashboard}
-        </Button>
-      </div>
+      <PracticeEmptyState
+        message={dict.matchingGame.noQuestions}
+        actionLabel={warmupCode ? dict.warmup.continueButton : dict.errors.backToDashboard}
+        actionHref={warmupCode ? "/warmup" : "/dashboard"}
+      />
     );
   }
 

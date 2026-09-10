@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Check, PartyPopper, RotateCcw, Volume2, X } from "lucide-react";
 
+import { PracticeEmptyState } from "@/components/practice-empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
@@ -36,12 +37,11 @@ export function PracticeSession({
 
   if (total === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
-        <p>{dict.practiceSession.noQuestions}</p>
-        <Button nativeButton={false} render={<Link href="/dashboard" />}>
-          {dict.errors.backToDashboard}
-        </Button>
-      </div>
+      <PracticeEmptyState
+        message={dict.practiceSession.noQuestions}
+        actionLabel={dict.errors.backToDashboard}
+        actionHref="/dashboard"
+      />
     );
   }
 
@@ -127,8 +127,9 @@ export function PracticeSession({
             flipped && "transform-[rotateY(180deg)]"
           )}
         >
-          {/* Front */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-3xl border border-border bg-card p-8 shadow-sm backface-hidden">
+          {/* Front — filled (not bordered like a standalone Card) since it now sits inside the
+           * page's PracticeCard; a bordered white face there would read as a card-in-a-card. */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-3xl bg-muted p-8 backface-hidden">
             <Badge variant="secondary" className="max-w-xs truncate">
               {getTopicName(topics, current.topicId)}
             </Badge>
@@ -141,7 +142,7 @@ export function PracticeSession({
           </div>
 
           {/* Back */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-3xl border border-border bg-card p-8 shadow-sm backface-hidden transform-[rotateY(180deg)]">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-3xl bg-muted p-8 backface-hidden transform-[rotateY(180deg)]">
             <p className="text-2xl font-semibold text-foreground">{current.meanVI}</p>
             <p className="max-w-sm text-center text-sm text-muted-foreground">
               {current.definition}

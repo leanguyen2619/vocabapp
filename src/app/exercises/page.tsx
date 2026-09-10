@@ -151,7 +151,7 @@ export default async function ExercisesPage({
                 : type.href;
 
             const cardBody = (
-              <CardContent className="flex flex-col gap-2 py-4">
+              <CardContent className="flex flex-col gap-2 py-3.5">
                 <div className="flex items-start gap-3">
                   <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
                     <Icon className="size-5 text-primary" />

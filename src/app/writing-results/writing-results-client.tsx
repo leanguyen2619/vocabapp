@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Clock, MessageSquare } from "lucide-react";
+import { Clock, MessageSquare, PenLine } from "lucide-react";
 
 import { PaginationControls } from "@/components/pagination-controls";
 import { Badge } from "@/components/ui/badge";
@@ -65,7 +65,12 @@ export function WritingResultsClient({
       <Card>
         <CardContent className="flex flex-col gap-1 py-4">
           {submissions.length === 0 && (
-            <p className="py-8 text-center text-sm text-muted-foreground">{dict.writingResults.empty}</p>
+            <div className="flex flex-col items-center gap-2 py-8 text-center text-muted-foreground">
+              <div className="flex size-11 items-center justify-center rounded-full bg-muted">
+                <PenLine className="size-5" />
+              </div>
+              <p className="max-w-xs text-sm">{dict.writingResults.empty}</p>
+            </div>
           )}
           {submissions.length > 0 && filtered.length === 0 && (
             <p className="py-8 text-center text-sm text-muted-foreground">{dict.writingResults.noResults}</p>

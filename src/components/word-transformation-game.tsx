@@ -6,6 +6,7 @@ import { Check, PartyPopper, RotateCcw, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PracticeEmptyState } from "@/components/practice-empty-state";
 import { Input } from "@/components/ui/input";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { recordVocabAttemptAction } from "@/lib/actions/progress";
@@ -50,12 +51,11 @@ export function WordTransformationGame({
 
   if (total === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
-        <p>{dict.wordTransformationGame.noQuestions}</p>
-        <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
-          {warmupCode ? dict.warmup.continueButton : dict.wordTransformationGame.changeType}
-        </Button>
-      </div>
+      <PracticeEmptyState
+        message={dict.wordTransformationGame.noQuestions}
+        actionLabel={warmupCode ? dict.warmup.continueButton : dict.wordTransformationGame.changeType}
+        actionHref={warmupCode ? "/warmup" : "/exercises"}
+      />
     );
   }
 

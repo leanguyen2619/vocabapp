@@ -24,10 +24,10 @@ import { getLevelName, getTopicName } from "@/lib/labels";
 import { speakWord } from "@/lib/speech";
 import type { Level, LearningStatus, Topic, VocabularyWithProgress } from "@/types";
 
-const statusVariant: Record<LearningStatus, "default" | "outline" | "secondary"> = {
-  mastered: "default",
-  learning: "outline",
-  new: "secondary",
+const statusVariant: Record<LearningStatus, "success" | "outline" | "secondary"> = {
+  mastered: "success",
+  learning: "secondary",
+  new: "outline",
 };
 
 export function VocabularyClient({
@@ -101,10 +101,7 @@ export function VocabularyClient({
         <div className="flex flex-col gap-1">
           <h1 className="font-heading text-2xl font-semibold tracking-tight">{dict.vocabulary.title}</h1>
           <p className="text-muted-foreground">
-            {formatMessage(dict.vocabulary.subtitle, {
-              filtered: filtered.length,
-              total: myVocabulary.length,
-            })}
+            {formatMessage(dict.vocabulary.subtitle, { total: myVocabulary.length })}
           </p>
         </div>
 

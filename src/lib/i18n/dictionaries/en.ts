@@ -299,7 +299,7 @@ const en: Dictionary = {
   },
   vocabulary: {
     title: "My Vocabulary",
-    subtitle: "{filtered}/{total} words — your own learning progress.",
+    subtitle: "{total} words in your bank — each word's learning status is shown below.",
     mastered: "Mastered",
     learning: "Learning",
     new: "New",
@@ -440,7 +440,7 @@ const en: Dictionary = {
     restart: "Play again",
     changeType: "Choose another type",
     wordCounter: "Word {current}/{total}",
-    emptyPlaceholder: "Tap the letters below",
+    emptyPlaceholder: "Pick the letters below to build the word",
     backspaceAriaLabel: "Remove last letter",
     successMessage: "Correct! {answer} means “{mean}”.",
     nextWord: "Next word",

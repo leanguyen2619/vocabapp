@@ -6,6 +6,7 @@ import { Check, Lightbulb, PartyPopper, RotateCcw, Volume2, X } from "lucide-rea
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PracticeEmptyState } from "@/components/practice-empty-state";
 import { Input } from "@/components/ui/input";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { recordVocabAttemptAction } from "@/lib/actions/progress";
@@ -48,12 +49,11 @@ export function TypingGame({
 
   if (total === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 py-16 text-center text-muted-foreground">
-        <p>{dict.typingGame.noQuestions}</p>
-        <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
-          {warmupCode ? dict.warmup.continueButton : dict.typingGame.changeType}
-        </Button>
-      </div>
+      <PracticeEmptyState
+        message={dict.typingGame.noQuestions}
+        actionLabel={warmupCode ? dict.warmup.continueButton : dict.typingGame.changeType}
+        actionHref={warmupCode ? "/warmup" : "/exercises"}
+      />
     );
   }
 
