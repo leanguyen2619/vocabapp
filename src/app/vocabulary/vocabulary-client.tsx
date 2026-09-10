@@ -82,7 +82,7 @@ export function VocabularyClient({
 
   return (
     <div className="flex flex-1 flex-col bg-background bg-forest">
-      <header>
+      <header className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur-sm">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
           <Link
             href="/dashboard"
@@ -108,19 +108,7 @@ export function VocabularyClient({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="default" className="gap-1">
-            {dict.vocabulary.mastered}: {masteredCount}
-          </Badge>
-          <Badge variant="outline" className="gap-1">
-            {dict.vocabulary.learning}: {learningCount}
-          </Badge>
-          <Badge variant="secondary" className="gap-1">
-            {dict.vocabulary.new}: {newCount}
-          </Badge>
-        </div>
-
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
           <Tabs
             value={levelFilter}
             onValueChange={(value) => {
@@ -145,11 +133,21 @@ export function VocabularyClient({
               setPage(1);
             }}
           >
+            {/* Counts live on the tab labels themselves — a separate badge row above just
+             * repeated these four words with different numbers and read as another filter. */}
             <TabsList>
-              <TabsTrigger value="all">{dict.vocabulary.allStatus}</TabsTrigger>
-              <TabsTrigger value="mastered">{dict.vocabulary.mastered}</TabsTrigger>
-              <TabsTrigger value="learning">{dict.vocabulary.review}</TabsTrigger>
-              <TabsTrigger value="new">{dict.vocabulary.new}</TabsTrigger>
+              <TabsTrigger value="all">
+                {dict.vocabulary.allStatus} ({myVocabulary.length})
+              </TabsTrigger>
+              <TabsTrigger value="mastered">
+                {dict.vocabulary.mastered} ({masteredCount})
+              </TabsTrigger>
+              <TabsTrigger value="learning">
+                {dict.vocabulary.review} ({learningCount})
+              </TabsTrigger>
+              <TabsTrigger value="new">
+                {dict.vocabulary.new} ({newCount})
+              </TabsTrigger>
             </TabsList>
           </Tabs>
 

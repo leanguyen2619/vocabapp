@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getMyStudentLevelIndexAction, listLevelsAction } from "@/lib/actions/levels";
+import { exerciseTypeLabel } from "@/lib/exercise-type-meta";
 import { getCurrentAccount } from "@/lib/session";
 import type { PracticeTypeCode } from "@/types";
 
@@ -50,7 +51,7 @@ export async function listExerciseTypesAction(): Promise<ExerciseTypeSummary[]> 
 
   return practiceTypes.map((pt) => ({
     code: pt.type,
-    name: pt.name,
+    name: exerciseTypeLabel(pt.type, pt.name),
     description: pt.description,
     level: ordinalByLevelId.get(pt.levelId) ?? 1,
     enabled: pt.enabled,

@@ -367,7 +367,7 @@ export function AdminAccountsClient({
 
   return (
     <div className="flex flex-1 flex-col bg-background bg-forest">
-      <header>
+      <header className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur-sm">
         <div className="mx-auto flex w-full max-w-4xl items-center justify-between px-6 py-4">
           <Link
             href="/dashboard"

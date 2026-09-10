@@ -91,7 +91,7 @@ export default async function ExercisesPage({
 
   return (
     <div className="flex flex-1 flex-col bg-background bg-forest">
-      <header>
+      <header className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur-sm">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
           <Link
             href="/dashboard"
@@ -151,16 +151,20 @@ export default async function ExercisesPage({
                 : type.href;
 
             const cardBody = (
-              <CardContent className="flex flex-col gap-3 py-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
+              <CardContent className="flex flex-col gap-2 py-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
                     <Icon className="size-5 text-primary" />
                   </div>
-                  <Badge variant="secondary">Lv{type.level}</Badge>
-                </div>
-                <div>
-                  <p className="font-medium">{type.name}</p>
-                  <p className="text-sm text-muted-foreground">{type.description}</p>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-medium">{type.name}</p>
+                      <Badge variant="secondary" className="shrink-0">
+                        Lv{type.level}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{type.description}</p>
+                  </div>
                 </div>
                 {!isReady && (
                   <div className="flex flex-col gap-1">

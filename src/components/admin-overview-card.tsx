@@ -47,13 +47,13 @@ export function AdminOverviewCard({
         </span>
       </div>
 
-      <div className="relative h-40 overflow-hidden rounded-2xl sm:h-48">
+      <div className="relative h-24 overflow-hidden rounded-2xl sm:h-28">
         <Image
           src="/forest-bg.jpg"
           alt=""
           fill
           sizes="(min-width: 640px) 600px, 100vw"
-          className="object-cover dark:opacity-90 dark:brightness-75"
+          className="object-cover object-[center_35%] dark:opacity-90 dark:brightness-75"
           priority
         />
 

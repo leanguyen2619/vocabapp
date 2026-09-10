@@ -324,7 +324,7 @@ export function AdminVocabularyClient({
 
   return (
     <div className="flex flex-1 flex-col bg-background bg-forest">
-      <header>
+      <header className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur-sm">
         <div className="mx-auto flex w-full max-w-4xl items-center justify-between px-6 py-4">
           <Link
             href="/dashboard"
@@ -483,8 +483,8 @@ export function AdminVocabularyClient({
             {pagedWords.map((word, index) => (
               <div key={word.id}>
                 {index > 0 && <div className="my-3 h-px bg-border" />}
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
+                  <div className="min-w-0 sm:max-w-xl sm:flex-1">
                     <p className="font-medium">
                       {word.vocab}{" "}
                       {word.ipa && (

@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import type { StudentSummary } from "@/lib/actions/students";
 import type { Dictionary, Locale } from "@/lib/i18n/dictionaries";
-import { cn } from "@/lib/utils";
 import type { Account, Level, Topic, Vocabulary } from "@/types";
 
 interface AdminFunction {
@@ -137,21 +136,13 @@ export function AdminDashboardContent({
         <h2 className="font-heading text-lg font-semibold tracking-tight">
           {dict.adminDashboard.functionsTitle}
         </h2>
-        {/* A plain 3-column grid leaves a dangling gap whenever the count isn't a multiple of 3
-         * (8 cards, for instance, ends with a lone 2-card row and an empty slot on the right).
-         * Using 6 sub-columns instead — 2 per normal card, so 3 still fit per row — lets just the
-         * TRAILING row's cards widen to fill the full row evenly (3-each for a 2-card remainder,
-         * 6 for a 1-card remainder) instead of hugging the left with a visible hole. Recomputed
-         * from the live count, so this keeps working as functions are added or removed. */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
-          {adminFunctions.map((fn, i) => {
+        {/* Uniform-width cards, 3 per row. A short trailing row just left-aligns with an empty
+         * slot on the right — the normal, expected shape for a card grid. An earlier version
+         * stretched the last row's cards to fill the width, but that made them visibly larger
+         * than the rows above and read as broken. */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {adminFunctions.map((fn) => {
             const isReady = Boolean(fn.href);
-            const lastRowSize = adminFunctions.length % 3 || 3;
-            const isInLastRow = i >= adminFunctions.length - lastRowSize;
-            const lastRowSpan = { 1: "lg:col-span-6", 2: "lg:col-span-3", 3: "lg:col-span-2" }[
-              lastRowSize as 1 | 2 | 3
-            ];
-            const spanClassName = isInLastRow ? lastRowSpan : "lg:col-span-2";
 
             const cardBody = (
               <CardContent className="flex flex-col gap-3 py-4">
@@ -180,14 +171,14 @@ export function AdminDashboardContent({
 
             if (!isReady) {
               return (
-                <Card key={fn.title} className={cn("bg-card/85 opacity-60 backdrop-blur-sm", spanClassName)}>
+                <Card key={fn.title} className="bg-card/85 opacity-60 backdrop-blur-sm">
                   {cardBody}
                 </Card>
               );
             }
 
             return (
-              <Link key={fn.title} href={fn.href!} className={spanClassName}>
+              <Link key={fn.title} href={fn.href!}>
                 <Card className="h-full bg-card/85 backdrop-blur-sm transition-colors hover:border-primary/50">
                   {cardBody}
                 </Card>

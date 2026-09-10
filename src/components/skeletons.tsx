@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
  * while a route's real content streams in — headers live inside each page, not a shared layout. */
 function SkeletonHeader({ maxWidth }: { maxWidth: string }) {
   return (
-    <header>
+    <header className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur-sm">
       <div className={cn("mx-auto flex w-full items-center justify-between px-6 py-4", maxWidth)}>
         <Skeleton className="h-4 w-32" />
         <Skeleton className="h-7 w-24" />

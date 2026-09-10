@@ -8,6 +8,7 @@ import { listVocabularyAction } from "@/lib/actions/vocabulary";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getCurrentAccount } from "@/lib/session";
+import { exerciseTypeLabel } from "@/lib/exercise-type-meta";
 import type { PracticeTypeCode } from "@/types";
 import { AdminQuestionBankClient } from "./question-bank-client";
 
@@ -41,7 +42,7 @@ export default async function AdminQuestionBankPage() {
 
   const practiceTypes = QUESTION_BASED_CODES.map((code) => ({
     code,
-    name: exerciseTypes.find((t) => t.code === code)?.name ?? code,
+    name: exerciseTypeLabel(code, exerciseTypes.find((t) => t.code === code)?.name),
   }));
 
   return (

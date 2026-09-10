@@ -97,6 +97,13 @@ function splitSlashAlternatives(input: string): string[] {
   return [...forms]
 }
 
+/** Uppercase the first character only — for standalone display of Vietnamese labels like
+ * "động từ", which should read "Động từ", not the word-by-word "Động Từ" that CSS `capitalize`
+ * (or `text-transform`) would produce. */
+export function capitalizeFirst(text: string): string {
+  return text.length > 0 ? text.charAt(0).toUpperCase() + text.slice(1) : text
+}
+
 /** Ordinal of B1 in the fixed A1→A2→B1→B2 progression (seeded in that order — see prisma/seed.ts)
  * — used alongside getMyStudentLevelIndexAction (src/lib/actions/levels.ts) to gate features meant
  * for more advanced students, like showing a word's English definition instead of relying solely

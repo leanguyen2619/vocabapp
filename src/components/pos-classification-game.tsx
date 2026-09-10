@@ -14,7 +14,7 @@ import { formatMessage } from "@/lib/i18n/format";
 import { getTopicName } from "@/lib/labels";
 import type { PosQuestion } from "@/lib/practice-prep";
 import { speakWord } from "@/lib/speech";
-import { cn } from "@/lib/utils";
+import { capitalizeFirst, cn } from "@/lib/utils";
 import type { PartOfSpeech, PracticeTypeCode, Topic } from "@/types";
 
 export function PosClassificationGame({
@@ -162,7 +162,7 @@ export function PosClassificationGame({
               onClick={() => void handleSelect(option)}
               disabled={isAnswered}
               className={cn(
-                "flex items-center justify-between rounded-2xl border-2 border-border bg-card px-4 py-3 text-left text-base font-medium capitalize transition-colors disabled:cursor-default",
+                "flex items-center justify-between rounded-2xl border-2 border-border bg-card px-4 py-3 text-left text-base font-medium transition-colors disabled:cursor-default",
                 !isAnswered && "hover:border-primary/50",
                 isThisCorrect &&
                   "border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/30 dark:text-emerald-400",
@@ -172,7 +172,7 @@ export function PosClassificationGame({
                   "border-red-400 bg-red-50 text-red-700 dark:border-red-800/60 dark:bg-red-950/30 dark:text-red-400"
               )}
             >
-              {dict.partOfSpeech[option]}
+              {capitalizeFirst(dict.partOfSpeech[option])}
               {isThisCorrect && <Check className="size-5 shrink-0 text-emerald-600 dark:text-emerald-400" />}
               {result !== null && isSelected && !isThisCorrect && (
                 <X className="size-5 shrink-0 text-red-500 dark:text-red-400" />
