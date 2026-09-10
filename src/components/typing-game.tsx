@@ -13,7 +13,7 @@ import { markWarmupTypeCompleteAction } from "@/lib/actions/warmup";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { speakWord } from "@/lib/speech";
-import { cn, normalizeForAnswerMatch } from "@/lib/utils";
+import { cn, isAcceptedAnswer } from "@/lib/utils";
 import type { PracticeTypeCode, Vocabulary } from "@/types";
 
 export function TypingGame({
@@ -58,7 +58,7 @@ export function TypingGame({
   }
 
   const current = vocabList[index];
-  const isCorrect = normalizeForAnswerMatch(value) === normalizeForAnswerMatch(current.vocab);
+  const isCorrect = isAcceptedAnswer(value, current.vocab);
 
   const handleNext = () => {
     if (index + 1 >= total) {

@@ -170,6 +170,7 @@ const vi = {
     statStreak: "Chuỗi ngày học",
     statStreakValue: "{count} ngày",
     streakLine: "Bạn đang ở chuỗi {count} ngày nhé!",
+    streakEncourage: "Ráng giữ đều thêm vài ngày nữa để thành thói quen nha!",
     statLevelProgress: "Cấp độ hiện tại",
   },
   adminStudents: {

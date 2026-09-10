@@ -13,7 +13,7 @@ import { markWarmupTypeCompleteAction } from "@/lib/actions/warmup";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
 import { speakWord } from "@/lib/speech";
-import { cn, normalizeForAnswerMatch } from "@/lib/utils";
+import { cn, isAcceptedAnswer } from "@/lib/utils";
 import type { PracticeTypeCode, Vocabulary } from "@/types";
 
 export function ListeningGame({
@@ -34,7 +34,7 @@ export function ListeningGame({
 
   const total = vocabList.length;
   const current = vocabList[index] as Vocabulary | undefined;
-  const isCorrect = current !== undefined && normalizeForAnswerMatch(value) === normalizeForAnswerMatch(current.vocab);
+  const isCorrect = current !== undefined && isAcceptedAnswer(value, current.vocab);
 
   useEffect(() => {
     // Browser-only feature check — the "supported" default of true is what the server

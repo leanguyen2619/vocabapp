@@ -54,6 +54,13 @@ export function DashboardOverviewCard({
               {formatMessage(dict.studentDashboard.streakLine, { count: streak })}
             </p>
           )}
+          {/* A short nudge only in the fragile early days (1–4) — once a streak is longer it
+           * carries its own momentum and doesn't need the reminder. */}
+          {streak >= 1 && streak <= 4 && (
+            <p className="text-xs text-emerald-600/90 dark:text-emerald-400/80">
+              {dict.studentDashboard.streakEncourage}
+            </p>
+          )}
         </div>
         <span className="shrink-0 rounded-full border border-emerald-200 bg-white/70 px-3 py-1 text-xs font-medium text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-200">
           {todayLabel}

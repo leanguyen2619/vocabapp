@@ -13,7 +13,7 @@ import type { WordTransformationItem } from "@/lib/actions/practice-content";
 import { markWarmupTypeCompleteAction } from "@/lib/actions/warmup";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatMessage } from "@/lib/i18n/format";
-import { cn, normalizeForAnswerMatch } from "@/lib/utils";
+import { cn, isAcceptedAnswer } from "@/lib/utils";
 import type { PracticeTypeCode } from "@/types";
 
 /** Splits a sentence on its literal "___" blank marker into [before, after] — same convention as
@@ -61,7 +61,7 @@ export function WordTransformationGame({
 
   const current = prompts[index];
   const [before, after] = splitSentence(current.sentence);
-  const isCorrect = normalizeForAnswerMatch(value) === normalizeForAnswerMatch(current.answer);
+  const isCorrect = isAcceptedAnswer(value, current.answer);
 
   const handleNext = () => {
     if (index + 1 >= total) {
