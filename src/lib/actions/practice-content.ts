@@ -149,6 +149,15 @@ export interface WordFormationItem {
   definition: string;
 }
 
+/** word_formation tiles the vocab word letter-by-letter for the student to reassemble, graded by
+ * exact reconstruction (see prepareWordFormation/WordFormationGame) — that only makes sense for a
+ * plain word or phrase. "(x)"/"[x]" optional-notation and "/" alternative-notation (see
+ * expandAcceptedAnswers's own doc comment — same source data, same notation) would force the
+ * student to place a literal "(", ")", or "/" tile in exact position to "win", which is
+ * nonsensical since that punctuation was never part of the word to begin with. A plain space is
+ * fine (WordFormationGame renders it as a visible tile) — only these three characters are excluded. */
+const WORD_FORMATION_INCOMPATIBLE_CHARS = /[()[\]/]/;
+
 /** Approved word_formation Question rows — replaces the static wordFormationPrompts pool.
  * Filtered to the caller's unlocked levels. */
 export async function getWordFormationPromptsAction(): Promise<WordFormationItem[]> {
@@ -165,7 +174,9 @@ export async function getWordFormationPromptsAction(): Promise<WordFormationItem
   });
 
   return rows
-    .filter((q) => unlockedLevelIds.has(q.vocab.levelId))
+    .filter(
+      (q) => unlockedLevelIds.has(q.vocab.levelId) && !WORD_FORMATION_INCOMPATIBLE_CHARS.test(q.vocab.vocab)
+    )
     .map((q) => ({
       id: q.id,
       vocabId: q.vocabId,

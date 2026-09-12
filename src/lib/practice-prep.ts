@@ -29,6 +29,10 @@ export function buildPosQuestions(items: PosClassificationItem[]): PosQuestion[]
 export interface Tile {
   id: number;
   char: string;
+  /** A plain space is a valid character in a multi-word prompt like "ice cream", but rendering it
+   * as a literal " " gives an invisible, blank tile the student can't see to pick or verify — see
+   * WordFormationGame, which renders a visible marker for this instead of the raw character. */
+  isSpace: boolean;
 }
 
 export interface PreparedPrompt extends WordFormationItem {
@@ -38,6 +42,6 @@ export interface PreparedPrompt extends WordFormationItem {
 export function prepareWordFormation(prompts: WordFormationItem[]): PreparedPrompt[] {
   return shuffle(prompts).map((p) => ({
     ...p,
-    tiles: shuffle(p.word.split("").map((char, id) => ({ id, char }))),
+    tiles: shuffle(p.word.split("").map((char, id) => ({ id, char, isSpace: char === " " }))),
   }));
 }

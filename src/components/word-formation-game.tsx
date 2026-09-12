@@ -162,17 +162,24 @@ export function WordFormationGame({
             {dict.wordFormationGame.emptyPlaceholder}
           </span>
         )}
-        {placedIds.map((id) => (
-          <span
-            key={id}
-            className={cn(
-              "flex size-9 items-center justify-center rounded-lg bg-card text-lg font-semibold uppercase ring-1 ring-foreground/10",
-              solved && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400"
-            )}
-          >
-            {prompt.tiles.find((t) => t.id === id)!.char}
-          </span>
-        ))}
+        {placedIds.map((id) => {
+          const tile = prompt.tiles.find((t) => t.id === id)!;
+          return (
+            <span
+              key={id}
+              className={cn(
+                "flex size-9 items-center justify-center rounded-lg bg-card text-lg font-semibold uppercase ring-1 ring-foreground/10",
+                tile.isSpace && "text-muted-foreground",
+                solved && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400"
+              )}
+            >
+              {/* A raw " " tile renders as an invisible, unverifiable blank — show a visible
+               * "open box" space glyph instead (grading still compares the real " " character,
+               * only the display differs). */}
+              {tile.isSpace ? "␣" : tile.char}
+            </span>
+          );
+        })}
       </div>
 
       {!solved && (
@@ -183,9 +190,12 @@ export function WordFormationGame({
               type="button"
               disabled={placedIds.includes(tile.id) || wrongFlash}
               onClick={() => handlePlace(tile.id)}
-              className="flex size-10 items-center justify-center rounded-lg border-2 border-border bg-card text-lg font-semibold uppercase transition-colors hover:border-primary/50 disabled:pointer-events-none disabled:opacity-30"
+              className={cn(
+                "flex size-10 items-center justify-center rounded-lg border-2 border-border bg-card text-lg font-semibold uppercase transition-colors hover:border-primary/50 disabled:pointer-events-none disabled:opacity-30",
+                tile.isSpace && "text-muted-foreground"
+              )}
             >
-              {tile.char}
+              {tile.isSpace ? "␣" : tile.char}
             </button>
           ))}
           <Button
