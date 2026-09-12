@@ -65,8 +65,8 @@ export function MatchingGame({
     return (
       <PracticeEmptyState
         message={dict.matchingGame.noQuestions}
-        actionLabel={warmupCode ? dict.warmup.continueButton : dict.errors.backToDashboard}
-        actionHref={warmupCode ? "/warmup" : "/dashboard"}
+        actionLabel={warmupCode ? dict.warmup.continueButton : dict.matchingGame.changeType}
+        actionHref={warmupCode ? "/warmup" : "/exercises"}
       />
     );
   }
@@ -130,8 +130,8 @@ export function MatchingGame({
             <RotateCcw className="size-4" />
             {dict.matchingGame.restart}
           </Button>
-          <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/dashboard"} />}>
-            {warmupCode ? dict.warmup.continueButton : dict.errors.backToDashboard}
+          <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
+            {warmupCode ? dict.warmup.continueButton : dict.matchingGame.changeType}
           </Button>
         </div>
       </div>

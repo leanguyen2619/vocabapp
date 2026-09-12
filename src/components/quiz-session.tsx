@@ -110,8 +110,8 @@ export function QuizSession({
             <RotateCcw className="size-4" />
             {dict.quizSession.restart}
           </Button>
-          <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/dashboard"} />}>
-            {warmupCode ? dict.warmup.continueButton : dict.errors.backToDashboard}
+          <Button nativeButton={false} render={<Link href={warmupCode ? "/warmup" : "/exercises"} />}>
+            {warmupCode ? dict.warmup.continueButton : dict.quizSession.changeType}
           </Button>
         </div>
       </div>

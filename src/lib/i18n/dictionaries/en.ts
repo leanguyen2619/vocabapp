@@ -358,6 +358,7 @@ const en: Dictionary = {
     title: "Match the English word to its Vietnamese meaning",
     subtitle: "Pick a word on the left, then its matching meaning on the right.",
     noQuestions: "No words available for this game yet.",
+    changeType: "Choose another type",
   },
   posGame: {
     finishedTitle: "Exercise complete!",

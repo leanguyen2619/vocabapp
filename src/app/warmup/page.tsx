@@ -17,7 +17,7 @@ import { SynonymAntonymGame } from "@/components/synonym-antonym-game";
 import { TypingGame } from "@/components/typing-game";
 import { WordFormationGame } from "@/components/word-formation-game";
 import { WordTransformationGame } from "@/components/word-transformation-game";
-import { Progress, ProgressLabel } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import {
@@ -210,11 +210,12 @@ export default async function WarmupPage() {
               </p>
             </div>
 
-            <Progress value={((stepIndex - 1) / totalSteps) * 100}>
-              <ProgressLabel>
-                {formatMessage(dict.warmup.stepCounter, { current: stepIndex, total: totalSteps })}
-              </ProgressLabel>
-            </Progress>
+            {/* A plain label, not its own Progress bar — the game below already renders one for
+             * its own question-by-question progress, and stacking a second bar just for "which of
+             * the 3 warmup exercises" read as visual clutter more than useful information. */}
+            <Badge variant="secondary" className="self-center">
+              {formatMessage(dict.warmup.stepCounter, { current: stepIndex, total: totalSteps })}
+            </Badge>
 
             {game}
           </CardContent>

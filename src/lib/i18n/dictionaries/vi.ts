@@ -360,6 +360,7 @@ const vi = {
     title: "Nối từ tiếng Anh với nghĩa tiếng Việt",
     subtitle: "Chọn 1 từ bên trái rồi chọn nghĩa tương ứng bên phải.",
     noQuestions: "Chưa có từ nào cho trò chơi này.",
+    changeType: "Chọn dạng khác",
   },
   posGame: {
     finishedTitle: "Hoàn thành bài tập!",
