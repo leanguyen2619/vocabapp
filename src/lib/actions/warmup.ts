@@ -128,3 +128,24 @@ export async function markWarmupTypeCompleteAction(code: PracticeTypeCode): Prom
     data: { completedCodes: { push: code } },
   });
 }
+
+/**
+ * TEMPORARY: lets a student bypass today's mandatory warmup entirely, marking all of today's
+ * assigned types complete in one go instead of playing through them. Requested as a stopgap —
+ * remove this action and the "Bỏ qua khởi động" button on /warmup once it's no longer needed.
+ */
+export async function skipWarmupAction(): Promise<void> {
+  const account = await getCurrentAccount();
+  if (!account || account.role !== "student") return;
+
+  const warmupDate = startOfToday();
+  const existing = await prisma.dailyWarmup.findUnique({
+    where: { accountId_warmupDate: { accountId: account.id_login, warmupDate } },
+  });
+  if (!existing) return;
+
+  await prisma.dailyWarmup.update({
+    where: { accountId_warmupDate: { accountId: account.id_login, warmupDate } },
+    data: { completedCodes: existing.practiceTypeCodes },
+  });
+}

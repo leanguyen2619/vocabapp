@@ -59,6 +59,7 @@ const en: Dictionary = {
     subtitle: "Complete the {total} random exercises below to start today's learning.",
     stepCounter: "Exercise {current}/{total}",
     continueButton: "Continue",
+    skipButton: "Skip warmup",
     logoutDialogTitle: "Confirm logout",
     logoutDialogDesc: "Enter your password to log out of this account.",
     logoutSubmit: "Log out",
