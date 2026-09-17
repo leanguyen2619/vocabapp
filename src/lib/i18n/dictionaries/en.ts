@@ -170,6 +170,7 @@ const en: Dictionary = {
     statStreakValue: "{count} days",
     streakLine: "You're on a {count}-day streak!",
     streakEncourage: "Study a bit today so you don't lose your streak!",
+    streakKeptToday: "You've already kept your streak today, nice work!",
     statLevelProgress: "Current level",
   },
   adminStudents: {
@@ -240,6 +241,11 @@ const en: Dictionary = {
     dailyTargetSuccess: "Set {count} words/day for {name}.",
     dailyTargetClearSuccess: "Reset {name} to the class default.",
     dailyTargetError: "Words per day must be a positive whole number.",
+    streakOverrideTitle: "Restore streak",
+    streakOverrideDesc: "Use this when a student genuinely studied but their streak was lost to a system bug. Only set this once you've confirmed the student actually did the work.",
+    streakOverrideSaveButton: "Save",
+    streakOverrideSuccess: "Set a {count}-day streak for {name}.",
+    streakOverrideError: "Streak must be a non-negative whole number.",
   },
   adminDashboard: {
     greeting: "Hi {name}",

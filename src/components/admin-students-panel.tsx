@@ -64,6 +64,7 @@ import {
   pinRandomTopicForStudentAction,
   pinTopicForStudentAction,
   setDailyWordTargetOverrideAction,
+  setStreakOverrideAction,
   unpinTopicForStudentAction,
   type StudentDetail,
   type StudentSummary,
@@ -119,6 +120,8 @@ export function AdminStudentsPanel({
   const [pinning, setPinning] = useState(false);
   const [dailyTargetInput, setDailyTargetInput] = useState("");
   const [savingTarget, setSavingTarget] = useState(false);
+  const [streakInput, setStreakInput] = useState("");
+  const [savingStreak, setSavingStreak] = useState(false);
 
   const [studentAssignTarget, setStudentAssignTarget] = useState<StudentSummary | null>(null);
   const [studentAssignVocab, setStudentAssignVocab] = useState<string[]>([]);
@@ -262,6 +265,7 @@ export function AdminStudentsPanel({
     setDetailData(data);
     setPinTopicSelect(data?.pinnedTopicId != null ? String(data.pinnedTopicId) : ALL);
     setDailyTargetInput(data?.dailyWordTargetOverride != null ? String(data.dailyWordTargetOverride) : "");
+    setStreakInput(data?.streak != null ? String(data.streak) : "");
   };
 
   const handlePinTopic = async () => {
@@ -337,6 +341,24 @@ export function AdminStudentsPanel({
         ? formatMessage(dict.adminStudents.dailyTargetClearSuccess, { name: detailData.fullName })
         : formatMessage(dict.adminStudents.dailyTargetSuccess, { count: target, name: detailData.fullName })
     );
+  };
+
+  const handleSaveStreak = async () => {
+    if (!detailData) return;
+    const trimmed = streakInput.trim();
+    if (trimmed === "") return;
+    const streak = Number(trimmed);
+
+    setSavingStreak(true);
+    const result = await setStreakOverrideAction(detailData.id_login, streak);
+    setSavingStreak(false);
+
+    if (result.error !== undefined) {
+      toast.error(result.error);
+      return;
+    }
+    setDetailData((prev) => (prev ? { ...prev, streak } : prev));
+    toast.success(formatMessage(dict.adminStudents.streakOverrideSuccess, { count: streak, name: detailData.fullName }));
   };
 
   const buildCredentialsText = (entry: KnownCredentials) =>
@@ -1089,6 +1111,27 @@ export function AdminStudentsPanel({
                     />
                     <Button variant="outline" size="sm" disabled={savingTarget} onClick={() => void handleSaveDailyTarget()}>
                       {dict.adminStudents.dailyTargetSaveButton}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="streakOverride" className="flex items-center gap-1.5">
+                    <Flame className="size-3.5 text-orange-500" />
+                    {dict.adminStudents.streakOverrideTitle}
+                  </Label>
+                  <p className="text-sm text-muted-foreground">{dict.adminStudents.streakOverrideDesc}</p>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="streakOverride"
+                      type="number"
+                      min={0}
+                      value={streakInput}
+                      onChange={(e) => setStreakInput(e.target.value)}
+                      className="w-full sm:w-40"
+                    />
+                    <Button variant="outline" size="sm" disabled={savingStreak} onClick={() => void handleSaveStreak()}>
+                      {dict.adminStudents.streakOverrideSaveButton}
                     </Button>
                   </div>
                 </div>

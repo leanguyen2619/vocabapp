@@ -31,6 +31,8 @@ export function StudentDashboardContent({
   topics,
   newWordsCount,
   unseenGradedWritingCount,
+  streak,
+  hasStudiedToday,
   locale,
   dict,
 }: {
@@ -40,12 +42,18 @@ export function StudentDashboardContent({
   topics: Topic[];
   newWordsCount: number;
   unseenGradedWritingCount: number;
+  /** Account-level streak (see the schema comment on Account.streak) — computed by the page from
+   * the session account, not derived from `levels` here anymore. */
+  streak: number;
+  /** Whether any vocab answer has already been recorded today — the exact same condition that
+   * keeps/bumps the streak, so this is the ground truth for "have I kept my streak today," not
+   * an approximation from today's assignment-completion count. */
+  hasStudiedToday: boolean;
   locale: Locale;
   dict: Dictionary;
 }) {
   const completedCount = dailyAssignments.filter((a) => a.status === "done").length;
   const assignmentStatusLabel: Record<AssignmentStatus, string> = dict.assignmentStatus;
-  const streak = Math.max(0, ...levels.map((l) => l.streak));
   const activeLevel = levels.find((l) => l.status === "in_progress") ?? levels[0] ?? null;
 
   return (
@@ -55,6 +63,7 @@ export function StudentDashboardContent({
         wordsCompletedToday={completedCount}
         wordsTotalToday={dailyAssignments.length}
         streak={streak}
+        hasStudiedToday={hasStudiedToday}
         currentLevelLabel={activeLevel?.level ?? null}
         currentLevelScore={activeLevel?.score ?? 0}
         locale={locale}

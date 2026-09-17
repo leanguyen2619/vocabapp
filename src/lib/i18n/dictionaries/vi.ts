@@ -172,6 +172,7 @@ const vi = {
     statStreakValue: "{count} ngày",
     streakLine: "Bạn đang ở chuỗi {count} ngày nhé!",
     streakEncourage: "Nhớ học hôm nay để không bị mất chuỗi nha!",
+    streakKeptToday: "Đã giữ chuỗi hôm nay rồi, tuyệt vời!",
     statLevelProgress: "Cấp độ hiện tại",
   },
   adminStudents: {
@@ -242,6 +243,11 @@ const vi = {
     dailyTargetSuccess: "Đã đặt {count} từ/ngày cho {name}.",
     dailyTargetClearSuccess: "Đã dùng lại mặc định của lớp cho {name}.",
     dailyTargetError: "Số từ mỗi ngày phải là số nguyên dương.",
+    streakOverrideTitle: "Khôi phục chuỗi ngày",
+    streakOverrideDesc: "Dùng khi học sinh đã học thật nhưng chuỗi bị mất do lỗi hệ thống. Chỉ nên đặt khi bạn đã xác nhận học sinh thực sự có học.",
+    streakOverrideSaveButton: "Lưu",
+    streakOverrideSuccess: "Đã đặt chuỗi {count} ngày cho {name}.",
+    streakOverrideError: "Chuỗi ngày phải là số nguyên không âm.",
   },
   adminDashboard: {
     greeting: "Chào {name}",

@@ -179,7 +179,6 @@ export interface QuestionWithAnswers extends Question {
 
 export interface LevelWithProgress extends Level {
   score: number;
-  streak: number;
   status: AccountLevelStatus;
   totalVocab: number;
   masteredVocab: number;

@@ -129,7 +129,6 @@ export async function listAllStudentsAction(): Promise<StudentSummary[]> {
 
     const myHistory = learningHistory.filter((h) => h.accountId === s.id_login);
     const masteredVocab = myHistory.filter((h) => h.status === "mastered").length;
-    const streak = Math.max(0, ...myLevels.map((al) => al.streak), 0);
 
     const todayHistory = myHistory.filter((h) => h.lastDate >= startOfToday);
     let todayStatus: AssignmentStatus = "pending";
@@ -150,7 +149,7 @@ export async function listAllStudentsAction(): Promise<StudentSummary[]> {
       className: s.class?.className ?? null,
       levelName,
       score: activeLevel?.score ?? 0,
-      streak,
+      streak: s.streak,
       masteredVocab,
       todayStatus,
       pinnedTopicName: s.pinnedTopic?.topic ?? null,
@@ -327,7 +326,6 @@ export async function getStudentDetailAction(studentId: string): Promise<Student
 
   const activeLevel = pickActiveLevel(levels, accountLevels);
   const levelName = levels.find((l) => l.id === activeLevel?.levelId)?.level ?? levels[0]?.level ?? "-";
-  const streak = Math.max(0, ...accountLevels.map((al) => al.streak), 0);
 
   const masteredCount = history.filter((h) => h.status === "mastered").length;
   const learningEntries = history.filter((h) => h.status === "learning");
@@ -338,7 +336,7 @@ export async function getStudentDetailAction(studentId: string): Promise<Student
     email: student.email,
     levelName,
     score: activeLevel?.score ?? 0,
-    streak,
+    streak: student.streak,
     masteredCount,
     learningCount: learningEntries.length,
     newCount: Math.max(0, totalVocab - masteredCount - learningEntries.length),
@@ -427,6 +425,37 @@ export async function setDailyWordTargetOverrideAction(
   await prisma.account.update({
     where: { id_login: studentId },
     data: { dailyWordTargetOverride: target },
+  });
+  return {};
+}
+
+/**
+ * Manually sets a student's streak — for the rare case a student genuinely studied but the
+ * streak didn't reflect it (see the Account.streak schema comment for the bug this replaced) and
+ * the admin has independently confirmed the work happened. Deliberately a plain admin-judgment
+ * override, not an automated recovery: there's no reliable signal to detect "should have counted
+ * but didn't" from the data alone.
+ *
+ * Also stamps lastActivityDate to now, not just streak — otherwise the very next real answer
+ * would see the OLD (possibly days-stale) lastActivityDate, read it as a multi-day gap, and reset
+ * the streak right back to 1, undoing the restore immediately.
+ */
+export async function setStreakOverrideAction(
+  studentId: string,
+  streak: number
+): Promise<{ error: string } | { error?: undefined }> {
+  const admin = await requireAdmin();
+  if (!admin) return { error: "Bạn không có quyền thực hiện thao tác này." };
+  if (!Number.isInteger(streak) || streak < 0) {
+    return { error: "Chuỗi ngày phải là số nguyên không âm." };
+  }
+
+  const student = await prisma.account.findFirst({ where: { id_login: studentId, role: "student" } });
+  if (!student) return { error: "Không tìm thấy học sinh này." };
+
+  await prisma.account.update({
+    where: { id_login: studentId },
+    data: { streak, lastActivityDate: new Date() },
   });
   return {};
 }

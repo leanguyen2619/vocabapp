@@ -42,7 +42,6 @@ async function computeLevelsWithProgress(accountId: string): Promise<LevelWithPr
       autoUnlockNextAt: level.autoUnlockNextAt,
       status: entry?.status ?? "locked",
       score: entry?.score ?? computedScore,
-      streak: entry?.streak ?? 0,
       totalVocab,
       masteredVocab,
     };
@@ -212,7 +211,7 @@ export async function setAccountLevelStatusAction(
     .upsert({
       where: { accountId_levelId: { accountId, levelId } },
       update: { status, ...(manualNote !== undefined ? { manualNote: manualNote || null } : {}) },
-      create: { accountId, levelId, status, manualNote: manualNote || null, score: 0, streak: 0 },
+      create: { accountId, levelId, status, manualNote: manualNote || null, score: 0 },
     })
     .catch(() => null);
   return updated !== null;

@@ -80,7 +80,7 @@ export function ProfileClient({
   const unlockedLevels = levels.filter((level) => level.status !== "locked");
   const totalMastered = unlockedLevels.reduce((sum, l) => sum + l.masteredVocab, 0);
   const completedLevels = levels.filter((level) => level.status === "completed").length;
-  const streak = Math.max(0, ...levels.map((level) => level.streak));
+  const streak = account.streak;
 
   const handleLogout = async () => {
     await logoutAction();

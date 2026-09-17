@@ -58,7 +58,7 @@ export async function recordForVocab(
   // re-querying after the write, which is what let the two writes below also run in parallel
   // instead of one waiting on the other. allLevels (ordered) is only needed to find whichever
   // level comes right after this one, for the auto-unlock check below.
-  const [existing, level, totalVocabInLevel, masteredCountBefore, existingAccountLevel, allLevels] =
+  const [existing, level, totalVocabInLevel, masteredCountBefore, existingAccountLevel, allLevels, account] =
     await Promise.all([
       prisma.learningHistory.findUnique({ where: { accountId_vocabId: { accountId, vocabId } } }),
       prisma.level.findUnique({ where: { id: levelId } }),
@@ -66,10 +66,17 @@ export async function recordForVocab(
       prisma.learningHistory.count({ where: { accountId, status: "mastered", vocab: { levelId } } }),
       prisma.accountLevel.findUnique({ where: { accountId_levelId: { accountId, levelId } } }),
       prisma.level.findMany({ orderBy: { id: "asc" }, select: { id: true } }),
+      prisma.account.findUnique({ where: { id_login: accountId }, select: { streak: true, lastActivityDate: true } }),
     ]);
 
   const previousStatus = existing?.status ?? "new";
   const status = nextStatus(previousStatus, isCorrect);
+
+  // One streak per ACCOUNT, not per level — any vocab answer, on any level, counts as "studied
+  // today." (Used to live on AccountLevel, bumped only for whichever level the answered word
+  // belonged to; see the migration/schema comment on Account.streak for why that broke.)
+  const now = new Date();
+  const streak = computeStreak(account?.streak ?? 0, account?.lastActivityDate ?? null, now);
 
   const writes: Promise<unknown>[] = [
     prisma.learningHistory.upsert({
@@ -77,6 +84,7 @@ export async function recordForVocab(
       update: { status, lastDate: new Date() },
       create: { accountId, vocabId, status },
     }),
+    prisma.account.update({ where: { id_login: accountId }, data: { streak, lastActivityDate: now } }),
   ];
 
   if (level) {
@@ -92,18 +100,11 @@ export async function recordForVocab(
     const levelStatus =
       LEVEL_STATUS_RANK[naturalStatus] > LEVEL_STATUS_RANK[currentStatus] ? naturalStatus : currentStatus;
 
-    const now = new Date();
-    const streak = computeStreak(
-      existingAccountLevel?.streak ?? 0,
-      existingAccountLevel?.lastActivityDate ?? null,
-      now
-    );
-
     writes.push(
       prisma.accountLevel.upsert({
         where: { accountId_levelId: { accountId, levelId } },
-        update: { score, status: levelStatus, streak, lastActivityDate: now },
-        create: { accountId, levelId, score, status: levelStatus, streak, lastActivityDate: now },
+        update: { score, status: levelStatus },
+        create: { accountId, levelId, score, status: levelStatus },
       })
     );
 
@@ -126,7 +127,7 @@ export async function recordForVocab(
             prisma.accountLevel.upsert({
               where: { accountId_levelId: { accountId, levelId: nextLevel.id } },
               update: { status: "in_progress" },
-              create: { accountId, levelId: nextLevel.id, status: "in_progress", score: 0, streak: 0 },
+              create: { accountId, levelId: nextLevel.id, status: "in_progress", score: 0 },
             })
           );
         }

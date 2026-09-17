@@ -14,6 +14,7 @@ export function DashboardOverviewCard({
   wordsCompletedToday,
   wordsTotalToday,
   streak,
+  hasStudiedToday,
   currentLevelLabel,
   currentLevelScore,
   locale,
@@ -23,6 +24,11 @@ export function DashboardOverviewCard({
   wordsCompletedToday: number;
   wordsTotalToday: number;
   streak: number;
+  /** Whether the streak has already been kept today — the exact same "answered at least one
+   * vocab question today" condition drives both. Flips the reminder below from "don't forget"
+   * to "already done," so the streak's keep-it-alive criteria is stated plainly instead of left
+   * for the student to guess at. */
+  hasStudiedToday: boolean;
   currentLevelLabel: string | null;
   currentLevelScore: number;
   locale: Locale;
@@ -54,10 +60,11 @@ export function DashboardOverviewCard({
               <p className="text-sm text-emerald-700 dark:text-emerald-400">
                 {formatMessage(dict.studentDashboard.streakLine, { count: streak })}
               </p>
-              {/* Shown for the whole life of a streak, however long — the point is to keep nudging
-               * the student to study today so the streak doesn't break. */}
+              {/* Shown for the whole life of a streak, however long — states the actual
+               * keep-it-alive rule plainly (answer at least one question today) instead of
+               * leaving the student to guess, and flips to a done state once it's true. */}
               <p className="text-xs text-emerald-600/90 dark:text-emerald-400/80">
-                {dict.studentDashboard.streakEncourage}
+                {hasStudiedToday ? dict.studentDashboard.streakKeptToday : dict.studentDashboard.streakEncourage}
               </p>
             </>
           )}
@@ -131,7 +138,8 @@ export function DashboardOverviewCard({
               </div>
               <span className="text-sm text-foreground">{dict.studentDashboard.statStreak}</span>
             </div>
-            <span className="text-sm font-semibold text-foreground tabular-nums">
+            <span className="flex items-center gap-1.5 text-sm font-semibold text-foreground tabular-nums">
+              {hasStudiedToday && <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400" />}
               {formatMessage(dict.studentDashboard.statStreakValue, { count: streak })}
             </span>
           </div>

@@ -138,6 +138,17 @@ model Account {
   // StudentSummary.assignRuleExhausted) and, once an email provider is configured, as an email.
   assignRuleExhaustedAt DateTime?
 
+  // Consecutive-day learning streak — ONE number per account, not per level. Was previously
+  // tracked per (account, level) on AccountLevel, bumped only when a word from that specific
+  // level got answered; the value shown to the user was the max across all their levels. That
+  // meant a student could fully complete every word assigned to them today and still see their
+  // streak fail to move, if those words happened to belong to a level other than whichever one
+  // was currently holding the displayed max — confusing, and prone to showing a stale number
+  // frozen from weeks of inactivity on some other level. See recordForVocab in progress-core.ts,
+  // the sole place this gets bumped: any vocab answer, on any level, counts as "studied today."
+  streak           Int       @default(0)
+  lastActivityDate DateTime?
+
   class       SchoolClass? @relation(fields: [classId], references: [id])
   pinnedTopic Topic?       @relation(fields: [pinnedTopicId], references: [id], onDelete: SetNull)
 
@@ -221,13 +232,11 @@ model Level {
 // ---------- Accounts_Level ----------
 
 model AccountLevel {
-  accountId        String
-  levelId          String
-  score            Int                @default(0)
-  streak           Int                @default(0)
-  lastActivityDate DateTime?
-  manualNote       String?
-  status           AccountLevelStatus @default(locked)
+  accountId  String
+  levelId    String
+  score      Int                @default(0)
+  manualNote String?
+  status     AccountLevelStatus @default(locked)
 
   account Account @relation(fields: [accountId], references: [id_login], onDelete: Cascade)
   level   Level   @relation(fields: [levelId], references: [id], onDelete: Cascade)

@@ -21,6 +21,7 @@ import {
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/locale";
 import { getMyWarmupStatusAction } from "@/lib/actions/warmup";
+import { isSameCalendarDay } from "@/lib/progress-core";
 import { getCurrentAccount } from "@/lib/session";
 import { redirectIfWarmupIncomplete } from "@/lib/warmup-guard";
 import { DashboardShell } from "./dashboard-client";
@@ -80,11 +81,12 @@ export default async function DashboardPage() {
       countMyUnseenGradedWritingAction(),
     ]);
   redirectIfWarmupIncomplete(warmupStatus);
-  // Matches profile-client.tsx's formula so the two pages never disagree on the number shown.
-  const streak = Math.max(0, ...levels.map((l) => l.streak));
+  const hasStudiedToday = account.lastActivityDate
+    ? isSameCalendarDay(account.lastActivityDate, new Date())
+    : false;
 
   return (
-    <DashboardShell account={account} streak={streak}>
+    <DashboardShell account={account} streak={account.streak}>
       <StudentDashboardContent
         account={account}
         dailyAssignments={dailyAssignments}
@@ -92,6 +94,8 @@ export default async function DashboardPage() {
         topics={topics}
         newWordsCount={newWords.length}
         unseenGradedWritingCount={unseenGradedWritingCount}
+        streak={account.streak}
+        hasStudiedToday={hasStudiedToday}
         locale={locale}
         dict={dict}
       />
