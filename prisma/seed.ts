@@ -90,10 +90,10 @@ const vocabularyBank = [
 ] as const;
 
 const accountLevels = [
-  { levelId: "level_1", score: 100, streak: 12, status: "completed" },
-  { levelId: "level_2", score: 68, streak: 12, status: "in_progress" },
-  { levelId: "level_3", score: 0, streak: 0, status: "locked" },
-  { levelId: "level_4", score: 0, streak: 0, status: "locked" },
+  { levelId: "level_1", score: 100, status: "completed" },
+  { levelId: "level_2", score: 68, status: "in_progress" },
+  { levelId: "level_3", score: 0, status: "locked" },
+  { levelId: "level_4", score: 0, status: "locked" },
 ] as const;
 
 const learningHistory = [
