@@ -979,7 +979,7 @@ export function AdminStudentsPanel({
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="default">
+                <Badge variant="success">
                   {dict.vocabulary.mastered}: {detailData.masteredCount}
                 </Badge>
                 <Badge variant="outline">
