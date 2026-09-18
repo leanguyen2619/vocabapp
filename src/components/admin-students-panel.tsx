@@ -946,7 +946,7 @@ export function AdminStudentsPanel({
           }
         }}
       >
-        <DialogContent>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{dict.adminStudents.detailTitle}</DialogTitle>
             <DialogDescription>{dict.adminStudents.detailDesc}</DialogDescription>
@@ -963,10 +963,10 @@ export function AdminStudentsPanel({
           )}
 
           {detailData && (
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-1">
                 <p className="font-medium">{detailData.fullName}</p>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-1.5">
                   <Badge variant="secondary">{detailData.levelName}</Badge>
                   <Badge variant="outline" className="gap-1">
                     <Flame className="size-3 text-orange-500" />
@@ -975,27 +975,24 @@ export function AdminStudentsPanel({
                   <Badge variant="outline">
                     {dict.common.score}: {detailData.score}%
                   </Badge>
+                  <Badge variant="success">
+                    {dict.vocabulary.mastered}: {detailData.masteredCount}
+                  </Badge>
+                  <Badge variant="outline">
+                    {dict.vocabulary.learning}: {detailData.learningCount}
+                  </Badge>
+                  <Badge variant="secondary">
+                    {dict.vocabulary.new}: {detailData.newCount}
+                  </Badge>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="success">
-                  {dict.vocabulary.mastered}: {detailData.masteredCount}
-                </Badge>
-                <Badge variant="outline">
-                  {dict.vocabulary.learning}: {detailData.learningCount}
-                </Badge>
-                <Badge variant="secondary">
-                  {dict.vocabulary.new}: {detailData.newCount}
-                </Badge>
-              </div>
-
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1.5">
                 <p className="text-sm font-medium">{dict.adminStudents.learningWordsTitle}</p>
                 {detailData.learningWords.length === 0 ? (
                   <p className="text-sm text-muted-foreground">{dict.adminStudents.noLearningWords}</p>
                 ) : (
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex max-h-28 flex-wrap gap-1.5 overflow-y-auto">
                     {detailData.learningWords.map((w) => (
                       <Badge key={w.vocab} variant="outline">
                         {w.vocab} — {w.meanVI}
@@ -1023,7 +1020,7 @@ export function AdminStudentsPanel({
 
               <Separator />
 
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2 text-sm font-medium">
                   <Pin className="size-3.5" />
                   {dict.adminStudents.assignModeTitle}
@@ -1139,7 +1136,7 @@ export function AdminStudentsPanel({
 
               <Separator />
 
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2 text-sm font-medium">
                   <KeyRound className="size-3.5" />
                   {dict.adminStudents.resetPasswordTitle}

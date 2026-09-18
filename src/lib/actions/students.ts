@@ -317,18 +317,26 @@ export async function getStudentDetailAction(studentId: string): Promise<Student
   });
   if (!student) return null;
 
-  const [levels, accountLevels, history, totalVocab] = await Promise.all([
+  const [levels, accountLevels, statusCounts, learningEntries, totalVocab] = await Promise.all([
     getAllLevels(),
     prisma.accountLevel.findMany({ where: { accountId: studentId } }),
-    prisma.learningHistory.findMany({ where: { accountId: studentId }, include: { vocab: true } }),
+    // Counted in the DB instead of fetching every LearningHistory row (some students accumulate
+    // hundreds+) just to .filter().length them client-side.
+    prisma.learningHistory.groupBy({ by: ["status"], where: { accountId: studentId }, _count: true }),
+    // Only "learning" rows need the joined vocab text, and only the first 20 are ever shown.
+    prisma.learningHistory.findMany({
+      where: { accountId: studentId, status: "learning" },
+      include: { vocab: true },
+      take: 20,
+    }),
     prisma.vocabulary.count(),
   ]);
 
   const activeLevel = pickActiveLevel(levels, accountLevels);
   const levelName = levels.find((l) => l.id === activeLevel?.levelId)?.level ?? levels[0]?.level ?? "-";
 
-  const masteredCount = history.filter((h) => h.status === "mastered").length;
-  const learningEntries = history.filter((h) => h.status === "learning");
+  const masteredCount = statusCounts.find((c) => c.status === "mastered")?._count ?? 0;
+  const learningCount = statusCounts.find((c) => c.status === "learning")?._count ?? 0;
 
   return {
     id_login: student.id_login,
@@ -338,9 +346,9 @@ export async function getStudentDetailAction(studentId: string): Promise<Student
     score: activeLevel?.score ?? 0,
     streak: student.streak,
     masteredCount,
-    learningCount: learningEntries.length,
-    newCount: Math.max(0, totalVocab - masteredCount - learningEntries.length),
-    learningWords: learningEntries.slice(0, 20).map((h) => ({ vocab: h.vocab.vocab, meanVI: h.vocab.meanVI })),
+    learningCount,
+    newCount: Math.max(0, totalVocab - masteredCount - learningCount),
+    learningWords: learningEntries.map((h) => ({ vocab: h.vocab.vocab, meanVI: h.vocab.meanVI })),
     pinnedTopicId: student.pinnedTopicId,
     pinnedTopicName: student.pinnedTopic?.topic ?? null,
     dailyWordTargetOverride: student.dailyWordTargetOverride,
