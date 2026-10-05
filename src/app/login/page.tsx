@@ -39,6 +39,8 @@ export default async function LoginPage() {
           <LoginForm dict={dict} />
         </CardContent>
       </Card>
+
+      <p className="max-w-sm text-center text-sm text-muted-foreground">{dict.login.helpText}</p>
     </div>
   );
 }

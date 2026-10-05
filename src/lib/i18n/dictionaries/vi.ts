@@ -142,6 +142,7 @@ const vi = {
     forgotPasswordSubmitting: "Đang gửi...",
     forgotPasswordSuccess: "Đã gửi yêu cầu. Quản trị viên sẽ liên hệ để đặt lại mật khẩu cho bạn.",
     forgotPasswordErrorFillEmail: "Vui lòng nhập email.",
+    helpText: "Không đăng nhập được? Bấm \"Quên mật khẩu?\" phía trên, hoặc liên hệ giáo viên/quản trị viên để được hỗ trợ.",
   },
   dashboard: {
     streakDays: "ngày",

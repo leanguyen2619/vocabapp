@@ -140,6 +140,7 @@ const en: Dictionary = {
     forgotPasswordSubmitting: "Sending...",
     forgotPasswordSuccess: "Request sent. An admin will reach out to reset your password.",
     forgotPasswordErrorFillEmail: "Please enter your email.",
+    helpText: "Can't sign in? Click \"Forgot password?\" above, or contact your teacher or administrator.",
   },
   dashboard: {
     streakDays: "days",
