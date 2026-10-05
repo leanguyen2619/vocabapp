@@ -19,6 +19,7 @@ export function SkipWarmupButton({ dict }: { dict: Dictionary }) {
     // session (the very redirect that landed the student on /warmup), and Next's client router
     // cache can replay that stale "still incomplete, redirect to /warmup" RSC response instead of
     // re-checking the now-updated status. A full reload always re-renders the destination fresh.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- intentional hard navigation, see above
     window.location.href = "/dashboard";
   };
 
