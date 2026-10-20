@@ -1,6 +1,6 @@
 const vi = {
   meta: {
-    title: "VocabApp — Học từ vựng mỗi ngày",
+    title: "Start Your Journey Today with Reindeer",
     description: "Nền tảng luyện từ vựng với flashcard, trắc nghiệm và theo dõi tiến độ học tập.",
   },
   /** Short browser-tab titles for pages whose own dict section has no generic "title" field

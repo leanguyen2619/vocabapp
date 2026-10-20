@@ -2,7 +2,7 @@ import type { Dictionary } from "./vi";
 
 const en: Dictionary = {
   meta: {
-    title: "VocabApp — Learn vocabulary every day",
+    title: "Start Your Journey Today with Reindeer",
     description: "A vocabulary learning platform with flashcards, quizzes, and progress tracking.",
   },
   pageTitles: {
